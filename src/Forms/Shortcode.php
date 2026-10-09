@@ -28,8 +28,9 @@ final class Shortcode {
 	 * @param PluginInfo $info     The plugin's folder and version.
 	 * @param Projects   $projects Which project.
 	 * @param Settings   $settings The project's form settings.
+	 * @param Display    $display  The "theme styles only" switch.
 	 */
-	public function __construct( private PluginInfo $info, private Projects $projects, private Settings $settings ) {}
+	public function __construct( private PluginInfo $info, private Projects $projects, private Settings $settings, private Display $display ) {}
 
 	/** Registers the shortcode. */
 	public function register(): void {
@@ -90,17 +91,11 @@ final class Shortcode {
 		return (string) ob_get_clean();
 	}
 
-	/** Queues the form's script and stylesheet (printed in the footer; the stylesheet can be switched off with a filter). */
+	/** Queues the form's script and stylesheet (printed in the footer; the stylesheet stays away with "theme styles only" or a filter). */
 	private function enqueue(): void {
 		$version = $this->info->version();
 		wp_enqueue_script( 'omnabase-form', plugins_url( 'assets/form.js', $this->info->mainFile() ), array(), $version, array( 'in_footer' => true, 'strategy' => 'defer' ) );
-		/**
-		 * Whether the form brings its own small stylesheet (built from OmnaBase's colours, in the theme's font). False leaves the form to the
-		 * theme's styles alone.
-		 *
-		 * @param bool $styles True by default.
-		 */
-		if ( apply_filters( 'omnabase_form_styles', true ) ) {
+		if ( $this->display->wantsStylesheet() ) {
 			wp_enqueue_style( 'omnabase-form', plugins_url( 'assets/form.css', $this->info->mainFile() ), array(), $version );
 		}
 	}

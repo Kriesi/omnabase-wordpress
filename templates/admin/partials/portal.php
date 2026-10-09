@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings › OmnaBase: the message-centre section (the page pick) and the shortcodes' help. Included by settings.php.
+ * Settings › OmnaBase: the message-centre section (the page pick); the shortcodes have their own section. Included by settings.php.
  *
  * @package OmnaBase
  *
@@ -31,12 +31,4 @@ defined( 'ABSPATH' ) || exit;
 		</table>
 		<?php submit_button( __( 'Save page', 'omnabase' ), 'secondary', 'omnabase-save-portal', false ); ?>
 	</form>
-
-	<h3><?php esc_html_e( 'Shortcodes', 'omnabase' ); ?></h3>
-	<ul class="ob-wp-settings__shortcodes">
-		<li><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre, on the page above', 'omnabase' ); ?></li>
-		<li><code>[omnabase_messages guest="form"]</code> <?php esc_html_e( 'visitors who are not signed in get the contact form instead of a login link', 'omnabase' ); ?></li>
-		<li><code>[omnabase_form]</code> <?php esc_html_e( 'the contact form on any page', 'omnabase' ); ?></li>
-		<li><code>[omnabase_form project="slug" subject="…"]</code> <?php esc_html_e( 'names a project and words the subject', 'omnabase' ); ?></li>
-	</ul>
 </div>

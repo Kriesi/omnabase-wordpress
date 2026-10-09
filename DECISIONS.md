@@ -501,3 +501,149 @@ model), `Portal\Requests` (New ticket, Reply, the link), `Portal\LinkLimit` and 
 **Left for round six.** WooCommerce's My Account "Support" link (the brief's "when turned on", a switch on the screen); the "theme styles
 only" switch (Q4); a refused New ticket keeps nothing of what was typed (the customer writes it again); the privacy-policy text naming the
 message centre; the `.pot`.
+
+## 2026-10-09 — M13 round six: ready to hand out
+
+The red team's tests came first (`docs/reviews/m13-round6-red-team-report.md`: 36 cases in 11 files plus the helper `RoundSixTestCase.php`:
+structure 12, integration 15 (plain run 10, shops run 5), the Playwright-run checks 7 (`release` 3, `fresh` 2, `uninstall` 1, `cron-health` 1);
+OmnaBase's 2 in its own repository; all copied in). Before (the report's run): structure 9 of 12 failing (three guards pass by design), plain
+integration 10 of 10, shops 5 of 5, `release` 3 of 3, `uninstall` 1 of 1, `cron-health` 1 of 1, `fresh` stopped at the missing config. After:
+all green, one adjusted (below). No OmnaBase API change. The words: *Plugin Check*, WordPress.org's checker (an error blocks a listing, a
+warning advises); *`.pot`*, the template translators start from; *text domain*, the name translations are filed under (`omnabase`);
+*exporter* and *eraser*, the pieces WordPress's Tools › Export Personal Data and Erase Personal Data call; *uninstall*, what WordPress runs
+when the plugin is deleted; *WP-Cron*, WordPress's built-in scheduler; *My Account*, WooCommerce's page for a signed-in customer.
+
+**The coordinator's rulings, as built.**
+
+- **The version lives in `package.json`, the plugin header and readme.txt's Stable tag** (and `OMNABASE_VERSION`, the changelog's top
+  section): `package.json` now carries `"version": "0.1.0"`; `bin/check-version.sh` reads it, and composer.json's version when it declares
+  one (it does not, as Composer advises).
+- **The changelog stays `= 0.1.0 — unreleased =`**: the date goes on when the founder ships the first zip; the release build still refuses
+  an undated section. readme.txt's "Changelog" carries the same lines under `= 0.1.0 =` (the date lives in changelog.txt alone).
+- **The uninstall test runs against the development WordPress and the real e2e server** (`tests/e2e/uninstall.spec.ts`), WordPress's way
+  (deactivate, then `uninstall_plugin()`, never deleting this checkout).
+- **The fresh site is `.wp-env.fresh.json`** on 8890 (PHP 8.1, no plugins, `testsEnvironment: false`, only the harness's must-use plugin
+  mapped, test host `fresh.omnabase.test`), so uploading and deleting the zip there can never touch the source.
+- **An exporter and an eraser both** (`Privacy\Exporter`, `Privacy\Eraser`, reading through `Privacy\Holdings`). The exporter lists the
+  user's site id, the "known to OmnaBase" mark, the message centre's link times and kept words, the outbox's open rows about the person (their
+  account's user-link and licence rows, and form messages whose stored address is theirs, with the stored fields) and their forum topics'
+  ticket numbers (as a member, or as a guest by bbPress's stored address). The eraser removes the site id and the known mark, and also the
+  message centre's fingerprint, link times and kept words (personal data held per user, beyond the ruling's two, so an erasure leaves none);
+  it **anonymises** the outbox rows: discarded, payload and subject emptied, the reason "the person's data was erased" kept. Forum topics keep
+  their ticket numbers (a number alone is no personal data once WordPress or bbPress erased the author). Neither touches OmnaBase: the
+  eraser's message and the privacy text say OmnaBase keeps its own copy, deleted in OmnaBase.
+- **Plugin Check's two errors** (`suppress_filters => true` in the forum screen's and the forum posts' `get_posts`): both are `WP_Query` now
+  (`no_found_rows`, filters run). On the built zip on 2026-10-09: **no errors, no warnings**.
+- **The untranslated customer-data labels**: the shaper names "the oldest licences left out" with the key `licences_oldest`
+  (`Shaper::OLDEST_LICENCES`), and the screen words every left-out section through `__()` (`profile`, `orders`, `subscriptions`, `licences`,
+  "licences (the oldest)").
+- **The kept words** (round five's leftover): a New ticket that OmnaBase refuses (or that cannot be sent, or whose form expired) keeps its
+  subject and message in that user's meta `omnabase_portal_draft` for an hour, shown escaped in their New ticket form; a successful New
+  ticket forgets them; a filled trap field or a refused user keeps nothing. Never in the address bar, never shown to another user.
+- **The `.pot`**: `languages/omnabase.pot`, made by `wp i18n make-pot` in wp-env's cli container from what the zip ships (`bin/make-pot.sh`,
+  also `composer i18n:pot` and `npm run pot`; the workshop's folders excluded), committed; 290 sentences on 2026-10-09.
+
+**The parts.** `Privacy` (the wiring, once per request) with `Privacy\PolicyText`, `Privacy\Holdings`, `Privacy\Exporter`, `Privacy\Eraser`;
+`Forms\Display` (the option `omnabase_display`: "theme styles only" and the My Account link); `Portal\MyAccountLink`; `Portal\Draft`;
+`Admin\ShortcodesView` and `Admin\DisplayActions` (the Shortcodes section, `partials/shortcodes.php`); `Admin\HealthNotes`;
+`Facts\ShopVersions`; `bin/make-pot.sh`; `.wp-env.fresh.json`. `Outbox\Table` gains `sendNow`, `openOf` and `anonymise`, `Outbox\Queue`
+gains `sendNow`, `Admin\DataActions` the action `omnabase_outbox_send_now`.
+
+**Choices the brief left open.**
+
+- **The Shortcodes section** (`.ob-wp-settings__shortcodes`, its own h2, after the message centre): both shortcodes and each attribute
+  (`project`, `subject`; `guest`, `project`) in one line each, then one form with the two front-end switches and one Save. The switches live
+  there, not in the message centre's page form: that form's select (`omnabase_portal[page]`) would be sent along with every switch change,
+  and the two are saved apart. The My Account switch is offered only while WooCommerce is active; saved without WooCommerce, its stored value
+  is kept.
+- **"Theme styles only"**: off by default; on, neither `[omnabase_form]` nor the message centre queues `assets/form.css`. Round four's filter
+  `omnabase_form_styles` still has the last word (its default is now the switch).
+- **The My Account link**: the menu item `omnabase-support` reading "Support", placed before "Log out", whose address
+  (`woocommerce_get_endpoint_url`) is the picked page's permalink; nothing while the switch is off or no published page is picked.
+- **Round five's landing after a new question changed**: a successful New ticket now leads back to the list (the thanks notice, the new
+  question on top, an empty form), no longer to the new thread; the red team's kept-words test pins an empty form after a success, and round
+  five's own tests only ask that the subject shows.
+- **"Send now"** on every waiting row of the outbox (rows needing attention keep Retry and Discard): due at once, its tries and idempotency
+  key kept (a resend counts once), and the one-off run woken; the nonce and `manage_options` as every action.
+- **Health**: a line "Last customer-data call from OmnaBase: <time>." (or "No customer-data call from OmnaBase yet.") from the facts log,
+  and while `DISABLE_WP_CRON` is set a warning that WP-Cron is turned off and a real cron job must call wp-cron.php every minute.
+- **"Unsupported version"** beside the source's switch in the customer-data section, with the installed and the needed version. The minimums
+  (the oldest versions whose public functions the sources use): WooCommerce 8.2, WooCommerce Subscriptions 5.0, Easy Digital Downloads 3.0,
+  EDD Recurring 2.11, EDD Software Licensing 3.8, License Manager for WooCommerce 2.2. A version the plugin cannot read (the fakes publish
+  none for the EDD add-ons) is not judged.
+- **The privacy text** (`wp_add_privacy_policy_content` at `admin_init`, under "OmnaBase"): a note for the owner, then sentences naming
+  OmnaBase as Kriesi Media GmbH's service and the site's processor, forum topics and replies, form messages, the message centre, customer data
+  and licence changes, what the site receives, and OmnaBase's privacy policy. **The legal addresses** are OmnaBase's own pages,
+  `https://app.omnabase.com/legal/privacy` and `/legal/terms` (served by OmnaBase's API since its legal round seven), in `Api\ApiUrl`
+  beside the pinned host (the guard keeps web addresses there) and in readme.txt, whose placeholders are gone.
+- **Uninstall's `DELETE /me`**: first, before anything is removed, through the plugin's own autoloader and `Api\Client` (the plugin is not
+  loaded during uninstall), only when the vault holds a readable key; whatever OmnaBase answers, the removal goes on. A never-connected site
+  makes no call. Uninstall also removes the option `omnabase_display` and the user meta `omnabase_portal_draft`.
+- **readme.txt**: the description, a Shortcodes subsection, installation, seven FAQs, "External services" per piece (what is sent and when,
+  what comes back, nothing before you connect, the terms and privacy links), "Privacy" (what is stored on the site, the export and erase
+  tools, OmnaBase's own copy), the changelog.
+
+**Test adjustments (each with its reason in the test's comment).**
+
+1. `cron-health.spec.ts`: a 2.5-second wait after each wp-config.php change before the page view. wp-env's WordPress container keeps
+   compiled PHP for 2 seconds (`opcache.revalidate_freq = 2`), so in the full suite the page right after removing `DISABLE_WP_CRON` still ran
+   the old wp-config.php and showed the warning; alone it passed. The assertions are unchanged.
+
+**Left for later** (see "M13: done" for the whole list): nothing of round six's own.
+
+## 2026-10-09 — M13: done
+
+M13 (OmnaBase's brief `docs/briefs/m13-wordpress-plugin.md`, draft 2, the founder's Go with the defaults on 2026-10-09) is built: a round
+zero (the workshop) and six rounds, in this repository, with OmnaBase-side changes in rounds zero, one, three, four and five (recorded in
+OmnaBase's DECISIONS, "M13: done" there points here). Red-team tests over the six rounds: 370 in this repository (68, 118, 56, 42, 50, 36)
+and 31 in OmnaBase (rounds one to six: 8, 0, 6, 8, 7, 2); all green; in this repository eight were adjusted, each with its reason
+in its round's entry. Not deployed anywhere, not released: the first zip waits for the founder's test.
+
+**What the plugin does** (version 0.1.0, PHP 8.1+, WordPress 6.8+):
+
+- **Connect** from Settings › OmnaBase in one approval (PKCE, one server-side exchange, no key to copy); the key and both secrets encrypted in
+  the vault; two signed receivers (`/wp-json/omnabase/v1/events`, `/customer`); Check connection both ways; Disconnect stops the key.
+- **Customer data on every ticket** from the sources the owner switches on (the profile with picked user fields, WooCommerce and EDD orders,
+  WooCommerce Subscriptions and EDD Recurring, EDD Software Licensing and License Manager licences), shaped to OmnaBase's facts contract,
+  keys masked; licence changes refresh OmnaBase's copy through the outbox.
+- **bbPress forums**: topics in marked forums become tickets, the author's and moderators' replies reach them, the team's answers come back
+  as forum replies by the support user, optionally closing the topic on resolve.
+- **`[omnabase_form]`**: the contact form with the project's products, licence field and privacy link, a time token, a honeypot and limits.
+- **`[omnabase_messages]`**: the message centre on the picked page (never cached), the visitor always the signed-in user; the confirm prompt
+  before mail conversations and forum topics show; a "Support" link in WooCommerce's My Account when switched on.
+- **The outbox** for every call that matters, worked by WP-Cron every minute, never dropping a row (Send now, Retry, Discard).
+- **Ready to hand out**: the readme, the privacy text, an exporter and an eraser, every string translatable with the `.pot`, Plugin Check
+  clean on the zip, uninstall removing everything after a best-effort `DELETE /me`, the zip proven on a clean WordPress.
+
+**The founder's test on a real site** (the brief's last step; the plugin's flows only prove wp-env against OmnaBase's e2e server):
+
+1. Deploy OmnaBase first: the plugin needs M12's API and M13's OmnaBase-side changes (`DELETE /me`, `/me/ping`, `siteAuthor`, the keyed form
+   route and `GET /forms/{slug}`, the portal's forum topics and the cleared confirmation), all built and not yet deployed.
+2. A real WordPress with a **public https address**, at the domain's root, pretty permalinks, and **PHP 8.1 or newer** (Tools › Site Health ›
+   Info › Server shows the PHP version; check before installing).
+3. Build the zip here (`bin/build-dist.sh`; the development zip has the release's files), upload it under Plugins › Add New Plugin › Upload,
+   activate, open Settings › OmnaBase and Connect to Team Kriesi (or a test workspace).
+4. Try each piece once: Check connection both ways; switch on a customer-data source and open a buyer's ticket; mark a forum, post a topic as a
+   customer, answer it in OmnaBase and see the reply on the forum; put `[omnabase_form]` on a page and send; pick a message-centre page, sign
+   in as a customer, ask a question, confirm the mailed link; read Settings › Privacy › Policy Guide; export a test customer's personal data.
+5. Deactivate and delete the plugin: the site's key reads as revoked under Settings › Integrations › API keys in OmnaBase.
+6. Then the release: date the changelog's section (`= 0.1.0 — <date> =`), `bin/build-dist.sh --release` (checks PHP 8.1 syntax in wp-env)
+   gives `build/dist/omnabase-0.1.0.zip`; copy the dated heading's lines into readme.txt's Changelog if they changed.
+
+**Open items for later** (none blocks the founder's test):
+
+- From round two: a registered user's earlier guest orders are not shown; License Manager's guest licences are not read; an administrator's
+  edit inside License Manager alone refreshes nothing until the order changes (License Manager 3.0.20 fires no event for it).
+- From round three: a topic edited between a lost answer and the retry meets `idempotency_mismatch` (Retry fixes it; fixing the body at the
+  first try would avoid it); closed topics are never reopened (a follow-up is a new topic); topics published before their forum was marked are
+  never filed; two deliveries of one message at the same moment could both post.
+- From round four: the form's limits are transients, not atomic (a burst could overshoot by a few; OmnaBase's own limits stand behind).
+- The browser flows: the shared connect and sign-in helpers of `facts.spec.ts` and `forum.spec.ts` are still separate; wp-env's tests site
+  on 8889 moves to `--config .wp-env.tests.json` once wp-env stops starting it by default; the e2e server shares OmnaBase's port 3011.
+- Out of scope by the brief: Gutenberg blocks, multisite, the WordPress.org submission, other forum plugins, attachments, translations beyond
+  the `.pot`, an update server.
+
+**The paid add-ons' fakes**: WooCommerce Subscriptions, EDD Recurring and EDD Software Licensing are proven only against the fakes in
+`tests/fakes/` (loaded by the wp-env harness when the real add-on is absent, never shipped). When the founder drops the real zips into
+`paid/`, map them in `.wp-env.override.json` (git-ignored), and run `composer test:integration` and `npx playwright test tests/e2e/facts.spec.ts`
+against them; the sources read only the add-ons' public functions, and "unsupported version" names any that is too old.

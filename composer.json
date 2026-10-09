@@ -41,6 +41,7 @@
         "test:unit": "phpunit --testsuite unit",
         "test:structure": "phpunit --testsuite structure",
         "test:integration": "bin/test-integration.sh",
+        "i18n:pot": "bin/make-pot.sh",
         "lint": "phpcs",
         "lint:fix": "phpcbf"
     }

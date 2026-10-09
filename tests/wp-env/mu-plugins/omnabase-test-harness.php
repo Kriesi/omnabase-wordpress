@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: OmnaBase test harness (wp-env only)
- * Description: The local WordPress's test plumbing. Mapped into wp-env's mu-plugins by .wp-env.json; never part of the plugin's zip.
+ * Description: The local WordPress's test plumbing. Mapped into wp-env's mu-plugins by .wp-env.json (and .wp-env.fresh.json, round six's clean WordPress); never part of the plugin's zip.
  *
  * Four things, all inert unless wp-config.php defines OMNABASE_TEST_MODE (wp-env's config does) on a `local` environment:
  *

@@ -3,7 +3,8 @@
  * The message centre `[omnabase_messages]`. Rendered by `Portal\Views`; everything printed is escaped, a message's words as text. The views:
  * `login` (a visitor not signed in), `refused` (OmnaBase refused the user), `down` (OmnaBase could not be asked), `list` (the tickets, the
  * confirm prompt, New ticket), `thread` (one ticket and Reply), `missing` (no such ticket of this visitor's). Every form posts back to the
- * page with the nonce; the page is never cached, so the New ticket form's token may be printed in it.
+ * page with the nonce; the page is never cached, so the New ticket form's token may be printed in it, and so may the words of a refused New
+ * ticket (round six: the same user's own, escaped).
  *
  * @package OmnaBase
  *
@@ -122,13 +123,13 @@ $omnabase_view = (string) $omnabase_messages['view'];
 			<p class="ob-wp-messages__field">
 				<label>
 					<span class="ob-wp-messages__label"><?php esc_html_e( 'Subject', 'omnabase' ); ?></span>
-					<input class="ob-wp-messages__input" type="text" name="subject" value="" maxlength="200" required>
+					<input class="ob-wp-messages__input" type="text" name="subject" value="<?php echo esc_attr( $omnabase_messages['draft']['subject'] ); ?>" maxlength="200" required>
 				</label>
 			</p>
 			<p class="ob-wp-messages__field">
 				<label>
 					<span class="ob-wp-messages__label"><?php esc_html_e( 'Message', 'omnabase' ); ?></span>
-					<textarea class="ob-wp-messages__input ob-wp-messages__text" name="message" rows="6" maxlength="50000" required></textarea>
+					<textarea class="ob-wp-messages__input ob-wp-messages__text" name="message" rows="6" maxlength="50000" required><?php echo esc_textarea( $omnabase_messages['draft']['message'] ); ?></textarea>
 				</label>
 			</p>
 			<div class="ob-wp-form__trap" aria-hidden="true">

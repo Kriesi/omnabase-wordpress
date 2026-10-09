@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Portal;
 
+use OmnaBase\WordPress\Forms\Display;
 use OmnaBase\WordPress\Forms\Projects;
 use OmnaBase\WordPress\Forms\Shortcode as FormShortcode;
 use OmnaBase\WordPress\PluginInfo;
@@ -31,8 +32,9 @@ final class Shortcode {
 	 * @param Projects   $projects Whether the site is connected.
 	 * @param Centre     $centre   The signed-in view's model.
 	 * @param Views      $views    The output.
+	 * @param Display    $display  The "theme styles only" switch.
 	 */
-	public function __construct( private PluginInfo $info, private PickedPage $page, private Projects $projects, private Centre $centre, private Views $views ) {}
+	public function __construct( private PluginInfo $info, private PickedPage $page, private Projects $projects, private Centre $centre, private Views $views, private Display $display ) {}
 
 	/** Registers the shortcode. */
 	public function register(): void {
@@ -73,12 +75,11 @@ final class Shortcode {
 		return $this->views->loggedOut( $this->page->url() );
 	}
 
-	/** Queues the message centre's small script and the front-end stylesheet it shares with the form (the same filter switches it off). */
+	/** Queues the message centre's small script and the stylesheet it shares with the form (the same switch and filter keep it away). */
 	private function enqueue(): void {
 		$version = $this->info->version();
 		wp_enqueue_script( 'omnabase-messages', plugins_url( 'assets/messages.js', $this->info->mainFile() ), array(), $version, array( 'in_footer' => true, 'strategy' => 'defer' ) );
-		/** This filter is documented in src/Forms/Shortcode.php. */
-		if ( apply_filters( 'omnabase_form_styles', true ) ) {
+		if ( $this->display->wantsStylesheet() ) {
 			wp_enqueue_style( 'omnabase-form', plugins_url( 'assets/form.css', $this->info->mainFile() ), array(), $version );
 		}
 	}

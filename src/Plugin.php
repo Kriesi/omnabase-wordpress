@@ -10,16 +10,19 @@ namespace OmnaBase\WordPress;
 use OmnaBase\WordPress\Admin\Actions;
 use OmnaBase\WordPress\Admin\ConnectionView;
 use OmnaBase\WordPress\Admin\DataActions;
+use OmnaBase\WordPress\Admin\DisplayActions;
 use OmnaBase\WordPress\Admin\FactsView;
 use OmnaBase\WordPress\Admin\Flash;
 use OmnaBase\WordPress\Admin\ForumActions;
 use OmnaBase\WordPress\Admin\ForumView;
 use OmnaBase\WordPress\Admin\Health;
+use OmnaBase\WordPress\Admin\HealthNotes;
 use OmnaBase\WordPress\Admin\Notices;
 use OmnaBase\WordPress\Admin\OutboxView;
 use OmnaBase\WordPress\Admin\PortalActions;
 use OmnaBase\WordPress\Admin\PortalView;
 use OmnaBase\WordPress\Admin\SettingsScreen;
+use OmnaBase\WordPress\Admin\ShortcodesView;
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Api\Loopback;
 use OmnaBase\WordPress\Connect\ConnectionInfo;
@@ -27,6 +30,7 @@ use OmnaBase\WordPress\Connect\ConnectState;
 use OmnaBase\WordPress\Connect\Disconnect;
 use OmnaBase\WordPress\Connect\Flow;
 use OmnaBase\WordPress\Connect\SiteCheck;
+use OmnaBase\WordPress\Forms\Display;
 use OmnaBase\WordPress\Rest\Customer;
 use OmnaBase\WordPress\Rest\DeliveryLog;
 use OmnaBase\WordPress\Rest\Events;
@@ -42,7 +46,8 @@ defined( 'ABSPATH' ) || exit;
  * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form and its two
  * routes (`Forms`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum
  * settings, the message centre's page, the customer-data switches, Retry and Discard) and the "reconnect needed" notice. Everywhere too: the
- * message centre (`Portal`: its shortcode, form posts, no-cache marking and the profile watcher).
+ * message centre (`Portal`: its shortcode, form posts, no-cache marking, the profile watcher, My Account's link), and the privacy text,
+ * exporter and eraser (`Privacy`).
  */
 final class Plugin {
 
@@ -66,6 +71,7 @@ final class Plugin {
 		( new Forms( $this->info, $vault, $data ) )->register();
 		$portal = new Portal( $this->info, $vault, $data );
 		$portal->register();
+		( new Privacy( $data ) )->register();
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
 		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {
@@ -97,21 +103,36 @@ final class Plugin {
 		$flow    = new Flow( $client, $vault, new ConnectState( $vault ), $info, $site, $health );
 		$actions = new Actions( $flow, new Disconnect( $client, $vault, $info, $health, $ping ), $health, $flash );
 		$actions->register();
-		( new DataActions( $data->switches, $data->sources, $data->table, $flash ) )->register();
+		$display = new Display();
+		( new DataActions( $data->switches, $data->sources, $data->table, $data->queue, $flash ) )->register();
 		( new ForumActions( $forum->settings, $flash ) )->register();
 		( new PortalActions( $portal->page, $flash ) )->register();
-		$connection = new ConnectionView( $vault, $client, $info, $site );
-		$facts      = new FactsView( $data->switches, $data->sources, $data->log );
-		$outbox     = new OutboxView( $data->table, $data->worker );
-		$sections   = array(
-			'connection' => array( $connection, 'build' ),
+		( new DisplayActions( $display, $flash ) )->register();
+		$sections = array(
+			'connection' => array( new ConnectionView( $vault, $client, $info, $site ), 'build' ),
 			'health'     => array( $health, 'view' ),
-			'forum'      => array( new ForumView( $forum->settings ), 'build' ),
-			'portal'     => array( new PortalView( $portal->page ), 'build' ),
-			'facts'      => array( $facts, 'build' ),
-			'outbox'     => array( $outbox, 'build' ),
-		);
+		) + $this->settingsSections( $data, $forum, $portal, $display );
 		( new SettingsScreen( $this->info, $flash, $actions, $sections ) )->register();
 		( new Notices( $vault ) )->register();
+	}
+
+	/**
+	 * The screen's sections below the connection and its health, each a view to build at render time.
+	 *
+	 * @param CustomerData $data    The customer-data parts.
+	 * @param Forums       $forum   The forum parts.
+	 * @param Portal       $portal  The message centre's parts.
+	 * @param Display      $display The front-end switches.
+	 * @return array<string,callable():array>
+	 */
+	private function settingsSections( CustomerData $data, Forums $forum, Portal $portal, Display $display ): array {
+		return array(
+			'healthNotes' => array( new HealthNotes( $data->log ), 'build' ),
+			'forum'       => array( new ForumView( $forum->settings ), 'build' ),
+			'portal'      => array( new PortalView( $portal->page ), 'build' ),
+			'shortcodes'  => array( new ShortcodesView( $display ), 'build' ),
+			'facts'       => array( new FactsView( $data->switches, $data->sources, $data->log ), 'build' ),
+			'outbox'      => array( new OutboxView( $data->table, $data->worker ), 'build' ),
+		);
 	}
 }

@@ -52,6 +52,12 @@ final class Options {
 	public const PORTAL = 'omnabase_portal';
 
 	/**
+	 * The front-end switches (round six): `[ 'theme_only' => bool, 'my_account' => bool ]`, the "theme styles only" switch and WooCommerce's
+	 * My Account "Support" link; both off when missing. Read and written by `Forms\Display` alone.
+	 */
+	public const DISPLAY = 'omnabase_display';
+
+	/**
 	 * All options, for uninstall.php and the structure guard.
 	 */
 	public const ALL = array(
@@ -66,6 +72,7 @@ final class Options {
 		self::DB_VERSION,
 		self::FORUM,
 		self::PORTAL,
+		self::DISPLAY,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */
@@ -85,6 +92,12 @@ final class Options {
 
 	/** User meta: when the user asked the message centre for a confirmation link, the last day's times (three a day, round five). */
 	public const PORTAL_LINKS_META = 'omnabase_portal_links';
+
+	/**
+	 * User meta: the words of a New ticket that OmnaBase refused (round six), `[ 'subject', 'message', 'at' ]`, shown again in that user's
+	 * form for an hour and forgotten after a successful New ticket.
+	 */
+	public const PORTAL_DRAFT_META = 'omnabase_portal_draft';
 
 	/** Post meta: the OmnaBase ticket number a topic became. */
 	public const TICKET_META = '_omnabase_ticket';

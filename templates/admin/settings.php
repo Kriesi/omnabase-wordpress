@@ -4,13 +4,13 @@
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>,forum:array<string,mixed>,portal:array<string,mixed>,facts:array<string,mixed>,outbox:array<string,mixed>} $view
+ * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>,healthNotes:array{factsAt:int,cronOff:bool},forum:array<string,mixed>,portal:array<string,mixed>,shortcodes:array<string,mixed>,facts:array<string,mixed>,outbox:array<string,mixed>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
 
 $omnabase_connection = $view['connection'];
-$omnabase_health     = $view['health'];
+$omnabase_health     = $view['health'] + $view['healthNotes'];
 ?>
 <div class="wrap ob-wp-settings">
 	<h1><?php esc_html_e( 'OmnaBase', 'omnabase' ); ?></h1>
@@ -51,12 +51,14 @@ $omnabase_health     = $view['health'];
 	<?php endif; ?>
 
 	<?php
-	$omnabase_forum  = $view['forum'];
-	$omnabase_facts  = $view['facts'];
-	$omnabase_outbox = $view['outbox'];
-	$omnabase_portal = $view['portal'];
+	$omnabase_forum      = $view['forum'];
+	$omnabase_facts      = $view['facts'];
+	$omnabase_outbox     = $view['outbox'];
+	$omnabase_portal     = $view['portal'];
+	$omnabase_shortcodes = $view['shortcodes'];
 	require __DIR__ . '/partials/forum.php';
 	require __DIR__ . '/partials/portal.php';
+	require __DIR__ . '/partials/shortcodes.php';
 	require __DIR__ . '/partials/facts.php';
 	require __DIR__ . '/partials/outbox.php';
 	require __DIR__ . '/partials/deliveries.php';

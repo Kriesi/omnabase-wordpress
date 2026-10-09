@@ -1,5 +1,6 @@
 {
   "name": "omnabase-wordpress",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "OmnaBase for WordPress: the local WordPress (wp-env) and the browser flows (Playwright). The plugin itself is PHP; see composer.json.",
@@ -14,6 +15,8 @@
     "seed": "bin/seed.sh",
     "e2e": "playwright test",
     "dist": "bin/build-dist.sh",
+    "pot": "bin/make-pot.sh",
+    "env:fresh": "wp-env start --config=.wp-env.fresh.json",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {

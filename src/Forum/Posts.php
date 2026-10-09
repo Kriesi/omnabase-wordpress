@@ -147,18 +147,18 @@ final class Posts {
 	 * @param string $message_id OmnaBase's message id.
 	 */
 	public static function postedFor( string $message_id ): int {
-		$found = get_posts(
+		$query = new \WP_Query(
 			array(
-				'post_type'        => bbp_get_reply_post_type(),
-				'post_status'      => array_keys( get_post_stati() ),
-				'meta_key'         => Options::MESSAGE_META, // phpcs:ignore WordPress.DB.SlowDBQuery -- one indexed meta key, at most one row.
-				'meta_value'       => $message_id, // phpcs:ignore WordPress.DB.SlowDBQuery
-				'fields'           => 'ids',
-				'numberposts'      => 1,
-				'suppress_filters' => true,
+				'post_type'      => bbp_get_reply_post_type(),
+				'post_status'    => array_keys( get_post_stati() ),
+				'meta_key'       => Options::MESSAGE_META, // phpcs:ignore WordPress.DB.SlowDBQuery -- one indexed meta key, at most one row.
+				'meta_value'     => $message_id, // phpcs:ignore WordPress.DB.SlowDBQuery
+				'fields'         => 'ids',
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
 			)
 		);
-		return (int) ( $found[0] ?? 0 );
+		return (int) ( $query->posts[0] ?? 0 );
 	}
 
 	/**

@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/wp-env.json",
+	"core": null,
+	"phpVersion": "8.1",
+	"port": 8890,
+	"testsEnvironment": false,
+	"plugins": [],
+	"mappings": {
+		"wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
+	},
+	"config": {
+		"WP_ENVIRONMENT_TYPE": "local",
+		"OMNABASE_TEST_MODE": true,
+		"OMNABASE_TEST_HOST": "fresh.omnabase.test"
+	}
+}

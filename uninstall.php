@@ -9,12 +9,24 @@
  * `{prefix}omnabase_outbox`. Round three: the forum settings, the ticket number on every topic and OmnaBase's message id on every reply the
  * plugin posted (post meta), the subscriber-mail jobs. Round four: what the shortcode form keeps as transients (the time tokens, the counted
  * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Round five: the message centre's picked page (option), each user's fingerprint and
- * confirmation-link times (user meta). Still to come: the best-effort `DELETE /me` (round six).
+ * confirmation-link times (user meta). Round six: first a best-effort `DELETE /me` that stops the site's key at OmnaBase (only when the vault
+ * holds a readable key; whatever OmnaBase answers, the removal goes on), then the front-end switches (option) and the message centre's kept
+ * words of a refused question (user meta).
  *
  * @package OmnaBase
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
+
+// Best effort, before the vault goes: OmnaBase stops this site's key (and with it the site's own webhook addresses). The plugin is not
+// loaded during uninstall, so its autoloader is required here; a site that never connected makes no call.
+if ( is_readable( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+	$omnabase_vault = new \OmnaBase\WordPress\Security\Vault();
+	if ( \OmnaBase\WordPress\Security\Vault::OK === $omnabase_vault->state() ) {
+		( new \OmnaBase\WordPress\Api\Client( $omnabase_vault ) )->revoke();
+	}
+}
 
 $omnabase_options = array(
 	'omnabase_vault',
@@ -28,6 +40,7 @@ $omnabase_options = array(
 	'omnabase_db_version',
 	'omnabase_forum',
 	'omnabase_portal',
+	'omnabase_display',
 );
 
 foreach ( $omnabase_options as $omnabase_option ) {
@@ -39,9 +52,10 @@ delete_metadata( 'user', 0, 'omnabase_pending_connect', '', true );
 delete_metadata( 'user', 0, 'omnabase_site_id', '', true );
 delete_metadata( 'user', 0, 'omnabase_known', '', true );
 
-// The message centre's per-user fingerprint and its record of confirmation links asked for.
+// The message centre's per-user fingerprint, its record of confirmation links asked for, and the kept words of a refused question.
 delete_metadata( 'user', 0, 'omnabase_portal_fingerprint', '', true );
 delete_metadata( 'user', 0, 'omnabase_portal_links', '', true );
+delete_metadata( 'user', 0, 'omnabase_portal_draft', '', true );
 
 // Every topic's ticket number and every posted reply's OmnaBase message id.
 delete_post_meta_by_key( '_omnabase_ticket' );

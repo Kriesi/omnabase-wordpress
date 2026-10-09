@@ -21,4 +21,13 @@ section is never changed again. At release the top section is copied into readme
 * Added: A message centre for signed-in customers: put [omnabase_messages] on the page you pick under Settings › OmnaBase, and customers read their tickets, answer them and ask new questions there; their earlier email conversations and forum topics show once they confirm their address through a link we mail them.
 * Added: The message centre's page is never cached, also when a page builder made it, and [omnabase_messages guest="form"] gives visitors who are not signed in the contact form instead of a login link.
 * Added: When a customer changes their email address in WordPress, OmnaBase learns the new address and the message centre asks them to confirm it again.
-* Added: Settings › OmnaBase lists the plugin's shortcodes.
+* Added: Settings › OmnaBase has a Shortcodes section that explains both shortcodes and each of their options.
+* Added: WooCommerce's My Account menu can show a "Support" link to the message centre (a switch under Settings › OmnaBase, off until you turn it on).
+* Added: A "theme styles only" switch: the contact form and the message centre then follow your theme's look alone.
+* Added: A suggested privacy-policy text under Settings › Privacy names OmnaBase and what each feature sends; WordPress's tools to export and erase personal data now include what the plugin stores.
+* Added: "Send now" on the outbox sends a waiting call at once instead of at its next try.
+* Added: Health shows when OmnaBase last asked your site for customer data, and warns when WP-Cron is turned off on your site.
+* Added: The customer-data settings say when a shop plugin is older than the version the plugin supports.
+* Added: When a new question in the message centre cannot be sent, the customer finds their words still in the form.
+* Added: Ready for translation: every text on screen can be translated, with a translation template included.
+* Added: Deleting the plugin also stops the site's key at OmnaBase.

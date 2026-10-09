@@ -14,8 +14,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only: the connection (Connect, Disconnect,
- * Check connection), its health, the forums, the customer-data switches, the outbox and the last webhook deliveries. The way back from OmnaBase's
- * connect page arrives here too, handled at the page's load hook before anything is printed. Round three adds the forum section.
+ * Check connection), its health, the forums, the message centre, the shortcodes, the customer-data switches, the outbox and the last
+ * webhook deliveries. The way back from OmnaBase's connect page arrives here too, handled at the page's load hook before anything is
+ * printed.
  */
 final class SettingsScreen {
 
@@ -28,7 +29,8 @@ final class SettingsScreen {
 	 * @param PluginInfo                    $info     The header fields (the version shown in the footer line).
 	 * @param Flash                         $flash    The message from the last action.
 	 * @param Actions                       $actions  The way back's handler.
-	 * @param array<string,callable():array> $sections Each section's view by name (`connection`, `health`, `forum`, `facts`, `outbox`).
+	 * @param array<string,callable():array> $sections Each section's view by name (`connection`, `health`, `healthNotes`, `forum`, `portal`,
+	 *                                                 `shortcodes`, `facts`, `outbox`).
 	 */
 	public function __construct( private PluginInfo $info, private Flash $flash, private Actions $actions, private array $sections ) {}
 

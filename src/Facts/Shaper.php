@@ -25,6 +25,9 @@ final class Shaper {
 	public const ITEMS = 20;
 
 	/** The order in which sections are left out of an answer that is too large. */
+	/** The log's name for "the oldest licences left out" (the screen words it, `Admin\FactsView`). */
+	public const OLDEST_LICENCES = 'licences_oldest';
+
 	private const DROP_ORDER = array( 'profile', 'subscriptions', 'orders', 'licences' );
 
 	private const ORDER        = array( 'number' => array( 60, true ), 'date' => array( 40, false ), 'total' => array( 60, false ), 'status' => array( 60, false ) );
@@ -219,7 +222,7 @@ final class Shaper {
 		}
 		while ( self::size( $block ) > self::BUDGET && ! empty( $block['licences'] ) ) {
 			array_pop( $block['licences'] );
-			$dropped = array_values( array_unique( array_merge( $dropped, array( 'licences (the oldest)' ) ) ) );
+			$dropped = array_values( array_unique( array_merge( $dropped, array( self::OLDEST_LICENCES ) ) ) );
 		}
 		return array( $block, $dropped );
 	}

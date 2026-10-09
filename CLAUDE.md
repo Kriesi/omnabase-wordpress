@@ -21,14 +21,19 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
 
 - `omnabase.php` the header and the start; `uninstall.php` removes everything the plugin stores (a list that grows with every option, table,
   meta key and scheduled job: add yours there in the same change).
-- `src/` by concern: `Api Connect Security Rest Outbox Facts Sync Forum Forms Portal Admin Privacy` (most arrive in later rounds).
-  `Plugin` is the hand-wired container; each part registers its own hooks. `Options::ALL` lists every option name.
-- `templates/` the PHP templates (escape everything on output); `assets/` CSS and JS; `languages/` the `.pot`.
+- `src/` by concern: `Api Connect Security Rest Outbox Facts Sync Forum Forms Portal Admin Privacy`. `Plugin` is the hand-wired
+  container (with `CustomerData`, `Forums`, `Forms`, `Portal`, `Privacy`); each part registers its own hooks. `Options::ALL` lists every
+  option name; the user and post meta names and transient prefixes are on `Options` too.
+- `templates/` the PHP templates (escape everything on output); `assets/` CSS and JS; `languages/omnabase.pot` the translation template
+  (committed; regenerate it with `bin/make-pot.sh` after changing any translated sentence: the structure guard and the release check
+  compare it with the code).
 - `tests/Unit` (brain/monkey), `tests/Structure` (file-level guards), `tests/Integration` (inside wp-env), `tests/e2e` (Playwright),
   `tests/wp-env/mu-plugins` the local test harness (never shipped), `tests/fakes` the paid add-ons' fakes (from round two; the harness
   loads them in the development WordPress when the real add-on is absent).
-- `bin/` the scripts: `seed.sh`, `build-dist.sh`, `check-version.sh`, `test-integration.sh`, `omnabase-e2e.sh`, `build-form-css.php` (the
-  form's `assets/form.css` from OmnaBase's kit tokens and `styles/form.css`, the source of its rules; the result is committed).
+- `bin/` the scripts: `seed.sh`, `build-dist.sh` (`--release` for the customer zip), `check-version.sh` (the header, `OMNABASE_VERSION`,
+  readme.txt's Stable tag, the changelog's top section, `package.json`'s version), `make-pot.sh` (the `.pot` through `wp i18n make-pot` in
+  wp-env; also `composer i18n:pot`, `npm run pot`), `test-integration.sh`, `omnabase-e2e.sh`, `build-form-css.php` (the form's
+  `assets/form.css` from OmnaBase's kit tokens and `styles/form.css`, the source of its rules; the result is committed).
 - `paid/` (git-ignored): the founder's paid add-on zips when he has them (WooCommerce Subscriptions, EDD Software Licensing, EDD Recurring).
 
 ## The rounds and the red team
@@ -56,7 +61,8 @@ first public release on, a site's stored data is migrated and nothing a site hol
   a nonce and `current_user_can( 'manage_options' )` on every admin action, a real `permission_callback` on every REST route (the named
   exceptions: the two signed receivers, the form and its time-token route, each with its own check). The key and the secrets are read only
   by the vault (from round one) and never reach HTML, JS or a log.
-- Every runtime file starts with `defined( 'ABSPATH' ) || exit;`. Strings are translatable with the `omnabase` text domain.
+- Every runtime file starts with `defined( 'ABSPATH' ) || exit;`. Every word a person reads goes through `__()`/`esc_html__()`/… with the
+  `omnabase` text domain, also labels built in `src/` and shown later (the structure guard scans for bare strings and prose).
 - Outgoing calls go to one pinned host (`https://app.omnabase.com`; `OMNABASE_API_URL` points a development site elsewhere, and the screen
   says so), certificates checked, no redirects.
 - Test-only code lives under `tests/` (the wp-env harness), never in `src/`: the structure guard refuses `OMNABASE_TEST_MODE` there.
@@ -82,8 +88,13 @@ customer-visible change, no class or file names.
   with bbPress loaded; all three must pass.
 - **Browser flows** (Playwright against wp-env with OmnaBase's e2e server as the backend): `npx playwright test`. Needs `npx wp-env start`,
   `bin/seed.sh`, Node 22 and OmnaBase's e2e server (below).
+- **The release checks** run with the flows (they need wp-env): `release.spec.ts` builds the zip, checks its contents, runs Plugin Check
+  on it (no error allowed; warnings listed) and compares the `.pot`; `uninstall.spec.ts` deletes the plugin's data from the development
+  WordPress the way WordPress does and expects one `DELETE /me`; `fresh.spec.ts` installs the zip on the fresh WordPress (below);
+  `cron-health.spec.ts` sets `DISABLE_WP_CRON` for one page view.
 - Finish a round with: `composer lint`, `composer test`, `composer test:integration`, `npm run typecheck` (the flows' TypeScript),
-  `npx playwright test`, `bin/build-dist.sh`.
+  `npx playwright test`, `bin/build-dist.sh`. Plugin Check by hand: unzip the zip into `build/check/` and run
+  `npx wp-env run cli -- wp plugin check /var/www/html/wp-content/plugins/omnabase/build/check/omnabase`.
 - CI (`.github/workflows/checks.yml`) runs only when started by hand (workflow_dispatch): phpcs and the unit and structure tests.
 
 ## The local WordPress (wp-env) and the ports
@@ -95,6 +106,13 @@ customer-visible change, no class or file names.
   must-use plugin. **8889**: the tests environment (its own database) for the integration layer. wp-env 11 still starts both by default and
   warns that this is deprecated; when it stops, the tests environment moves to `--config .wp-env.tests.json` (DECISIONS).
 - WP-CLI: `npx wp-env run cli -- wp <command>`; the harness adds `wp omnabase-test set-key <key>` and `forget-key` (test mode only).
+- **8890: the fresh WordPress** (`.wp-env.fresh.json`, its own containers and database): PHP 8.1, no plugins, only the harness's must-use
+  plugin mapped (test host `https://fresh.omnabase.test`), never this repository, so uploading and deleting the zip there cannot touch the
+  source. `fresh.spec.ts` starts it when it does not answer and resets it with `npx wp-env clean all --config=.wp-env.fresh.json --force`
+  (without `--force` wp-env waits for y/N). By hand: `npm run env:fresh`; WP-CLI there: `npx wp-env run --config=.wp-env.fresh.json cli -- wp
+  …`; stop it with `npx wp-env stop --config=.wp-env.fresh.json`.
+- wp-env's PHP keeps compiled files for 2 seconds (`opcache.revalidate_freq`): after changing wp-config.php through WP-CLI, wait that long
+  before the next page view.
 - **The harness's network**: the browser opens `https://wp.omnabase.test`; Playwright's route hands each request to `http://localhost:8888`
   with `X-Forwarded-Host`/`-Proto`, and the must-use plugin makes WordPress answer as https at that host. WordPress (in Docker) reaches
   OmnaBase's e2e server at `http://host.docker.internal:3011` (`OMNABASE_API_URL` in `.wp-env.json`). OmnaBase reaches WordPress through

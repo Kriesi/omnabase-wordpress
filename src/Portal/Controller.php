@@ -38,8 +38,9 @@ final class Controller {
 	 * @param Requests   $requests The writes.
 	 * @param Projects   $projects The key's projects.
 	 * @param Guard      $guard    Round four's trap field.
+	 * @param Draft      $draft    The kept words of a refused New ticket.
 	 */
-	public function __construct( private PickedPage $page, private Visitor $visitor, private Requests $requests, private Projects $projects, private Guard $guard ) {}
+	public function __construct( private PickedPage $page, private Visitor $visitor, private Requests $requests, private Projects $projects, private Guard $guard, private Draft $draft ) {}
 
 	/** Registers the hook. */
 	public function register(): void {
@@ -53,7 +54,25 @@ final class Controller {
 		if ( 'POST' !== $method || '' === $action || ! $this->page->isCurrent() ) {
 			return;
 		}
-		$this->back( $this->outcome( $action ) );
+		$result = $this->outcome( $action );
+		if ( self::NEW_TICKET === $action ) {
+			$this->remember( $result['notice'] );
+		}
+		$this->back( $result );
+	}
+
+	/**
+	 * A New ticket's words: forgotten once it went, kept for the same user when it was refused (nothing for a trap or a refused user).
+	 *
+	 * @param string $notice What the post led to.
+	 */
+	private function remember( string $notice ): void {
+		$user_id = get_current_user_id();
+		if ( Notices::CREATED === $notice ) {
+			$this->draft->forget( $user_id );
+		} elseif ( '' !== $notice ) {
+			$this->draft->keep( $user_id, self::posted( 'subject' ), self::posted( 'message' ) );
+		}
 	}
 
 	/**

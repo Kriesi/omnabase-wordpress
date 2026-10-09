@@ -27,8 +27,9 @@ final class Centre {
 	 * @param PickedPage $page    The picked page.
 	 * @param Visitor    $visitor Who the user is to OmnaBase.
 	 * @param PortalApi  $api     The calls.
+	 * @param Draft      $draft   The kept words of a refused New ticket.
 	 */
-	public function __construct( private PickedPage $page, private Visitor $visitor, private PortalApi $api ) {}
+	public function __construct( private PickedPage $page, private Visitor $visitor, private PortalApi $api, private Draft $draft ) {}
 
 	/**
 	 * The model for the signed-in user's view.
@@ -82,6 +83,7 @@ final class Centre {
 			'first'    => '' === $after ? '' : $this->page->url(),
 			'token'    => Requests::token(),
 			'honeypot' => Guard::HONEYPOT,
+			'draft'    => $this->draft->of( $user_id ),
 		);
 	}
 

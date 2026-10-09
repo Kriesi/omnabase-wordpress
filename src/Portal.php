@@ -9,11 +9,14 @@ namespace OmnaBase\WordPress;
 
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Connect\ConnectionInfo;
+use OmnaBase\WordPress\Forms\Display;
 use OmnaBase\WordPress\Forms\Guard;
 use OmnaBase\WordPress\Forms\Projects;
 use OmnaBase\WordPress\Portal\Centre;
 use OmnaBase\WordPress\Portal\Controller;
+use OmnaBase\WordPress\Portal\Draft;
 use OmnaBase\WordPress\Portal\LinkLimit;
+use OmnaBase\WordPress\Portal\MyAccountLink;
 use OmnaBase\WordPress\Portal\NoCache;
 use OmnaBase\WordPress\Portal\PickedPage;
 use OmnaBase\WordPress\Portal\PortalApi;
@@ -30,7 +33,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Part of the hand-wired container (`Plugin`): `[omnabase_messages]` and its form posts on the picked page, the no-cache marking at
- * `send_headers`, and the watcher that tells OmnaBase a known user's new address. `register()` hooks them once per request, however often
+ * `send_headers`, the watcher that tells OmnaBase a known user's new address, and WooCommerce's My Account "Support" link (round six). `register()` hooks them once per request, however often
  * the plugin is booted. The settings screen's section lives with the admin parts (`Admin\PortalView`, `Admin\PortalActions`).
  */
 final class Portal {
@@ -40,6 +43,7 @@ final class Portal {
 	private readonly Controller $controller;
 	private readonly NoCache $nocache;
 	private readonly ProfileWatcher $watcher;
+	private readonly MyAccountLink $account;
 
 	private static bool $registered = false;
 
@@ -55,14 +59,17 @@ final class Portal {
 		$known            = new KnownUsers();
 		$visitor          = new Visitor( $api, new SiteId(), $known );
 		$projects         = new Projects( new ConnectionInfo(), $vault );
+		$draft            = new Draft();
+		$display          = new Display();
 		$this->page       = new PickedPage();
-		$this->shortcode  = new Shortcode( $info, $this->page, $projects, new Centre( $this->page, $visitor, $api ), new Views( $info ) );
-		$this->controller = new Controller( $this->page, $visitor, new Requests( $api, new LinkLimit() ), $projects, new Guard() );
+		$this->shortcode  = new Shortcode( $info, $this->page, $projects, new Centre( $this->page, $visitor, $api, $draft ), new Views( $info ), $display );
+		$this->controller = new Controller( $this->page, $visitor, new Requests( $api, new LinkLimit() ), $projects, new Guard(), $draft );
 		$this->nocache    = new NoCache( $this->page );
 		$this->watcher    = new ProfileWatcher( $data->queue, $known );
+		$this->account    = new MyAccountLink( $this->page, $display );
 	}
 
-	/** The shortcode, the form posts, the no-cache marking and the profile watcher: once per request. */
+	/** The shortcode, the form posts, the no-cache marking, the profile watcher and My Account's link: once per request. */
 	public function register(): void {
 		if ( self::$registered ) {
 			return;
@@ -72,5 +79,6 @@ final class Portal {
 		$this->controller->register();
 		$this->nocache->register();
 		$this->watcher->register();
+		$this->account->register();
 	}
 }

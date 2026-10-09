@@ -1,10 +1,11 @@
 <?php
 /**
- * Settings › OmnaBase: the health section (the last "Check connection", the vault's key). Included by settings.php.
+ * Settings › OmnaBase: the health section (the last "Check connection", the last customer-data call, WP-Cron, the vault's key). Included
+ * by settings.php.
  *
  * @package OmnaBase
  *
- * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,keySource:string} $omnabase_health
+ * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,keySource:string,factsAt:int,cronOff:bool} $omnabase_health
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -45,6 +46,23 @@ $omnabase_words  = array(
 		<?php endif; ?>
 	<?php else : ?>
 		<p class="description"><?php esc_html_e( 'Check connection tests both directions: this site calling OmnaBase, and OmnaBase calling this site.', 'omnabase' ); ?></p>
+	<?php endif; ?>
+
+	<p class="ob-wp-settings__facts-call">
+		<?php
+		echo esc_html(
+			$omnabase_health['factsAt'] > 0
+				/* translators: %s: date and time of OmnaBase's last customer-data call. */
+				? sprintf( __( 'Last customer-data call from OmnaBase: %s.', 'omnabase' ), wp_date( 'Y-m-d H:i', $omnabase_health['factsAt'] ) )
+				: __( 'No customer-data call from OmnaBase yet.', 'omnabase' )
+		);
+		?>
+	</p>
+
+	<?php if ( $omnabase_health['cronOff'] ) : ?>
+		<div class="notice notice-warning inline ob-wp-settings__cron">
+			<p><?php esc_html_e( 'WP-Cron is turned off on this site (DISABLE_WP_CRON), so the outbox runs only when a real cron job calls wp-cron.php every minute.', 'omnabase' ); ?></p>
+		</div>
 	<?php endif; ?>
 
 	<?php if ( 'database' === $omnabase_health['keySource'] ) : ?>

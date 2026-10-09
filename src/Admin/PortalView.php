@@ -1,6 +1,6 @@
 <?php
 /**
- * The settings screen's message-centre section: the page pick and the shortcodes.
+ * The settings screen's message-centre section: the page pick.
  *
  * @package OmnaBase
  */
@@ -12,8 +12,8 @@ use OmnaBase\WordPress\Portal\PickedPage;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The site's published pages (at most 200, by title, the current pick always among them) for the message centre's page; the template adds
- * the shortcodes' help.
+ * The site's published pages (at most 200, by title, the current pick always among them) for the message centre's page (the shortcodes'
+ * help is its own section since round six, `ShortcodesView`).
  */
 final class PortalView {
 

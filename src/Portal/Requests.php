@@ -10,8 +10,8 @@ namespace OmnaBase\WordPress\Portal;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Each request is made as the visitor the caller names (their site id) and comes back as a notice code (`Notices`) and, for a new
- * ticket, its number. A new ticket's Idempotency-Key comes from the token printed in its form with the words sent, so the same form sent
+ * Each request is made as the visitor the caller names (their site id) and comes back as a notice code (`Notices`) and, for an answer,
+ * the ticket's number (a new ticket leads back to the list, round six). A new ticket's Idempotency-Key comes from the token printed in its form with the words sent, so the same form sent
  * twice (a double click, the browser's resend) is one ticket and a freshly loaded form is a new question. The fields follow OmnaBase's own
  * limits (a subject of 1 to 200 characters, a message or answer of 1 to 50 000).
  */
@@ -57,7 +57,7 @@ final class Requests {
 		$key    = 'obwp-portal-' . substr( hash( 'sha256', implode( '|', array( 'portal', $token, $site_id, $subject, $message ) ) ), 0, 40 );
 		$answer = $this->api->create( $site_id, $body, $key );
 		if ( in_array( $answer['status'], array( 200, 201 ), true ) && isset( $answer['body']['number'] ) ) {
-			return self::outcome( Notices::CREATED, (int) $answer['body']['number'] );
+			return self::outcome( Notices::CREATED ); // back to the list: the new question on top, and an empty form for the next one
 		}
 		// a 404 here is the project, gone from the key: nothing the visitor can fix
 		return self::outcome( 404 === $answer['status'] ? Notices::UNAVAILABLE : self::refused( $answer['status'] ) );

@@ -184,6 +184,18 @@ final class Table {
 	}
 
 	/**
+	 * The administrator sends a waiting row now ("Send now"): due at once, its tries and idempotency key kept (a resend counts once).
+	 *
+	 * @param int $id  The row.
+	 * @param int $now The time now.
+	 */
+	public function sendNow( int $id, int $now ): bool {
+		global $wpdb;
+		$table = self::name();
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET next_at = %d WHERE id = %d AND state = 'waiting' AND claimed_until < %d", $table, $now, $id, $now ) );
+	}
+
+	/**
 	 * The administrator gives a row up: kept seven days as discarded (its payload emptied), then removed with the sent ones.
 	 *
 	 * @param int $id  The row.
@@ -248,5 +260,32 @@ final class Table {
 		$table = self::name();
 		$row   = (array) $wpdb->get_row( $wpdb->prepare( "SELECT SUM(state = 'waiting') AS waiting, SUM(state = 'attention') AS attention, SUM(state = 'sent' AND sent_at >= %d) AS sent FROM %i", $since, $table ), ARRAY_A );
 		return array( 'waiting' => (int) ( $row['waiting'] ?? 0 ), 'attention' => (int) ( $row['attention'] ?? 0 ), 'sent' => (int) ( $row['sent'] ?? 0 ) );
+	}
+
+	/**
+	 * The open rows (waiting or needing attention) of one kind about one subject (a user's id; 0 for the form messages, which carry their
+	 * person in the payload), at most 500: what the personal-data tools look at.
+	 *
+	 * @param string $kind    The kind.
+	 * @param int    $subject The subject's id.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function openOf( string $kind, int $subject ): array {
+		global $wpdb;
+		$table = self::name();
+		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM %i WHERE kind = %s AND subject_id = %d AND state IN ('waiting', 'attention') ORDER BY id LIMIT 500", $table, $kind, $subject ), ARRAY_A );
+	}
+
+	/**
+	 * An open row is given up for a person's erasure: discarded, its payload and subject emptied, the reason kept.
+	 *
+	 * @param int    $id     The row.
+	 * @param string $reason Why, in words.
+	 * @param int    $now    The time now.
+	 */
+	public function anonymise( int $id, string $reason, int $now ): bool {
+		global $wpdb;
+		$table = self::name();
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'discarded', subject_id = 0, payload = NULL, claimed_until = 0, last_error = %s, sent_at = %d WHERE id = %d AND state IN ('waiting', 'attention')", $table, $reason, $now, $id ) );
 	}
 }

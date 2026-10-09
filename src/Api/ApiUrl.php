@@ -18,6 +18,10 @@ final class ApiUrl {
 
 	public const PRODUCTION = 'https://app.omnabase.com';
 
+	/** OmnaBase's privacy policy and terms, linked from the suggested privacy text (the readme names the same addresses). */
+	public const PRIVACY = self::PRODUCTION . '/legal/privacy';
+	public const TERMS   = self::PRODUCTION . '/legal/terms';
+
 	/** The API's base address, without a trailing slash. */
 	public static function base(): string {
 		return self::override() ?? self::PRODUCTION;

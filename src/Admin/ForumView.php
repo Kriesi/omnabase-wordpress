@@ -48,16 +48,17 @@ final class ForumView {
 
 	/** Every forum with its visibility and tick. @return array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}> */
 	private function forums(): array {
-		$ids = get_posts(
+		$query = new \WP_Query(
 			array(
-				'post_type'        => bbp_get_forum_post_type(),
-				'post_status'      => array( bbp_get_public_status_id(), bbp_get_private_status_id(), bbp_get_hidden_status_id() ),
-				'orderby'          => array( 'menu_order' => 'ASC', 'ID' => 'ASC' ),
-				'fields'           => 'ids',
-				'numberposts'      => self::MAX_FORUMS,
-				'suppress_filters' => true,
+				'post_type'      => bbp_get_forum_post_type(),
+				'post_status'    => array( bbp_get_public_status_id(), bbp_get_private_status_id(), bbp_get_hidden_status_id() ),
+				'orderby'        => array( 'menu_order' => 'ASC', 'ID' => 'ASC' ),
+				'fields'         => 'ids',
+				'posts_per_page' => self::MAX_FORUMS,
+				'no_found_rows'  => true,
 			)
 		);
+		$ids   = $query->posts;
 		$out = array();
 		foreach ( $ids as $id ) {
 			$id    = (int) $id;

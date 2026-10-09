@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress;
 
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Connect\ConnectionInfo;
+use OmnaBase\WordPress\Forms\Display;
 use OmnaBase\WordPress\Forms\FormJob;
 use OmnaBase\WordPress\Forms\Guard;
 use OmnaBase\WordPress\Forms\Intake;
@@ -45,7 +46,7 @@ final class Forms {
 		$guard           = new Guard();
 		$token           = new Token();
 		$intake          = new Intake( $projects, $guard, $token, new Sender( $client, $data->table, $settings ) );
-		$this->shortcode = new Shortcode( $info, $projects, $settings );
+		$this->shortcode = new Shortcode( $info, $projects, $settings, new Display() );
 		$this->routes    = new Form( $projects, $guard, $token, $intake );
 		$data->worker->add( new FormJob() );
 	}

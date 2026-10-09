@@ -4,7 +4,7 @@
  *
  * @package OmnaBase
  *
- * @var array{sources:array<int,array{id:string,label:string,on:bool}>,meta:array<int,array{key:string,on:bool}>,last:?array} $omnabase_facts
+ * @var array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,last:?array} $omnabase_facts
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -21,6 +21,9 @@ defined( 'ABSPATH' ) || exit;
 				<label>
 					<input type="checkbox" name="omnabase_facts[sources][]" value="<?php echo esc_attr( $omnabase_source['id'] ); ?>" <?php checked( $omnabase_source['on'] ); ?>>
 					<?php echo esc_html( $omnabase_source['label'] ); ?>
+					<?php if ( '' !== $omnabase_source['unsupported'] ) : ?>
+						<strong class="ob-wp-settings__unsupported">(<?php echo esc_html( $omnabase_source['unsupported'] ); ?>)</strong>
+					<?php endif; ?>
 				</label><br>
 			<?php endforeach; ?>
 		</fieldset>

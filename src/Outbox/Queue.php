@@ -38,4 +38,17 @@ final class Queue {
 		}
 		return $added;
 	}
+
+	/**
+	 * A waiting row goes now: due at once, and the outbox's one-off run is woken.
+	 *
+	 * @param int $id The row.
+	 */
+	public function sendNow( int $id ): bool {
+		$due = $this->table->sendNow( $id, time() );
+		if ( $due ) {
+			$this->schedule->soon();
+		}
+		return $due;
+	}
 }

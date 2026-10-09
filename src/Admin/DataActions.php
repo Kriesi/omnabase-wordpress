@@ -1,6 +1,6 @@
 <?php
 /**
- * The settings screen's customer-data and outbox actions: save the switches, Retry and Discard a row.
+ * The settings screen's customer-data and outbox actions: save the switches, Retry, Discard and Send now a row.
  *
  * @package OmnaBase
  */
@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Admin;
 
 use OmnaBase\WordPress\Facts\FactsSource;
 use OmnaBase\WordPress\Facts\Switches;
+use OmnaBase\WordPress\Outbox\Queue;
 use OmnaBase\WordPress\Outbox\Table;
 
 defined( 'ABSPATH' ) || exit;
@@ -22,6 +23,7 @@ final class DataActions {
 	public const SAVE_FACTS = 'omnabase_save_facts';
 	public const RETRY      = 'omnabase_outbox_retry';
 	public const DISCARD    = 'omnabase_outbox_discard';
+	public const SEND_NOW   = 'omnabase_outbox_send_now';
 
 	/**
 	 * Builds the handlers.
@@ -29,15 +31,17 @@ final class DataActions {
 	 * @param Switches      $switches The switches.
 	 * @param FactsSource[] $sources  Every source.
 	 * @param Table         $table    The outbox's table.
+	 * @param Queue         $queue    The outbox's queue ("Send now" wakes its run).
 	 * @param Flash         $flash    The message for the next view.
 	 */
-	public function __construct( private Switches $switches, private array $sources, private Table $table, private Flash $flash ) {}
+	public function __construct( private Switches $switches, private array $sources, private Table $table, private Queue $queue, private Flash $flash ) {}
 
-	/** Registers the three admin-post actions. */
+	/** Registers the four admin-post actions. */
 	public function register(): void {
 		add_action( 'admin_post_' . self::SAVE_FACTS, array( $this, 'saveFacts' ) );
 		add_action( 'admin_post_' . self::RETRY, array( $this, 'retry' ) );
 		add_action( 'admin_post_' . self::DISCARD, array( $this, 'discard' ) );
+		add_action( 'admin_post_' . self::SEND_NOW, array( $this, 'sendNow' ) );
 	}
 
 	/** Stores exactly the ticked sources and usermeta. */
@@ -66,6 +70,14 @@ final class DataActions {
 		Guard::check( self::DISCARD );
 		$done = $this->table->discard( self::row(), time() );
 		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call was discarded: it will not be sent.', 'omnabase' ) : __( 'That call is no longer in the outbox.', 'omnabase' ) );
+		Guard::backToScreen();
+	}
+
+	/** A waiting row is sent at once instead of at its next try. */
+	public function sendNow(): void {
+		Guard::check( self::SEND_NOW );
+		$done = $this->queue->sendNow( self::row() );
+		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call is being sent now.', 'omnabase' ) : __( 'That call is no longer waiting.', 'omnabase' ) );
 		Guard::backToScreen();
 	}
 
