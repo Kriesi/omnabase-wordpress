@@ -242,3 +242,96 @@ and permission check, now shared with round one's `Actions`). `CustomerData` wir
 health lines for the facts calls and a disabled WP-Cron; "unsupported version" checks per shop; an idempotency key column when topics join
 the outbox; the real paid add-ons (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing) are only proven against their fakes
 until the founder drops their zips into `paid/`.
+
+## 2026-10-09 — M13 round three: the forum
+
+The red team's tests came first (`docs/reviews/m13-round3-red-team-report.md`: 56 cases here in 7 files, plus OmnaBase's 6, and four
+replaced test-setup files: the integration bootstrap loading bbPress, `phpunit-integration.xml`, `bin/test-integration.sh` with its third
+run, `tests/e2e/harness.ts` with the fragment-redirect fix; all copied in). Before: structure 7 of 7 failing, integration 39 of 42, the flow
+stopped at the missing forum section. After: all green, two adjustments and one ruling-driven change, listed below with their reasons.
+OmnaBase's side (`siteAuthor`) is recorded in its DECISIONS "M13 round three: the forum; siteAuthor". The words: *topic* and *reply*,
+bbPress's forum posts; *marked forum*, ticked by the administrator; *hidden forum*, moderators only; *private forum*, every logged-in user;
+*support user*, the WordPress user OmnaBase's answers appear under; *echo*, the site's own posting coming back to OmnaBase as new.
+
+**The coordinator's rulings, as built.**
+
+- **Moderators**: every reply by someone with bbPress's moderator rights (the `moderate` capability, a permission) who is not the topic's
+  author goes as the team's delivered answer with `siteAuthor { name, email, role }`: the name is the support user's display name (the
+  brief's "<support user's name>", pinned by the red team), the email the moderator's own address and the role bbPress's display role
+  ("Moderator", "Keymaster"). OmnaBase shows the answer as the member whose address it is, otherwise as "<name> on <host>". The plugin never
+  tries to tell members apart.
+- **The contract's spellings**: `replyVia: "site"`, the reference `topic-<id>` (replies `reply-<id>`). A 200 with the existing ticket is
+  success (its number is kept); a 409 needs attention with OmnaBase's words.
+- **Connect asks for `ticket.resolved` too** (`message.sent,ticket.updated,ticket.resolved`): OmnaBase's fan-out sends a resolve as
+  `ticket.resolved`, and since round one a connect-made address hears only its own site's tickets. Sites connected before this round keep
+  their two events until they connect again (development stage: no migration).
+- **Closing on resolve** stays the administrator's switch (off by default, the brief): `ticket.resolved`, or `ticket.updated` whose change
+  is the status `resolved`, closes the topic through `bbp_close_topic`. **No reopening**: read in bbPress 2.6, a closed topic takes replies
+  only from moderators (its reply form is hidden from participants) and bbPress itself never reopens a topic on a reply, so a customer's
+  follow-up after a resolve is a new topic; reopening would need a reply bbPress does not allow. Pinned here; round four may revisit.
+- **A reply on a closed topic is posted `publish`** (bbPress would store it "closed" and hide it), by the support user.
+- **A guest topic without an email address needs attention** ("no usable email address"), never sent. **No support user**: the receiver
+  answers 503 (OmnaBase retries), never 410.
+- **A topic edited between a lost answer and the retry**: the row keeps its idempotency key, OmnaBase answers `409 idempotency_mismatch`, and
+  the row needs attention with a plain reason ("The post changed after a try whose answer was lost …"). **Retry** gives the row a new key:
+  safe, because the site's reference (`topic-<id>`, `reply-<id>`) still makes a resend count once at OmnaBase. `409 idempotency_in_flight`
+  waits like a 5xx.
+
+**The parts, by the brief's names.** `Forum\Triggers`, `Forum\TopicSender`, `Forum\ReplySender`, `Forum\ReplyPoster`,
+`Forum\SubscriberMails`, `Forum\Closer`, with `Forum\Settings` (the one option `omnabase_forum`), `Forum\Posts` (reading bbPress's posts and
+the two post meta keys) and `Forum\PlainText`; `Forums` wires them beside `CustomerData`. `Admin\ForumView`, `Admin\ForumActions`, the
+partial `forum.php`. `Outbox\Step` and `Rest\Refusal` are new; the post meta names live in `Options` (the echo marker `_omnabase_message_id`
+is written in one file only, as the guard wants).
+
+**Choices the brief left open.**
+
+- **The outbox's jobs say what to do with a row** (`Outbox\Step`: send, wait, skip, attention), decided when the row's turn comes (review
+  S3). A skipped row is `discarded` with its reason (kept seven days like sent rows), never "needs attention". Jobs also name what a row is
+  about (the screen's new "About" column: a user's name or a topic's title) and receive OmnaBase's answer (`sent( $row, $answer )`: the
+  topic keeps the ticket number).
+- **The idempotency key** (table version 2, column `idempotency_key`): made once with the row (`obwp-` and 32 random characters) and sent on
+  every try, but only by jobs that mark their call idempotent (topics and replies); the user link and the licence refresh are unchanged.
+- **Hooks only queue** (hooks: named moments where a plugin's code runs): the six bbPress moments and `transition_post_status` into
+  `publish` from any other status (edits, `publish` to `publish`, and deletions queue nothing). The queue keeps one waiting row per post
+  (`forum_topic:<id>`, `forum_reply:<id>`). Cheap checks at queue time: published, in a marked forum, not filed already, not the plugin's
+  own posting (a flag while it posts) or the support user's, guests switched on. Everything is checked again when the row goes.
+- **The ticket**: the connection's first project; the author's address and display name (a guest's from bbPress's `_bbp_anonymous_email`
+  and `_bbp_anonymous_name`), the name cut to 120 characters; the title as a one-line subject of at most 200; the first post as plain text
+  (paragraphs as new lines, scripts and tags gone, entities decoded) of at most 50 000, the subject when it is empty; `channel: "api"`;
+  `public` false only in a hidden forum.
+- **A reply**: the topic's author's (the same user, or for a guest's topic a guest with the same address) is the customer's; a moderator's
+  the team's; anyone else's is discarded. A reply whose topic has no ticket waits (five minutes at a time) while the topic's own row waits
+  or needs attention, and needs attention after 3 days; a reply on a topic that was never sent (published before its forum was marked) is
+  discarded: old topics are not filed by a reply.
+- **The answer back**: `message.sent` with `direction: out`, no `external` (the site's own) and a ticket reference `topic-<id>`; the body is
+  OmnaBase's HTML through `wp_kses_post` (its text through `wpautop` when there is no HTML), then the closing line as its own paragraph
+  (`{agent}` the message author's name, `{workspace}` the event's workspace name); the title "Reply To: <topic>" as bbPress's form writes it.
+  Before posting, a reply carrying the same message id in any status (trash included) makes the delivery a no-op. Two deliveries of one
+  message at the very same moment could both post (OmnaBase retries only after a timeout); accepted.
+- **The receiver's refusals**: a listener throws `Rest\Refusal` with its status; the receiver answers it, logs the delivery as "refused"
+  (the screen: "Not done yet …, OmnaBase retries") and does not record it as handled, so the retry does the work. A topic trashed, deleted
+  or unpublished: 409; no support user: 503; WordPress did not save the reply: 500.
+- **Subscriber mails**: a one-off WP-Cron job `omnabase_forum_mails` with the reply's id (WP-Cron woken at the end of the request), which
+  hands the reply to bbPress's own `bbp_notify_topic_subscribers` (it leaves out the author, anyone who cannot read the topic, and closed
+  topics). Cleared on deactivation and uninstall.
+- **The screen**: every forum (public, private, hidden; at most 200, by menu order then id) with its tick and "(public)" or "(hidden: not
+  public)"; the support user among keymasters and moderators who can `moderate` (stored only then, else the earlier one stays); the closing
+  line as plain text of at most 200 characters; guests on by default; a line when no support user is chosen. The outbox section adds "10
+  topics waiting: OmnaBase's daily limit for new tickets, next try …" when OmnaBase's 429 names its daily limit (`api_tickets`).
+- **Uninstall** removes `omnabase_forum`, both post meta keys for every post and the mail jobs; deactivation clears the mail jobs.
+
+**Test adjustments (each with its reason in the test's comment).**
+
+1. `ForumReceiverTest`, a closed topic: the red team's last line asked `bbp_is_reply_published`, which bbPress answers true only when the
+   reply's topic is open too, so it is false for every reply on a closed topic (also those written before the close). The line now asserts
+   what the test means, "visible like any other reply": bbPress counts it among the topic's shown replies.
+2. `forum.spec.ts`, the site down: with the relay merely reset, the e2e server's webhook net falls back to its stand-in receiver, which
+   answers 200 for any `*.test` host, so the answer read "Delivered". The site's host is now relayed to a loopback port nothing listens on.
+3. Round one's `RoundOneTestCase::EVENTS` (and `ConnectFlowTest`'s description) name `ticket.resolved` as the third event: the coordinator's
+   ruling, not a weakening; the link test still compares the link's events with the list.
+
+**Open for round four.** Fixing a topic's body at its first try (so an edit between a lost answer and the retry cannot meet
+`idempotency_mismatch`); reopening a closed topic if the founder wants follow-ups on resolved topics; topics published before their forum was
+marked are never filed (only new publications are); "Send now" on the outbox; the shared connect and sign-in helpers of `facts.spec.ts` and
+`forum.spec.ts` (the red team's note 10); the round-two leftovers (a registered user's earlier guest orders, License Manager's guest
+licences, health lines for the facts calls and a disabled WP-Cron).

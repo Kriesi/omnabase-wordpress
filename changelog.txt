@@ -14,3 +14,6 @@ section is never changed again. At release the top section is copied into readme
 * Added: Licence keys are always shown masked, and user fields that look like passwords, tokens or keys are never sent, even when ticked.
 * Added: Licence changes (renewals, refunds, expiries, activations) reach OmnaBase on their own, also after an outage; the new outbox on the settings screen shows anything waiting or needing your attention, with Retry and Discard.
 * Added: Works with WooCommerce's newer order storage (HPOS).
+* Added: bbPress forums: topics in the forums you tick become OmnaBase tickets, also on a busy day or during an outage; topics in hidden forums are marked not public.
+* Added: Forum replies by the topic's author and by moderators reach the ticket; your team's answers appear on the forum under the support user you choose, with a closing line you can word.
+* Added: Optionally close a forum topic when its ticket is resolved.

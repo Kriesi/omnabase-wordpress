@@ -13,7 +13,8 @@ defined( 'ABSPATH' ) || exit;
  * Verify, then handle once, then record. The signature is checked in the route's `permission_callback` (an unsigned call never reaches
  * the handler). A delivery id handled before is answered 200 without acting (OmnaBase's retry or "Redeliver"). A new one fires the action
  * `omnabase_webhook( $type, $payload, $delivery )` (round three's forum code listens there; a `ping` is also recorded for "Check connection")
- * and is recorded as handled only when that ran through; a handling that throws answers 500, so OmnaBase tries again.
+ * and is recorded as handled only when that ran through; a listener's `Refusal` answers its own status (the forum: 409 for a topic that is
+ * gone, 503 without a support user), any other throw answers 500, and either way OmnaBase tries again.
  */
 final class Events {
 
@@ -65,9 +66,10 @@ final class Events {
 			$this->log->add( $type, $delivery, $ticket, 'repeat' );
 			return new \WP_REST_Response( array( 'ok' => true ), 200 );
 		}
-		if ( ! $this->handle( $type, $payload, $delivery ) ) {
-			$this->log->add( $type, $delivery, $ticket, 'failed' );
-			return new \WP_REST_Response( array( 'ok' => false ), 500 );
+		$refusal = $this->handle( $type, $payload, $delivery );
+		if ( null !== $refusal ) {
+			$this->log->add( $type, $delivery, $ticket, $refusal['outcome'] );
+			return new \WP_REST_Response( array( 'ok' => false, 'reason' => $refusal['reason'] ), $refusal['status'] );
 		}
 		if ( '' !== $delivery ) {
 			$this->replay->remember( $delivery );
@@ -77,13 +79,14 @@ final class Events {
 	}
 
 	/**
-	 * The handling: the ping's record, then whoever listens. False when a listener broke.
+	 * The handling: the ping's record, then whoever listens. Null when it ran through, else the answer to give.
 	 *
 	 * @param string              $type     The event type.
 	 * @param array<string,mixed> $payload  The event as sent.
 	 * @param string              $delivery The delivery id.
+	 * @return array{status:int,outcome:string,reason:string}|null
 	 */
-	private function handle( string $type, array $payload, string $delivery ): bool {
+	private function handle( string $type, array $payload, string $delivery ): ?array {
 		try {
 			if ( 'ping' === $type ) {
 				$this->ping->record();
@@ -96,9 +99,11 @@ final class Events {
 			 * @param string $delivery The delivery id (the same on every retry).
 			 */
 			do_action( 'omnabase_webhook', $type, $payload, $delivery );
+		} catch ( Refusal $r ) {
+			return array( 'status' => min( 599, max( 400, $r->status ) ), 'outcome' => 'refused', 'reason' => $r->getMessage() );
 		} catch ( \Throwable $e ) {
-			return false;
+			return array( 'status' => 500, 'outcome' => 'failed', 'reason' => '' );
 		}
-		return true;
+		return null;
 	}
 }

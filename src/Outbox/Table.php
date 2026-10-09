@@ -15,14 +15,15 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * `{prefix}omnabase_outbox`: one row per call to OmnaBase still to make (or made in the last seven days). A row names its kind
- * (`user_link`, `licence_refresh`), the user it is about and a dedupe key; its state is `waiting`, `sent`, `attention` (needs the
- * administrator) or `discarded`. Times are unix seconds. The body is built from the user when the row is sent, so the table holds no
- * customer data. Made or changed on load when the schema version (`omnabase_db_version`) is missing or older; dropped by uninstall.php.
- * Every query is prepared.
+ * (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`), the user or post it is about, a dedupe key and its own idempotency key
+ * (version 2, round three: made once with the row and sent on every try, so a resent topic counts once at OmnaBase); its state is
+ * `waiting`, `sent`, `attention` (needs the administrator) or `discarded`. Times are unix seconds. The body is built from the user or post
+ * when the row is sent, so the table holds no customer data. Made or changed on load when the schema version (`omnabase_db_version`) is
+ * missing or older; dropped by uninstall.php. Every query is prepared.
  */
 final class Table {
 
-	public const VERSION = '1';
+	public const VERSION = '2';
 
 	/** The table's full name. */
 	public static function name(): string {
@@ -49,6 +50,7 @@ final class Table {
 			kind varchar(32) NOT NULL,
 			subject_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			dedupe_key varchar(191) NOT NULL DEFAULT '',
+			idempotency_key varchar(64) NOT NULL DEFAULT '',
 			state varchar(16) NOT NULL DEFAULT 'waiting',
 			attempts int(10) unsigned NOT NULL DEFAULT 0,
 			next_at bigint(20) NOT NULL DEFAULT 0,
@@ -79,8 +81,19 @@ final class Table {
 		if ( null !== $waiting ) {
 			return false;
 		}
-		$row = array( 'kind' => $kind, 'subject_id' => $subject, 'dedupe_key' => $dedupe, 'state' => Policy::WAITING, 'attempts' => 0, 'next_at' => $now, 'claimed_until' => 0, 'last_error' => '', 'created_at' => $now );
-		return false !== $wpdb->insert( $table, $row, array( '%s', '%d', '%s', '%s', '%d', '%d', '%d', '%s', '%d' ) );
+		$row = array( 'kind' => $kind, 'subject_id' => $subject, 'dedupe_key' => $dedupe, 'idempotency_key' => self::newKey(), 'state' => Policy::WAITING, 'attempts' => 0, 'next_at' => $now, 'claimed_until' => 0, 'last_error' => '', 'created_at' => $now );
+		return false !== $wpdb->insert( $table, $row, array( '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%d' ) );
+	}
+
+	/**
+	 * Whether a row with this dedupe key still waits or needs attention (a reply asks whether its topic is still on its way).
+	 *
+	 * @param string $dedupe The dedupe key.
+	 */
+	public function isOpen( string $dedupe ): bool {
+		global $wpdb;
+		$table = self::name();
+		return null !== $wpdb->get_var( $wpdb->prepare( "SELECT id FROM %i WHERE dedupe_key = %s AND state IN ('waiting', 'attention') LIMIT 1", $table, $dedupe ) );
 	}
 
 	/**
@@ -119,9 +132,10 @@ final class Table {
 	public function finish( int $id, int $attempts, array $decision, int $now ): void {
 		global $wpdb;
 		$sent = Policy::SENT === $decision['state'];
+		$done = $sent || Policy::DISCARDED === $decision['state']; // kept seven days from now, then purged
 		$wpdb->update(
 			self::name(),
-			array( 'state' => $decision['state'], 'attempts' => $attempts, 'next_at' => (int) ( $decision['next_at'] ?? 0 ), 'claimed_until' => 0, 'last_error' => $sent ? '' : $decision['reason'], 'sent_at' => $sent ? $now : null ),
+			array( 'state' => $decision['state'], 'attempts' => $attempts, 'next_at' => (int) ( $decision['next_at'] ?? 0 ), 'claimed_until' => 0, 'last_error' => $sent ? '' : $decision['reason'], 'sent_at' => $done ? $now : null ),
 			array( 'id' => $id ),
 			array( '%s', '%d', '%d', '%d', '%s', '%d' ),
 			array( '%d' )
@@ -129,7 +143,9 @@ final class Table {
 	}
 
 	/**
-	 * A row needing attention waits again, due now, as if new (its three days start afresh).
+	 * A row needing attention waits again, due now, as if new (its three days start afresh), with a new idempotency key: the old one may be
+	 * the reason it needed attention (OmnaBase's "used with another request" after the post was edited), and the site's own reference
+	 * (`topic-<id>`, `reply-<id>`) still makes a resend count once.
 	 *
 	 * @param int $id  The row.
 	 * @param int $now The time now.
@@ -137,7 +153,7 @@ final class Table {
 	public function retry( int $id, int $now ): bool {
 		global $wpdb;
 		$table = self::name();
-		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'waiting', next_at = %d, attempts = 0, created_at = %d, claimed_until = 0 WHERE id = %d AND state = 'attention'", $table, $now, $now, $id ) );
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'waiting', next_at = %d, attempts = 0, created_at = %d, claimed_until = 0, idempotency_key = %s WHERE id = %d AND state = 'attention'", $table, $now, $now, self::newKey(), $id ) );
 	}
 
 	/**
@@ -173,6 +189,25 @@ final class Table {
 		global $wpdb;
 		$table = self::name();
 		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM %i WHERE state IN ('attention', 'waiting') ORDER BY state = 'attention' DESC, next_at ASC, id ASC LIMIT %d", $table, $limit ), ARRAY_A );
+	}
+
+	/**
+	 * The waiting rows of one kind: how many, the earliest next try, and how many wait for the given reason.
+	 *
+	 * @param string $kind   The kind.
+	 * @param string $reason A reason in words, as the policy writes it.
+	 * @return array{count:int,next:int,because:int}
+	 */
+	public function waitingOf( string $kind, string $reason ): array {
+		global $wpdb;
+		$table = self::name();
+		$row   = (array) $wpdb->get_row( $wpdb->prepare( "SELECT COUNT(*) AS n, MIN(next_at) AS next, SUM(last_error = %s) AS because FROM %i WHERE state = 'waiting' AND kind = %s", $reason, $table, $kind ), ARRAY_A );
+		return array( 'count' => (int) ( $row['n'] ?? 0 ), 'next' => (int) ( $row['next'] ?? 0 ), 'because' => (int) ( $row['because'] ?? 0 ) );
+	}
+
+	/** A fresh idempotency key: 32 random letters and digits under a prefix that names the plugin. */
+	private static function newKey(): string {
+		return 'obwp-' . wp_generate_password( 32, false, false );
 	}
 
 	/**

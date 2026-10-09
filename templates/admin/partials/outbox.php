@@ -4,12 +4,13 @@
  *
  * @package OmnaBase
  *
- * @var array{counts:array{waiting:int,attention:int,sent:int},rows:array<int,array<string,mixed>>} $omnabase_outbox
+ * @var array{counts:array{waiting:int,attention:int,sent:int},topics:array{count:int,next:int,because:int},rows:array<int,array<string,mixed>>} $omnabase_outbox
  */
 
 defined( 'ABSPATH' ) || exit;
 
 $omnabase_counts = $omnabase_outbox['counts'];
+$omnabase_topics = $omnabase_outbox['topics'];
 ?>
 <div class="ob-wp-settings__outbox">
 	<h2><?php esc_html_e( 'Outbox', 'omnabase' ); ?></h2>
@@ -34,12 +35,25 @@ $omnabase_counts = $omnabase_outbox['counts'];
 			?>
 		</li>
 	</ul>
+	<?php if ( $omnabase_topics['count'] > 0 ) : ?>
+		<p class="ob-wp-settings__outbox-topics">
+			<?php
+			/* translators: %d: number of forum topics. */
+			$omnabase_line = sprintf( _n( '%d topic waiting', '%d topics waiting', $omnabase_topics['count'], 'omnabase' ), $omnabase_topics['count'] );
+			if ( $omnabase_topics['because'] > 0 ) {
+				/* translators: 1: "12 topics waiting", 2: date and time of the next try. */
+				$omnabase_line = sprintf( __( '%1$s: OmnaBase\'s daily limit for new tickets, next try %2$s', 'omnabase' ), $omnabase_line, wp_date( 'Y-m-d H:i', $omnabase_topics['next'] ) );
+			}
+			echo esc_html( $omnabase_line );
+			?>
+		</p>
+	<?php endif; ?>
 	<?php if ( array() !== $omnabase_outbox['rows'] ) : ?>
 		<table class="widefat striped">
 			<thead>
 				<tr>
 					<th scope="col"><?php esc_html_e( 'Call', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'User', 'omnabase' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'About', 'omnabase' ); ?></th>
 					<th scope="col"><?php esc_html_e( 'State', 'omnabase' ); ?></th>
 					<th scope="col"><?php esc_html_e( 'Last answer', 'omnabase' ); ?></th>
 					<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'omnabase' ); ?></span></th>

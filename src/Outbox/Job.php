@@ -10,28 +10,35 @@ namespace OmnaBase\WordPress\Outbox;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The body is built when the row is sent, from the user as they are then (the table holds no customer data).
+ * The body is built when the row is sent, from the user or the post as it is then (the table holds no customer data).
  */
 interface Job {
 
-	/** The kind it sends (`user_link`, `licence_refresh`). */
+	/** The kind it sends (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`). */
 	public function kind(): string;
 
 	/** The kind in words, for the settings screen. */
 	public function label(): string;
 
 	/**
-	 * The call for a row, or null when it can no longer be made (the user is gone).
+	 * What the row is about, in words, for the settings screen (a user's name, a topic's title).
 	 *
 	 * @param array<string,mixed> $row The row.
-	 * @return array{method:string,path:string,body:mixed,timeout:int}|null
 	 */
-	public function request( array $row ): ?array;
+	public function subject( array $row ): string;
+
+	/**
+	 * What to do with a row whose turn came: the call, a wait, a skip, or the administrator.
+	 *
+	 * @param array<string,mixed> $row The row.
+	 */
+	public function request( array $row ): Step;
 
 	/**
 	 * What follows once OmnaBase accepted the call.
 	 *
-	 * @param array<string,mixed> $row The row.
+	 * @param array<string,mixed>      $row    The row.
+	 * @param array<string,mixed>|null $answer OmnaBase's answer (its JSON), when it sent one.
 	 */
-	public function sent( array $row ): void;
+	public function sent( array $row, ?array $answer ): void;
 }

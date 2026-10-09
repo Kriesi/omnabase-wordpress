@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Wires the plugin into WordPress at `plugins_loaded`, so every other plugin (WooCommerce, EDD, bbPress) is loaded first; makes the outbox's
- * table on activation and clears its timer on deactivation; declares WooCommerce's newer order storage supported.
+ * table on activation and clears its timers on deactivation; declares WooCommerce's newer order storage supported.
  */
 final class Bootstrap {
 
@@ -35,7 +35,13 @@ final class Bootstrap {
 		add_action( 'plugins_loaded', array( self::$plugin, 'boot' ) );
 		add_action( 'before_woocommerce_init', static fn () => self::declareHpos( $main_file ) );
 		register_activation_hook( $main_file, static fn () => ( new Outbox\Table() )->install() );
-		register_deactivation_hook( $main_file, array( Outbox\Schedule::class, 'clear' ) );
+		register_deactivation_hook( $main_file, array( self::class, 'deactivate' ) );
+	}
+
+	/** Deactivation: the outbox's timer and the forum's waiting mail jobs are cleared (the rows and settings stay). */
+	public static function deactivate(): void {
+		Outbox\Schedule::clear();
+		Forum\SubscriberMails::clear();
 	}
 
 	/**

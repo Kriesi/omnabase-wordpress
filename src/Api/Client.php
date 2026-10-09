@@ -97,18 +97,21 @@ final class Client {
 	 * A call with the vault's key whose answer is kept whole, for the outbox: its status (null when no answer came), its headers with
 	 * lower-case names, its JSON body, and the network error in words.
 	 *
-	 * @param string     $method  The HTTP method.
-	 * @param string     $path    The path under /api/public/v1.
-	 * @param mixed|null $body    A JSON body, or null.
-	 * @param int        $timeout Seconds for the whole call.
+	 * @param string               $method  The HTTP method.
+	 * @param string               $path    The path under /api/public/v1.
+	 * @param mixed|null           $body    A JSON body, or null.
+	 * @param int                  $timeout Seconds for the whole call.
+	 * @param array<string,string> $headers Extra headers (the outbox's `Idempotency-Key`).
 	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
 	 */
-	public function call( string $method, string $path, $body, int $timeout ): array {
+	public function call( string $method, string $path, $body, int $timeout, array $headers = array() ): array {
 		$credentials = $this->vault->read();
 		if ( null === $credentials ) {
 			return array( 'status' => null, 'headers' => array(), 'body' => null, 'error' => __( 'This site is not connected to OmnaBase.', 'omnabase' ) );
 		}
-		return self::outcome( wp_remote_request( ApiUrl::publicApi( $path ), self::args( $method, $credentials['key'], $body, $timeout ) ) );
+		$args            = self::args( $method, $credentials['key'], $body, $timeout );
+		$args['headers'] = $headers + $args['headers'];
+		return self::outcome( wp_remote_request( ApiUrl::publicApi( $path ), $args ) );
 	}
 
 	/**

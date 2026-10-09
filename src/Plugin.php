@@ -12,6 +12,8 @@ use OmnaBase\WordPress\Admin\ConnectionView;
 use OmnaBase\WordPress\Admin\DataActions;
 use OmnaBase\WordPress\Admin\FactsView;
 use OmnaBase\WordPress\Admin\Flash;
+use OmnaBase\WordPress\Admin\ForumActions;
+use OmnaBase\WordPress\Admin\ForumView;
 use OmnaBase\WordPress\Admin\Health;
 use OmnaBase\WordPress\Admin\Notices;
 use OmnaBase\WordPress\Admin\OutboxView;
@@ -35,8 +37,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
- * and the licence events (`CustomerData`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way
- * back, the customer-data switches, Retry and Discard) and the "reconnect needed" notice.
+ * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`). In the admin: Settings ›
+ * OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum settings, the customer-data switches, Retry and
+ * Discard) and the "reconnect needed" notice.
  */
 final class Plugin {
 
@@ -54,11 +57,13 @@ final class Plugin {
 		$ping  = new LastPing();
 		$door  = new SignedCall( $vault );
 		$data  = new CustomerData( $vault );
+		$forum = new Forums( $data );
 		$data->registerBackground();
+		$forum->registerBackground();
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
 		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {
-			$this->bootAdmin( $vault, $log, $ping, $data );
+			$this->bootAdmin( $vault, $log, $ping, $data, $forum );
 		}
 	}
 
@@ -74,8 +79,9 @@ final class Plugin {
 	 * @param DeliveryLog  $log   The last deliveries.
 	 * @param LastPing     $ping  The last ping.
 	 * @param CustomerData $data  The customer-data parts.
+	 * @param Forums       $forum The forum parts.
 	 */
-	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping, CustomerData $data ): void {
+	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping, CustomerData $data, Forums $forum ): void {
 		$client  = new Client( $vault );
 		$info    = new ConnectionInfo();
 		$site    = new SiteCheck();
@@ -85,12 +91,14 @@ final class Plugin {
 		$actions = new Actions( $flow, new Disconnect( $client, $vault, $info, $health, $ping ), $health, $flash );
 		$actions->register();
 		( new DataActions( $data->switches, $data->sources, $data->table, $flash ) )->register();
+		( new ForumActions( $forum->settings, $flash ) )->register();
 		$connection = new ConnectionView( $vault, $client, $info, $site );
 		$facts      = new FactsView( $data->switches, $data->sources, $data->log );
 		$outbox     = new OutboxView( $data->table, $data->worker );
 		$sections   = array(
 			'connection' => array( $connection, 'build' ),
 			'health'     => array( $health, 'view' ),
+			'forum'      => array( new ForumView( $forum->settings ), 'build' ),
 			'facts'      => array( $facts, 'build' ),
 			'outbox'     => array( $outbox, 'build' ),
 		);

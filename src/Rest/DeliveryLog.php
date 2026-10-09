@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The last 20 deliveries, newest first, for the settings screen: when, which event, the delivery id, the ticket number and what the plugin
- * did (`handled`, `repeat`, `failed`). Never content: no customer name or address, no message text.
+ * did (`handled`, `repeat`, `failed`, `refused`). Never content: no customer name or address, no message text.
  */
 final class DeliveryLog {
 
@@ -25,7 +25,7 @@ final class DeliveryLog {
 	 * @param string   $event    The event type (`ping`, `message.sent` …).
 	 * @param string   $delivery The delivery id.
 	 * @param int|null $ticket   The ticket number the event is about, if any.
-	 * @param string   $outcome  What the plugin did: `handled`, `repeat` or `failed`.
+	 * @param string   $outcome  What the plugin did: `handled`, `repeat`, `failed` or `refused`.
 	 */
 	public function add( string $event, string $delivery, ?int $ticket, string $outcome ): void {
 		$row  = array(

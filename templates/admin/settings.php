@@ -4,7 +4,7 @@
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>,facts:array<string,mixed>,outbox:array<string,mixed>} $view
+ * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>,forum:array<string,mixed>,facts:array<string,mixed>,outbox:array<string,mixed>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -51,8 +51,10 @@ $omnabase_health     = $view['health'];
 	<?php endif; ?>
 
 	<?php
+	$omnabase_forum  = $view['forum'];
 	$omnabase_facts  = $view['facts'];
 	$omnabase_outbox = $view['outbox'];
+	require __DIR__ . '/partials/forum.php';
 	require __DIR__ . '/partials/facts.php';
 	require __DIR__ . '/partials/outbox.php';
 	require __DIR__ . '/partials/deliveries.php';

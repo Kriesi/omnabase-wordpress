@@ -8,7 +8,11 @@
  * `muplugins_loaded` when its folder is there (wp-env maps them), and its tables and roles are installed once before the first test
  * (`setup_theme`, outside the tests' transactions). The first run keeps a plain WordPress for the other tests. The paid add-ons (WooCommerce Subscriptions, EDD
  * Software Licensing, EDD Recurring) are never installed here: their fakes under `tests/fakes/` stand in, loaded after the real plugins so
- * a real add-on dropped into `paid/` would win. bbPress stays unloaded until round three.
+ * a real add-on dropped into `paid/` would win.
+ *
+ * M13 round three (the red team): with OMNABASE_TEST_FORUM=1 (bin/test-integration.sh's third run, the group "forum") bbPress 2.6 loads
+ * too, required at `muplugins_loaded` from wp-env's mapping, because the forum tests make real forums, topics and replies through bbPress's
+ * own functions and hooks. The other two runs keep WordPress without it.
  *
  * @package OmnaBase
  */
@@ -31,6 +35,7 @@ const OMNABASE_TEST_SHOPS = array(
 );
 
 $omnabase_with_shops = '1' === getenv( 'OMNABASE_TEST_SHOPS' );
+$omnabase_with_forum = '1' === getenv( 'OMNABASE_TEST_FORUM' );
 
 // EDD makes its own tables when it is built inside a test run (its BerlinDB tables otherwise wait for an admin page's `admin_init`).
 if ( $omnabase_with_shops ) {
@@ -39,8 +44,11 @@ if ( $omnabase_with_shops ) {
 
 tests_add_filter(
 	'muplugins_loaded',
-	static function () use ( $omnabase_with_shops ) {
+	static function () use ( $omnabase_with_shops, $omnabase_with_forum ) {
 		require dirname( __DIR__, 2 ) . '/omnabase.php';
+		if ( $omnabase_with_forum && is_file( WP_PLUGIN_DIR . '/bbpress/bbpress.php' ) ) {
+			require_once WP_PLUGIN_DIR . '/bbpress/bbpress.php';
+		}
 		if ( ! $omnabase_with_shops ) {
 			return;
 		}

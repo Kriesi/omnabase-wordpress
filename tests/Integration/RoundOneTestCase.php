@@ -30,7 +30,12 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 
 	protected const SITE   = 'https://shop.example.org';
 	protected const SCOPES = array( 'tickets:read', 'tickets:write', 'customers:read', 'customers:write', 'forms:write', 'portal' );
-	protected const EVENTS = array( 'message.sent', 'ticket.updated' );
+	/**
+	 * Builder's adjustment (M13 round three, the coordinator's ruling; DECISIONS "M13 round three"): Connect also asks for `ticket.resolved`,
+	 * the shape OmnaBase's fan-out sends a resolve in, so the forum's "close the topic when its ticket is resolved" can fire (the red team's
+	 * contradiction 5). Round one's link test compares the link's events with this list.
+	 */
+	protected const EVENTS = array( 'message.sent', 'ticket.updated', 'ticket.resolved' );
 	/** the stored values every leak check searches for (the facts secret has no prefix: review S7) */
 	protected const KEY      = 'obw_k3j9x2qak3j9x2qak3j9x2qak3j9x2qak3j9x2qak3j_ab7Q2X';
 	protected const WEBHOOKS = 'whsec_integrationWebhookSecret000000001';

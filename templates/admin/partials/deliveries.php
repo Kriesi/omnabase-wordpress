@@ -16,6 +16,7 @@ $omnabase_outcomes = array(
 	'handled' => __( 'Handled', 'omnabase' ),
 	'repeat'  => __( 'Repeat, answered without acting', 'omnabase' ),
 	'failed'  => __( 'Failed, OmnaBase retries', 'omnabase' ),
+	'refused' => __( 'Not done yet (topic gone, no support user, or not saved), OmnaBase retries', 'omnabase' ),
 );
 ?>
 <h2><?php esc_html_e( 'Webhook deliveries', 'omnabase' ); ?></h2>

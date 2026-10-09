@@ -30,7 +30,7 @@ use OmnaBase\WordPress\Sync\UserLink;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Part of the hand-wired container (`Plugin`): what round two adds. `registerBackground()` hooks the outbox's timer, the shops' licence
+ * Part of the hand-wired container (`Plugin`): what round two adds (its outbox, `queue` and `worker`, also carries round three's forum rows). `registerBackground()` hooks the outbox's timer, the shops' licence
  * events and the fresh start on a new connection; it runs once per request, however often the plugin is booted.
  */
 final class CustomerData {
@@ -38,6 +38,7 @@ final class CustomerData {
 	public readonly Switches $switches;
 	public readonly Table $table;
 	public readonly Worker $worker;
+	public readonly Queue $queue;
 	public readonly Responder $responder;
 	public readonly FactsLog $log;
 	/** @var FactsSource[] */
@@ -69,9 +70,9 @@ final class CustomerData {
 			new Sources\LicenseManager(),
 		);
 		$site_ids        = new SiteId();
-		$queue           = new Queue( $this->table, $this->schedule );
-		$link            = new UserLink( $queue, $site_ids, $this->known );
-		$this->refresh   = new LicenceRefresh( $queue, $site_ids, $this->known, $this->switches );
+		$this->queue     = new Queue( $this->table, $this->schedule );
+		$link            = new UserLink( $this->queue, $site_ids, $this->known );
+		$this->refresh   = new LicenceRefresh( $this->queue, $site_ids, $this->known, $this->switches );
 		$this->worker    = new Worker( $this->table, new Policy(), new Client( $vault ), $vault, array( $link, $this->refresh ) );
 		$this->responder = new Responder( $this->switches, new Identity( $site_ids ), $this->sources, new Shaper(), $link, $this->log );
 	}

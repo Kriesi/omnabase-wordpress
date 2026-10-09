@@ -17,15 +17,15 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The start builds the link to `<app>/connect#…` with exactly the fields OmnaBase's page reads (the site's origin, its title, the clicking
- * administrator's address, the six permissions, the two events, the way back, the state, the challenge); everything is after `#`, so it
- * never reaches a server or a log. The way back (the settings page with `code` and `state`, or `error` and `state`) checks the state for
+ * administrator's address, the six permissions, the three events (round three adds `ticket.resolved`, for closing topics), the way back,
+ * the state, the challenge); everything is after `#`, so it never reaches a server or a log. The way back (the settings page with `code` and `state`, or `error` and `state`) checks the state for
  * this administrator, trades the code once with the verifier, stores the key and secrets in the vault and what the connection is beside it.
  * Each step answers what to tell the administrator: `[ type, message ]`.
  */
 final class Flow {
 
 	public const SCOPES = array( 'tickets:read', 'tickets:write', 'customers:read', 'customers:write', 'forms:write', 'portal' );
-	public const EVENTS = array( 'message.sent', 'ticket.updated' );
+	public const EVENTS = array( 'message.sent', 'ticket.updated', 'ticket.resolved' );
 
 	/**
 	 * Builds the flow.

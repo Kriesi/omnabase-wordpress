@@ -42,4 +42,19 @@ final class KnownUsers {
 	public function forgetAll(): void {
 		delete_metadata( 'user', 0, Options::KNOWN_META, '', true );
 	}
+
+	/**
+	 * A user's name for the outbox list, or their number when they are gone.
+	 *
+	 * @param int $user_id The user.
+	 */
+	public static function nameOf( int $user_id ): string {
+		$user = get_userdata( $user_id );
+		return $user ? (string) $user->display_name : '#' . $user_id;
+	}
+
+	/** Why a user's call can no longer be made, in words. */
+	public static function goneReason(): string {
+		return __( 'This call can no longer be made: the user it is about was deleted.', 'omnabase' );
+	}
 }

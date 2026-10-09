@@ -10,6 +10,7 @@ namespace OmnaBase\WordPress\Sync;
 use OmnaBase\WordPress\Facts\Switches;
 use OmnaBase\WordPress\Outbox\Job;
 use OmnaBase\WordPress\Outbox\Queue;
+use OmnaBase\WordPress\Outbox\Step;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -56,16 +57,21 @@ final class LicenceRefresh implements Job {
 	}
 
 	/** {@inheritDoc} */
-	public function request( array $row ): ?array {
-		$site_id = $this->site_ids->forUser( (int) $row['subject_id'] );
-		if ( '' === $site_id ) {
-			return null;
-		}
-		return array( 'method' => 'POST', 'path' => '/customers/by-external/' . rawurlencode( $site_id ) . '/refresh', 'body' => new \stdClass(), 'timeout' => 15 );
+	public function subject( array $row ): string {
+		return KnownUsers::nameOf( (int) $row['subject_id'] );
 	}
 
 	/** {@inheritDoc} */
-	public function sent( array $row ): void {}
+	public function request( array $row ): Step {
+		$site_id = $this->site_ids->forUser( (int) $row['subject_id'] );
+		if ( '' === $site_id ) {
+			return Step::attention( KnownUsers::goneReason() );
+		}
+		return Step::send( 'POST', '/customers/by-external/' . rawurlencode( $site_id ) . '/refresh', new \stdClass(), 15 );
+	}
+
+	/** {@inheritDoc} */
+	public function sent( array $row, ?array $answer ): void {}
 
 	/** Whether a licence source is on. */
 	private function licencesShared(): bool {

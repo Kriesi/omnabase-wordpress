@@ -6,7 +6,7 @@
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2): choice 3 "Admins only. Refused, with the reason, on an http site, on plain
  * permalinks and when `rest_url()` is not `https://<host>/wp-json/`. The plugin makes the verifier … and the state, keeps both **per
  * admin** … and sends the browser to `/connect#…` with `site` = `home_url()`'s origin, the site title, the clicking admin's address,
- * `scopes` = `tickets:read,tickets:write,customers:read,customers:write,forms:write,portal`, `events` = `message.sent,ticket.updated` …
+ * `scopes` = `tickets:read,tickets:write,customers:read,customers:write,forms:write,portal`, `events` = `message.sent,ticket.updated` … (M13 round three adds `ticket.resolved`: DECISIONS)
  * `return` = the settings page. **The callback is the settings page** …: the same admin, the state (`hash_equals`), the expiry, then the
  * server-side exchange and a redirect to the clean address"; round one's *Red team*: "a callback with another state, an expired one or another
  * admin refused; two admins connecting at once keep their own states"; "Connect refuses http and plain permalinks". The link's fields are
@@ -33,8 +33,8 @@ final class ConnectFlowTest extends RoundOneTestCase {
 	 * What it checks: Connect sends the admin's browser to OmnaBase's connect page with exactly what OmnaBase reads, and asks OmnaBase
 	 *   nothing yet.
 	 * Passes when: the address is OmnaBase's `/connect#` page; after the `#` come exactly site (the https origin, no path), name (the site
-	 *   title), email (the clicking admin's), the six permissions, the two events, return (this settings page), a random state and a
-	 *   43-character challenge; no call to OmnaBase was made.
+	 *   title), email (the clicking admin's), the six permissions, the three events (round three added "ticket resolved"), return (this
+	 *   settings page), a random state and a 43-character challenge; no call to OmnaBase was made.
 	 * Fails when: a field is missing, misnamed or different, so OmnaBase's page shows "This link cannot connect a site", grants other
 	 *   permissions than the plugin needs, or sends the admin back somewhere else.
 	 */

@@ -53,11 +53,19 @@ export async function routeSite(context: BrowserContext): Promise<void> {
   });
 }
 
-/** the absolute address a navigation's redirect leads to when it stays on the site (wp.omnabase.test), else null */
+/**
+ * the absolute address a navigation's redirect leads to when it stays on the site (wp.omnabase.test), else null. M13 round three (the red
+ * team): a target that differs from the requested page only by its #fragment (bbPress's reply form posts to the topic and answers with
+ * "<topic>#post-<id>") loses the fragment, because `location.replace` to such an address only jumps within the page and the browser would
+ * stay on the "Redirecting" page for ever
+ */
 function inSiteRedirect(navigation: boolean, status: number, location: string | null, from: string): string | null {
   if (!navigation || status < 300 || status >= 400 || !location) return null;
   const to = new URL(location, from);
-  return to.hostname === SITE_HOST ? to.toString() : null;
+  const here = new URL(from);
+  if (to.hostname !== SITE_HOST) return null;
+  if (to.hash && to.origin === here.origin && to.pathname === here.pathname && to.search === here.search) to.hash = "";
+  return to.toString();
 }
 
 /** runs WP-CLI inside wp-env's cli container (the harness's `wp omnabase-test …` commands, the seed) */

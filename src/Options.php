@@ -1,6 +1,6 @@
 <?php
 /**
- * Every option, user meta key and transient prefix the plugin stores, by name.
+ * Every option, user meta key, post meta key and transient prefix the plugin stores, by name.
  *
  * @package OmnaBase
  */
@@ -43,6 +43,12 @@ final class Options {
 	public const DB_VERSION = 'omnabase_db_version';
 
 	/**
+	 * The forum settings: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>, 'closing_line' => <text>, 'guests' => bool,
+	 * 'close_resolved' => bool ]`; read and written by `Forum\Settings` alone.
+	 */
+	public const FORUM = 'omnabase_forum';
+
+	/**
 	 * All options, for uninstall.php and the structure guard.
 	 */
 	public const ALL = array(
@@ -55,6 +61,7 @@ final class Options {
 		self::FACTS,
 		self::FACTS_LOG,
 		self::DB_VERSION,
+		self::FORUM,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */
@@ -65,6 +72,12 @@ final class Options {
 
 	/** User meta: set once OmnaBase knows the user by their site id (the link was accepted, or OmnaBase asked by that id). */
 	public const KNOWN_META = 'omnabase_known';
+
+	/** Post meta: the OmnaBase ticket number a topic became. */
+	public const TICKET_META = '_omnabase_ticket';
+
+	/** Post meta: OmnaBase's message id on a reply the plugin posted (the echo marker: a reply carrying it is never sent back). */
+	public const MESSAGE_META = '_omnabase_message_id';
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';

@@ -6,7 +6,9 @@
  * (the vault, the kept connection, the last check, the last ping, the deliveries log, the handled delivery ids), each administrator's
  * pending connect (user meta) and the screen's one-time messages (transients). Round two: the customer-data switches, the facts log, the
  * outbox's schema version, every user's site id and "known to OmnaBase" mark (user meta), the outbox's two scheduled jobs and its table
- * `{prefix}omnabase_outbox`. Still to come: the best-effort `DELETE /me` (round six), post meta (rounds three to five).
+ * `{prefix}omnabase_outbox`. Round three: the forum settings, the ticket number on every topic and OmnaBase's message id on every reply the
+ * plugin posted (post meta), the subscriber-mail jobs. Still to come: the best-effort `DELETE /me` (round six), more post meta (rounds four
+ * and five).
  *
  * @package OmnaBase
  */
@@ -23,6 +25,7 @@ $omnabase_options = array(
 	'omnabase_facts',
 	'omnabase_facts_log',
 	'omnabase_db_version',
+	'omnabase_forum',
 );
 
 foreach ( $omnabase_options as $omnabase_option ) {
@@ -34,9 +37,14 @@ delete_metadata( 'user', 0, 'omnabase_pending_connect', '', true );
 delete_metadata( 'user', 0, 'omnabase_site_id', '', true );
 delete_metadata( 'user', 0, 'omnabase_known', '', true );
 
-// The outbox's timer: the job every minute and the one-off run after a new row.
+// Every topic's ticket number and every posted reply's OmnaBase message id.
+delete_post_meta_by_key( '_omnabase_ticket' );
+delete_post_meta_by_key( '_omnabase_message_id' );
+
+// The outbox's timer (the job every minute and the one-off run after a new row) and the forum's waiting subscriber mails.
 wp_clear_scheduled_hook( 'omnabase_outbox' );
 wp_clear_scheduled_hook( 'omnabase_outbox_now' );
+wp_unschedule_hook( 'omnabase_forum_mails' );
 
 // The screen's one-time messages (`omnabase_notice_<user id>` and their timeouts), whoever they were for.
 global $wpdb;

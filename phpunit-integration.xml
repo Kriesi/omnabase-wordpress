@@ -6,6 +6,9 @@
   Two runs (M13 round two): the plain WordPress (every test outside the group "shops"), and, with OMNABASE_TEST_SHOPS=1, WordPress with
   WooCommerce, EDD and License Manager for WooCommerce loaded (the group "shops": the customer-data and outbox tests). The shops' admin code
   phones home and prints notices of its own, so the round-one tests keep a WordPress without them.
+
+  A third run (M13 round three): with OMNABASE_TEST_FORUM=1, WordPress with bbPress loaded (the group "forum": topics, replies and
+  OmnaBase's answers posted back). The plain run leaves that group out too.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
@@ -21,6 +24,7 @@
   <groups>
     <exclude>
       <group>shops</group>
+      <group>forum</group>
     </exclude>
   </groups>
 </phpunit>

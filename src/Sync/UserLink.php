@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Sync;
 
 use OmnaBase\WordPress\Outbox\Job;
 use OmnaBase\WordPress\Outbox\Queue;
+use OmnaBase\WordPress\Outbox\Step;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -55,21 +56,22 @@ final class UserLink implements Job {
 	}
 
 	/** {@inheritDoc} */
-	public function request( array $row ): ?array {
-		$user = get_userdata( (int) $row['subject_id'] );
-		if ( ! $user ) {
-			return null;
-		}
-		return array(
-			'method'  => 'PUT',
-			'path'    => '/customers/by-external/' . rawurlencode( $this->site_ids->forUser( (int) $user->ID ) ),
-			'body'    => array( 'email' => (string) $user->user_email, 'name' => (string) $user->display_name ),
-			'timeout' => 10,
-		);
+	public function subject( array $row ): string {
+		return KnownUsers::nameOf( (int) $row['subject_id'] );
 	}
 
 	/** {@inheritDoc} */
-	public function sent( array $row ): void {
+	public function request( array $row ): Step {
+		$user = get_userdata( (int) $row['subject_id'] );
+		if ( ! $user ) {
+			return Step::attention( KnownUsers::goneReason() );
+		}
+		$path = '/customers/by-external/' . rawurlencode( $this->site_ids->forUser( (int) $user->ID ) );
+		return Step::send( 'PUT', $path, array( 'email' => (string) $user->user_email, 'name' => (string) $user->display_name ), 10 );
+	}
+
+	/** {@inheritDoc} */
+	public function sent( array $row, ?array $answer ): void {
 		$this->known->mark( (int) $row['subject_id'] );
 	}
 }

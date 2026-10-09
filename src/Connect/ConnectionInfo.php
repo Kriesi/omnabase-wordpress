@@ -48,6 +48,16 @@ final class ConnectionInfo {
 		return is_array( $info ) ? $info : array();
 	}
 
+	/** The first project's id (where the site's new tickets go), or an empty string. */
+	public function firstProjectId(): string {
+		return (string) ( self::projects( $this->read()['projects'] ?? array() )[0]['id'] ?? '' );
+	}
+
+	/** The workspace's name, or an empty string. */
+	public function workspaceName(): string {
+		return (string) ( $this->read()['workspace']['name'] ?? '' );
+	}
+
 	/** Forgets it (Disconnect). */
 	public function clear(): void {
 		delete_option( Options::SITE );
