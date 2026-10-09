@@ -108,4 +108,4 @@ The browser flows' backend is OmnaBase's own e2e server (`apps/web/e2e/server.ts
   same port, same test database.
 - The hooks the flows use: `/api/test/apikey` (a site key), `/api/test/relay` (OmnaBase → this WordPress), `/api/test/tick` (`webhooks`,
   `sender`), `/api/test/webhooks`, the mail capture (`/api/test/mail`, `/api/test/outbox`), `/api/test/clock`, `/api/test/limits`.
-- From round one, Connect needs OmnaBase's web app too (the connect page on Vite, port 4391): `bin/omnabase-e2e.sh` grows to start it.
+- From round one, Connect needs OmnaBase's web app too (the connect page on Vite, port 4391): `bin/omnabase-e2e.sh` starts it beside the e2e API (port 3011).
