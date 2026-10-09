@@ -27,7 +27,8 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
 - `tests/Unit` (brain/monkey), `tests/Structure` (file-level guards), `tests/Integration` (inside wp-env), `tests/e2e` (Playwright),
   `tests/wp-env/mu-plugins` the local test harness (never shipped), `tests/fakes` the paid add-ons' fakes (from round two; the harness
   loads them in the development WordPress when the real add-on is absent).
-- `bin/` the scripts: `seed.sh`, `build-dist.sh`, `check-version.sh`, `test-integration.sh`, `omnabase-e2e.sh`.
+- `bin/` the scripts: `seed.sh`, `build-dist.sh`, `check-version.sh`, `test-integration.sh`, `omnabase-e2e.sh`, `build-form-css.php` (the
+  form's `assets/form.css` from OmnaBase's kit tokens and `styles/form.css`, the source of its rules; the result is committed).
 - `paid/` (git-ignored): the founder's paid add-on zips when he has them (WooCommerce Subscriptions, EDD Software Licensing, EDD Recurring).
 
 ## The rounds and the red team

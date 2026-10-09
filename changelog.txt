@@ -17,3 +17,4 @@ section is never changed again. At release the top section is copied into readme
 * Added: bbPress forums: topics in the forums you tick become OmnaBase tickets, also on a busy day or during an outage; topics in hidden forums are marked not public.
 * Added: Forum replies by the topic's author and by moderators reach the ticket; your team's answers appear on the forum under the support user you choose, with a closing line you can word.
 * Added: Optionally close a forum topic when its ticket is resolved.
+* Added: A contact form by shortcode: put [omnabase_form] on any page and visitors' messages become tickets in OmnaBase, with your project's products, licence field and privacy link; bots and double clicks file nothing, and messages sent during an outage arrive once OmnaBase is back.

@@ -22,6 +22,8 @@ final class Client {
 	private const EXCHANGE_TIMEOUT_SECONDS = 10;
 	// `/me/ping` answers once OmnaBase has called the site back (OmnaBase allows the site 5 seconds).
 	private const PING_TIMEOUT_SECONDS = 15;
+	// A visitor waits for the form's answer; a slower OmnaBase hands the message to the outbox.
+	private const FORM_TIMEOUT_SECONDS = 10;
 
 	/**
 	 * Builds the client.
@@ -55,6 +57,37 @@ final class Client {
 	 */
 	public function revoke() {
 		return $this->withKey( 'DELETE', '/me', null, self::TIMEOUT_SECONDS );
+	}
+
+	/**
+	 * A project's form settings for the shortcode form: `{ products, askLicense, privacyUrl }` (round four).
+	 *
+	 * @param string $slug The project's slug.
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function formSettings( string $slug ) {
+		return $this->withKey( 'GET', '/forms/' . rawurlencode( $slug ), null, self::TIMEOUT_SECONDS );
+	}
+
+	/**
+	 * Sends a visitor's form message (round four), the answer kept whole: the visitor waits for it, so the timeout is short.
+	 *
+	 * @param string              $slug The project's slug.
+	 * @param array<string,mixed> $body The fields OmnaBase takes.
+	 * @param string              $key  The Idempotency-Key (from the form's time token).
+	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
+	 */
+	public function submitForm( string $slug, array $body, string $key ): array {
+		return $this->call( 'POST', self::formPath( $slug ), $body, self::FORM_TIMEOUT_SECONDS, array( 'Idempotency-Key' => $key ) );
+	}
+
+	/**
+	 * Where a project's form messages go.
+	 *
+	 * @param string $slug The project's slug.
+	 */
+	public static function formPath( string $slug ): string {
+		return '/forms/' . rawurlencode( $slug ) . '/submissions';
 	}
 
 	/**

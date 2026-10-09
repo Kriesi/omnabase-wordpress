@@ -335,3 +335,84 @@ is written in one file only, as the guard wants).
 marked are never filed (only new publications are); "Send now" on the outbox; the shared connect and sign-in helpers of `facts.spec.ts` and
 `forum.spec.ts` (the red team's note 10); the round-two leftovers (a registered user's earlier guest orders, License Manager's guest
 licences, health lines for the facts calls and a disabled WP-Cron).
+
+## 2026-10-09 — M13 round four: the shortcode form
+
+The red team's tests came first (`docs/reviews/m13-round4-red-team-report.md`: 42 cases here in 5 files plus the helper
+`RoundFourTestCase.php` and the replaced test harness with its "OmnaBase unreachable" switch; OmnaBase's 8 in its own repository; all copied
+in as they were). Before: structure 7 of 7 failing, integration 29 of 29, the flow stopped at "[omnabase_form]" shown as text. After: all
+green, none adjusted; one addition to the test harness (below). OmnaBase's side (the keyed form route without the hosted form's switch,
+`GET /forms/{slug}`) is recorded in its DECISIONS "M13 round four: the shortcode form; the keyed form route". The words: *shortcode*, a tag
+like `[omnabase_form]` that WordPress replaces with the plugin's output; *time token*, a one-time ticket the form's script fetches when the
+page loads; *honeypot*, a field people never see and bots fill; *idempotency key*, a one-time id that makes a resend count once;
+*transient*, a stored value with an expiry; *REST route*, an address under `/wp-json/…` a program calls.
+
+**The coordinator's rulings, as built.**
+
+- **The brief's numbers**: 5 messages an hour per visitor address and 25 an hour for the site (under OmnaBase's 30 per key and project); a
+  token is taken from 3 seconds until 2 hours after it was handed out; OmnaBase's 403 and 404 read "This form is not available right now".
+- **The outbox takes a network failure and any 5xx** (OmnaBase's proxy answers 502/503 while it switches versions), and OmnaBase still busy
+  with the same key (`409 idempotency_in_flight`), the outbox's own reading of "may pass by waiting". **Never a 429**: "Please try again in
+  an hour", not queued (queuing would step round OmnaBase's limit). A 400 reads "Your message could not be sent. Please write to us at
+  <the site's administration address>" (the filter `omnabase_form_support_email` names another) and forgets the kept form settings.
+- **The page never holds a token**: the form's script fetches one on load and only then enables Send. Without JavaScript the button stays
+  off and a `<noscript>` sentence says the form needs JavaScript; a post without a token is refused with "This form has expired. Please
+  reload the page and send again (the form needs JavaScript)."
+- **Amending round two's "the outbox holds no customer data"**: a form message has nothing to be rebuilt from, so its outbox row
+  (`form_submission`) carries the project and the body in a new `payload` column (table version 3) while it waits; the payload is emptied
+  the moment the row is sent or discarded (rows themselves are purged after seven days as before). Every other kind still builds its body
+  when it is sent.
+- **A double click**: the same token with the same words answers the first answer again (no second call); with other words it is refused
+  (409, "This form was sent already. Please reload the page to send another message."). The token is bound to its project.
+- **The privacy link**: the project's `privacyUrl` from `GET /forms/{slug}`, else the site's privacy policy page, else none.
+- **A proxy's address only through the filter `omnabase_visitor_address`** (the connection's address in, the address to count out; an
+  answer that is not an address is ignored).
+
+**The parts, by the brief's names.** `Forms\Shortcode` (the shortcode, the template `templates/form.php`, the script and stylesheet),
+`Forms\Token` (the time tokens), `Forms\Guard` (the honeypot `omnabase_hp`, the limits, the visitor's address), `Rest\Form` (the two routes),
+with `Forms\Projects` (which project), `Forms\Settings` (`GET /forms/{slug}`, kept), `Forms\Fields` (the checks), `Forms\Intake` (the order
+of the checks), `Forms\Sender` (the immediate try, the outbox behind it), `Forms\Answer` (every sentence a visitor reads) and
+`Forms\FormJob` (the outbox row); `Forms` wires them beside `CustomerData` and `Forums`. `Api\Client` gains `formSettings` and
+`submitForm`; `Outbox\Table` gains `carry` and the payload.
+
+**Choices the brief left open.**
+
+- **The routes**: `GET /wp-json/omnabase/v1/form-token?project=<slug>` answers `{ token }` with `Cache-Control: no-store`, only for a project
+  of the site's key (else 404, no token); its permission check is the limit of 30 tokens per 10 minutes per address (429). `POST
+  /wp-json/omnabase/v1/form` takes JSON (`project, token, name, email, subject, message, product?, licence?, omnabase_hp`); its permission
+  check is a connected site (503 otherwise). Answers carry `message` (the sentence), `reference` on success and `fields.<name>` for a wrong
+  field, and are never cached.
+- **The order of the checks** (`Forms\Intake`): the honeypot (filled: "Thanks. Your message was sent; we answer by email." and nothing goes,
+  nothing counts), the project, the fields (each named; the token is kept so the corrected message can go), the token, the limits, then
+  OmnaBase. A refused message counts towards no limit; a message refused by a limit burns its token (the answer is kept with it, so a
+  repeat reads the same sentence).
+- **The fields as OmnaBase checks them**: a name of 1 to 120 characters, a valid address, a subject of 1 to 200, a message of 1 to 20 000,
+  a product of at most 60 and a licence of 4 to 200 when given; empty optional fields are left out. The product is not checked against the
+  list (OmnaBase does; a stale list then reads "could not be sent" once and the settings are asked again).
+- **The token** (`Forms\Token`): 32 letters and digits, kept as a transient under a hash of itself (`omnabase_form_t_…`) with its project,
+  the time it was handed out and, once used, the message's fingerprint and the answer. The Idempotency-Key is `obwp-form-` and 40 characters
+  of a hash of the token, so every try of one message (the immediate one, the outbox's, a double click) is one ticket.
+- **The limits are transients** under a hash of the address with the site's salt (`omnabase_form_a_…`, `…ta_…`, `…site`), each a list of
+  times within the window; not atomic, which a burst of parallel requests could overshoot by a few (OmnaBase's own limits stand behind).
+- **The form's settings are kept an hour** (the brief), five minutes when OmnaBase could not be asked (the form then shows its four fields
+  without product list or licence field), and forgotten when OmnaBase refuses a message as wrong.
+- **The project**: the attribute (`project="<slug>"`, one of the key's), else the key's single project; otherwise only an administrator
+  reads a notice naming the problem ("not connected", "not one of this site's projects", "several projects"), everyone else nothing.
+- **A signed-in user**: name and email filled in, and the form carries WordPress's REST nonce (a short-lived token against forged
+  requests) in `data-nonce`, only for a signed-in user, so a visitor's page is the same for everyone and a page cache may keep it.
+- **The stylesheet** (choice 2): `bin/build-form-css.php` reads the light block of OmnaBase's `packages/ui/src/styles/tokens.css` (the
+  OmnaBase repository beside this one, or `OMNABASE_REPO`), copies only the variables the form's rules use (and those they refer to) under
+  `.ob-wp`, without the dark block and the kit's typeface, and puts the rules from `styles/form.css` after them into `assets/form.css`.
+  Unlike the front page's copy the result is **committed**: a checkout without the OmnaBase repository (CI, the zip's build elsewhere) still
+  has it; `bin/build-dist.sh` builds it first when the tokens are there. The filter `omnabase_form_styles` (false) leaves the form to the
+  theme alone; the settings screen's switch "theme styles only" (Q4) waits for the shortcodes section (round five or six).
+- **The script** (`assets/form.js`, vanilla, deferred in the footer): no key, no OmnaBase address; it calls the site's two routes only.
+- **Uninstall** deletes every `omnabase_form_…` transient; waiting form messages go with the outbox's table.
+
+**The builder's addition to the test harness** (`tests/wp-env/mu-plugins/omnabase-test-harness.php`, not a test): WordPress fixes the
+content folder's address from `localhost:8888` before must-use plugins load, so plugins' scripts and styles pointed at
+`https://localhost:8888`, which the browser's route does not take; the form's script never loaded in the flow. The harness now moves
+`content_url` and `plugins_url` to the test host like every other link (WooCommerce's front-end scripts load in the flows too now).
+
+**Left for later rounds.** A "Shortcodes" section on the settings screen (`[omnabase_form]`, round five's `[omnabase_messages]`) with the
+"theme styles only" switch; the privacy-policy text naming form messages (round six).

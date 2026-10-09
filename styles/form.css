@@ -1,0 +1,117 @@
+/* The shortcode form's own rules (the source; bin/build-form-css.php puts the kit's tokens above them into assets/form.css).
+   Every rule names the plugin's own classes inside .ob-wp (where the variables live), so the theme's own styles are never touched; the
+   theme's font and text colour carry through. */
+
+.ob-wp-form {
+  display: grid;
+  gap: var(--ob-space-4);
+  max-width: 640px;
+  font: inherit;
+  color: inherit;
+}
+
+.ob-wp-form .ob-wp-form__field {
+  margin: 0;
+}
+
+.ob-wp-form label {
+  display: grid;
+  gap: var(--ob-space-1);
+}
+
+.ob-wp-form .ob-wp-form__label {
+  font-size: var(--ob-text-sm);
+  font-weight: 600;
+}
+
+.ob-wp-form .ob-wp-form__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-bg-surface);
+  color: var(--ob-text);
+  font: inherit;
+}
+
+.ob-wp-form .ob-wp-form__input:focus {
+  outline: 2px solid var(--ob-focus);
+  outline-offset: 1px;
+  border-color: var(--ob-focus);
+}
+
+.ob-wp-form .ob-wp-form__message {
+  min-height: 8em;
+  resize: vertical;
+}
+
+.ob-wp-form .ob-wp-form__error {
+  display: block;
+  margin-top: var(--ob-space-1);
+  color: var(--ob-red-500);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp-form .ob-wp-form__error[hidden] {
+  display: none;
+}
+
+.ob-wp-form .ob-wp-form__actions {
+  margin: 0;
+}
+
+.ob-wp-form .ob-wp-form__submit {
+  padding: var(--ob-space-2) var(--ob-space-5);
+  border: 0;
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-btn-primary-bg);
+  color: var(--ob-btn-primary-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ob-wp-form .ob-wp-form__submit:hover {
+  background: var(--ob-btn-primary-hover);
+}
+
+.ob-wp-form .ob-wp-form__submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ob-wp-form .ob-wp-form__status {
+  margin: 0;
+  min-height: 1.5em;
+}
+
+.ob-wp-form .ob-wp-form__status--error {
+  color: var(--ob-red-500);
+}
+
+.ob-wp-form .ob-wp-form__privacy,
+.ob-wp-form .ob-wp-form__note {
+  margin: 0;
+  color: var(--ob-text-secondary);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp-form .ob-wp-form__privacy a {
+  color: var(--ob-accent);
+}
+
+/* the honeypot: off screen for people, still a real input for bots (never display: none, which some bots skip) */
+.ob-wp-form .ob-wp-form__trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ob-wp-form-notice {
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border-left: 4px solid var(--ob-amber-500);
+  background: var(--ob-amber-50);
+}

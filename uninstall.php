@@ -7,8 +7,9 @@
  * pending connect (user meta) and the screen's one-time messages (transients). Round two: the customer-data switches, the facts log, the
  * outbox's schema version, every user's site id and "known to OmnaBase" mark (user meta), the outbox's two scheduled jobs and its table
  * `{prefix}omnabase_outbox`. Round three: the forum settings, the ticket number on every topic and OmnaBase's message id on every reply the
- * plugin posted (post meta), the subscriber-mail jobs. Still to come: the best-effort `DELETE /me` (round six), more post meta (rounds four
- * and five).
+ * plugin posted (post meta), the subscriber-mail jobs. Round four: what the shortcode form keeps as transients (the time tokens, the counted
+ * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Still to come: the best-effort `DELETE /me` (round six), more user meta (round
+ * five).
  *
  * @package OmnaBase
  */
@@ -52,6 +53,14 @@ $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall: tra
 	$wpdb->prepare(
 		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
 		$wpdb->esc_like( '_transient_' ) . '%' . $wpdb->esc_like( 'omnabase_notice_' ) . '%'
+	)
+);
+
+// What the shortcode form keeps for a while (`omnabase_form_…` transients and their timeouts): tokens, counted addresses, cached settings.
+$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall: transients by prefix, no API for that, nothing to cache.
+	$wpdb->prepare(
+		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+		$wpdb->esc_like( '_transient_' ) . '%' . $wpdb->esc_like( 'omnabase_form_' ) . '%'
 	)
 );
 

@@ -81,4 +81,11 @@ final class Options {
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';
+
+	/**
+	 * Transients: what the shortcode form keeps for a while (round four), all under this prefix: the time tokens (`…t_<hash>`, two hours),
+	 * the counted submissions and token requests per visitor address (`…a_<hash>`, `…ta_<hash>`, an hour) and for the site (`…site`), the
+	 * project's cached form settings (`…s_<slug hash>`, an hour).
+	 */
+	public const FORM_TRANSIENT = 'omnabase_form_';
 }

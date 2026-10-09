@@ -37,9 +37,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
- * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`). In the admin: Settings ›
- * OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum settings, the customer-data switches, Retry and
- * Discard) and the "reconnect needed" notice.
+ * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form and its two
+ * routes (`Forms`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum
+ * settings, the customer-data switches, Retry and Discard) and the "reconnect needed" notice.
  */
 final class Plugin {
 
@@ -60,6 +60,7 @@ final class Plugin {
 		$forum = new Forums( $data );
 		$data->registerBackground();
 		$forum->registerBackground();
+		( new Forms( $this->info, $vault, $data ) )->register();
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
 		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {

@@ -14,7 +14,8 @@
 #   - the syntax check must run on PHP 8.1, the oldest version the header promises (inside wp-env's cli container, so wp-env must be up).
 # A development build checks syntax with the PHP on this machine and says which one.
 #
-# Still to come (brief, round four): the front-end stylesheet built from OmnaBase's kit tokens (packages/ui/src/tokens.css).
+# Round four: the shortcode form's stylesheet is built first from OmnaBase's kit tokens (bin/build-form-css.php) when the OmnaBase
+# repository is beside this one (or OMNABASE_REPO); otherwise the committed assets/form.css goes in as it is.
 #
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -31,6 +32,7 @@ done
 
 SLUG="omnabase"
 bin/check-version.sh
+php bin/build-form-css.php || echo "    (the form's stylesheet as committed)"
 VERSION="$(grep -m1 -E '^[[:space:]/*#@]*Version:' omnabase.php | sed -E 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*$//')"
 
 if [[ $RELEASE -eq 1 ]]; then

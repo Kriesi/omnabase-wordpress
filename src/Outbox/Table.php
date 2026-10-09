@@ -18,12 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`), the user or post it is about, a dedupe key and its own idempotency key
  * (version 2, round three: made once with the row and sent on every try, so a resent topic counts once at OmnaBase); its state is
  * `waiting`, `sent`, `attention` (needs the administrator) or `discarded`. Times are unix seconds. The body is built from the user or post
- * when the row is sent, so the table holds no customer data. Made or changed on load when the schema version (`omnabase_db_version`) is
- * missing or older; dropped by uninstall.php. Every query is prepared.
+ * when the row is sent, so the table holds no customer data, with one exception (version 3, round four): a form message has nothing to be
+ * rebuilt from, so a `form_submission` row carries its body in `payload` while it waits, and the payload is emptied the moment the row is
+ * sent or discarded. Made or changed on load when the schema version (`omnabase_db_version`) is missing or older; dropped by uninstall.php.
+ * Every query is prepared.
  */
 final class Table {
 
-	public const VERSION = '2';
+	public const VERSION = '3';
 
 	/** The table's full name. */
 	public static function name(): string {
@@ -56,6 +58,7 @@ final class Table {
 			next_at bigint(20) NOT NULL DEFAULT 0,
 			claimed_until bigint(20) NOT NULL DEFAULT 0,
 			last_error text NULL,
+			payload longtext NULL,
 			created_at bigint(20) NOT NULL DEFAULT 0,
 			sent_at bigint(20) NULL,
 			PRIMARY KEY  (id),
@@ -83,6 +86,27 @@ final class Table {
 		}
 		$row = array( 'kind' => $kind, 'subject_id' => $subject, 'dedupe_key' => $dedupe, 'idempotency_key' => self::newKey(), 'state' => Policy::WAITING, 'attempts' => 0, 'next_at' => $now, 'claimed_until' => 0, 'last_error' => '', 'created_at' => $now );
 		return false !== $wpdb->insert( $table, $row, array( '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%d' ) );
+	}
+
+	/**
+	 * Adds a waiting row that carries its own body and idempotency key (a form message whose immediate try failed): one try made already,
+	 * the next after the first back-off; false when a row for the same key waits already (a double click during an outage).
+	 *
+	 * @param string $kind    The row's kind.
+	 * @param string $key     Its idempotency key (also its dedupe key).
+	 * @param string $payload The body to send, as JSON.
+	 * @param int    $now     The time now.
+	 */
+	public function carry( string $kind, string $key, string $payload, int $now ): bool {
+		global $wpdb;
+		$table   = self::name();
+		$dedupe  = $kind . ':' . $key;
+		$waiting = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM %i WHERE dedupe_key = %s AND state = 'waiting' LIMIT 1", $table, $dedupe ) );
+		if ( null !== $waiting ) {
+			return false;
+		}
+		$row = array( 'kind' => $kind, 'subject_id' => 0, 'dedupe_key' => $dedupe, 'idempotency_key' => $key, 'state' => Policy::WAITING, 'attempts' => 1, 'next_at' => $now + 60, 'claimed_until' => 0, 'last_error' => '', 'payload' => $payload, 'created_at' => $now );
+		return false !== $wpdb->insert( $table, $row, array( '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%d' ) );
 	}
 
 	/**
@@ -122,7 +146,7 @@ final class Table {
 	}
 
 	/**
-	 * Records a try's outcome and lets go of the row.
+	 * Records a try's outcome and lets go of the row; a sent or discarded row's payload is emptied.
 	 *
 	 * @param int                                             $id       The row.
 	 * @param int                                             $attempts Its tries, this one included.
@@ -140,6 +164,9 @@ final class Table {
 			array( '%s', '%d', '%d', '%d', '%s', '%d' ),
 			array( '%d' )
 		);
+		if ( $done ) {
+			$wpdb->query( $wpdb->prepare( 'UPDATE %i SET payload = NULL WHERE id = %d', self::name(), $id ) );
+		}
 	}
 
 	/**
@@ -157,7 +184,7 @@ final class Table {
 	}
 
 	/**
-	 * The administrator gives a row up: kept seven days as discarded, then removed with the sent ones.
+	 * The administrator gives a row up: kept seven days as discarded (its payload emptied), then removed with the sent ones.
 	 *
 	 * @param int $id  The row.
 	 * @param int $now The time now.
@@ -165,7 +192,7 @@ final class Table {
 	public function discard( int $id, int $now ): bool {
 		global $wpdb;
 		$table = self::name();
-		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'discarded', sent_at = %d, claimed_until = 0 WHERE id = %d AND state IN ('waiting', 'attention')", $table, $now, $id ) );
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'discarded', sent_at = %d, claimed_until = 0, payload = NULL WHERE id = %d AND state IN ('waiting', 'attention')", $table, $now, $id ) );
 	}
 
 	/**
