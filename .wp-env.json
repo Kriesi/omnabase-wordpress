@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/wp-env.json",
+	"core": null,
+	"phpVersion": "8.1",
+	"port": 8888,
+	"plugins": [],
+	"mappings": {
+		"wp-content/plugins/omnabase": ".",
+		"wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip",
+		"wp-content/plugins/easy-digital-downloads": "https://downloads.wordpress.org/plugin/easy-digital-downloads.latest-stable.zip",
+		"wp-content/plugins/bbpress": "https://downloads.wordpress.org/plugin/bbpress.latest-stable.zip",
+		"wp-content/plugins/license-manager-for-woocommerce": "https://downloads.wordpress.org/plugin/license-manager-for-woocommerce.latest-stable.zip",
+		"wp-content/plugins/plugin-check": "https://downloads.wordpress.org/plugin/plugin-check.latest-stable.zip",
+		"wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
+	},
+	"config": {
+		"WP_ENVIRONMENT_TYPE": "local",
+		"OMNABASE_TEST_MODE": true,
+		"OMNABASE_TEST_HOST": "wp.omnabase.test",
+		"OMNABASE_API_URL": "http://host.docker.internal:3011"
+	},
+	"lifecycleScripts": {
+		"afterStart": "wp-env run cli wp plugin activate omnabase woocommerce easy-digital-downloads bbpress license-manager-for-woocommerce plugin-check"
+	}
+}

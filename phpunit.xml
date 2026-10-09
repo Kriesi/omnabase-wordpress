@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  The two PHPUnit layers that run on the Mac and in CI without WordPress:
+  - unit: pure logic, WordPress faked by brain/monkey (tests/Unit)
+  - structure: file-level guards over the repository (tests/Structure)
+  `composer test` runs both. The third layer, integration tests inside wp-env with WordPress's own test library, has its own
+  configuration (phpunit-integration.xml) and runs through `composer test:integration`.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         beStrictAboutOutputDuringTests="true"
+         stopOnFailure="false">
+  <php>
+    <ini name="memory_limit" value="512M"/>
+    <ini name="error_reporting" value="-1"/>
+  </php>
+  <testsuites>
+    <testsuite name="unit">
+      <directory suffix="Test.php">./tests/Unit</directory>
+    </testsuite>
+    <testsuite name="structure">
+      <directory suffix="Test.php">./tests/Structure</directory>
+    </testsuite>
+  </testsuites>
+  <coverage processUncoveredFiles="false">
+    <include>
+      <directory suffix=".php">./src</directory>
+    </include>
+  </coverage>
+</phpunit>

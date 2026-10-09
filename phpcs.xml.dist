@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<ruleset name="OmnaBase for WordPress">
+    <description>
+        Two questions about the plugin's runtime code, nothing about style:
+        1. Does it run on every PHP version the header promises (PHPCompatibilityWP, PHP 8.1 and up)?
+        2. Does it follow WordPress's security rules (WPCS: escaping output, sanitising input, nonces, prepared SQL) and
+           translate with the right text domain?
+    </description>
+
+    <file>omnabase.php</file>
+    <file>uninstall.php</file>
+    <file>src/</file>
+    <file>templates/</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*/build/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+
+    <!-- 1. The PHP versions: 8.1 and up (composer.json's "php": "^8.1", the header's "Requires PHP: 8.1"). -->
+    <config name="testVersion" value="8.1-"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <!-- The oldest WordPress the header promises ("Requires at least: 6.8"), for WPCS's deprecated-function checks. -->
+    <config name="minimum_wp_version" value="6.8"/>
+
+    <!-- 2. WordPress's security sniffs. -->
+    <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+    <rule ref="WordPress.DB.DirectDatabaseQuery"/>
+    <rule ref="WordPress.WP.AlternativeFunctions"/>
+    <rule ref="WordPress.WP.DeprecatedFunctions"/>
+    <rule ref="WordPress.PHP.DevelopmentFunctions"/>
+    <rule ref="WordPress.PHP.DontExtract"/>
+    <rule ref="WordPress.WP.GlobalVariablesOverride"/>
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="omnabase"/>
+                <element value="OmnaBase\WordPress"/>
+            </property>
+        </properties>
+    </rule>
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="omnabase"/>
+            </property>
+        </properties>
+    </rule>
+    <rule ref="Generic.PHP.Syntax"/>
+</ruleset>

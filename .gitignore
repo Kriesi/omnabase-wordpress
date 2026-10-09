@@ -1,0 +1,27 @@
+# Composer and npm
+/vendor/
+/node_modules/
+
+# Build output (bin/build-dist.sh)
+/build/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/tests/e2e/.auth/
+
+# wp-env local overrides
+.wp-env.override.json
+
+# Paid add-ons the founder may drop in (Woo Subscriptions, EDD Software Licensing, EDD Recurring): never committed
+/paid/
+
+# PHPUnit
+/.phpunit.result.cache
+/.phpunit.cache/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
