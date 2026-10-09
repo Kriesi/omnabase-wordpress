@@ -76,8 +76,9 @@ customer-visible change, no class or file names.
 - **Unit and structure** (no WordPress, seconds): `composer test` (both suites; `composer test:unit`, `composer test:structure` alone).
   `composer lint` runs phpcs (PHPCompatibilityWP for PHP 8.1+, WPCS's security and i18n sniffs). Both must pass before a round is done.
 - **Integration** (inside wp-env's tests environment, port 8889, WordPress's own test library): `composer test:integration`
-  (`bin/test-integration.sh`, PHPUnit's options pass through). Needs `npx wp-env start`. Two runs: a plain WordPress, then the group
-  `shops` with WooCommerce, EDD, License Manager and the paid add-ons' fakes loaded (`OMNABASE_TEST_SHOPS=1`); both must pass.
+  (`bin/test-integration.sh`, PHPUnit's options pass through). Needs `npx wp-env start`. Three runs: a plain WordPress, the group
+  `shops` with WooCommerce, EDD, License Manager and the paid add-ons' fakes loaded (`OMNABASE_TEST_SHOPS=1`), and the group `forum`
+  with bbPress loaded; all three must pass.
 - **Browser flows** (Playwright against wp-env with OmnaBase's e2e server as the backend): `npx playwright test`. Needs `npx wp-env start`,
   `bin/seed.sh`, Node 22 and OmnaBase's e2e server (below).
 - Finish a round with: `composer lint`, `composer test`, `composer test:integration`, `npm run typecheck` (the flows' TypeScript),
