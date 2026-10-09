@@ -18,3 +18,7 @@ section is never changed again. At release the top section is copied into readme
 * Added: Forum replies by the topic's author and by moderators reach the ticket; your team's answers appear on the forum under the support user you choose, with a closing line you can word.
 * Added: Optionally close a forum topic when its ticket is resolved.
 * Added: A contact form by shortcode: put [omnabase_form] on any page and visitors' messages become tickets in OmnaBase, with your project's products, licence field and privacy link; bots and double clicks file nothing, and messages sent during an outage arrive once OmnaBase is back.
+* Added: A message centre for signed-in customers: put [omnabase_messages] on the page you pick under Settings › OmnaBase, and customers read their tickets, answer them and ask new questions there; their earlier email conversations and forum topics show once they confirm their address through a link we mail them.
+* Added: The message centre's page is never cached, also when a page builder made it, and [omnabase_messages guest="form"] gives visitors who are not signed in the contact form instead of a login link.
+* Added: When a customer changes their email address in WordPress, OmnaBase learns the new address and the message centre asks them to confirm it again.
+* Added: Settings › OmnaBase lists the plugin's shortcodes.

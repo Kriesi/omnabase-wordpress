@@ -416,3 +416,88 @@ content folder's address from `localhost:8888` before must-use plugins load, so 
 
 **Left for later rounds.** A "Shortcodes" section on the settings screen (`[omnabase_form]`, round five's `[omnabase_messages]`) with the
 "theme styles only" switch; the privacy-policy text naming form messages (round six).
+
+## 2026-10-09 — M13 round five: the message centre
+
+The red team's tests came first (`docs/reviews/m13-round5-red-team-report.md`: 50 cases here in 7 files plus the helper
+`RoundFiveTestCase.php`: structure 7, integration 35 in the plain run, the flow 8; OmnaBase's 7 in its own repository; all copied in as they
+were). Before (the report's run): structure 7 of 7 failing, integration 35 of 35, the flow stopped at its first test (no settings section)
+with 7 not run. After: all green, none adjusted, no existing test changed. OmnaBase's side (this site's forum topics in the portal after
+confirmation, a different address clearing the confirmation, an old link no longer confirming) is recorded in its DECISIONS "M13 round
+five: the message centre; the portal's forum topics and a changed address". The words: *message centre*, the page where a signed-in
+customer reads and answers their own tickets; *shortcode*, a tag like `[omnabase_messages]` that WordPress replaces with the plugin's
+output; *site id*, the plugin's id for a WordPress user as OmnaBase knows them (`<user id>-<8 characters>`, round two); *confirm prompt*,
+the box asking a customer to prove their address through a link OmnaBase mails; *nonce*, a short-lived form token against forged requests;
+*hook*, a named moment where a plugin's code runs (`send_headers`: just before WordPress sends a page's headers; `template_redirect`:
+before the page is built; `profile_update`: after a user was saved); *usermeta*, extra fields stored per user; *outbox*, the plugin's lasting
+list of calls still to make.
+
+**The coordinator's rulings, as built.**
+
+- **The API wins where the prompt differed**: each view first sends `PUT /customers/by-external/<site id> { email, name }` (the user's
+  current address and display name, nothing else), then every portal call names the visitor with `OmnaBase-Customer: <site id>`; the
+  identity is always the current WordPress user, never the address bar, a posted field or a cookie (the structure guard: the one file that
+  names the header, `Portal\PortalApi`, reads nothing from the request, and `src/Portal/` reads no `$_REQUEST` or `$_COOKIE`).
+- **`guest="form"`** (the brief's): a visitor who is not signed in gets round four's contact form; without it, a login link whose return
+  address is the message centre's page.
+- **The brief's refusal sentences**: `409 address_taken` reads "This email address belongs to another account in our support. Please write
+  to us by email.", `409 forgotten` "Your support history was deleted at your request. Write to us to start again."; nothing else is shown
+  and nothing is read for a refused user.
+- **The red team's choices stand**: the option `omnabase_portal` (`[ 'page' => <page id> ]`); three link requests a day per user, OmnaBase's
+  own number, the fourth never leaving the site ("You asked for three links today …"); while OmnaBase says unconfirmed every view asks again
+  (OmnaBase never tells the site when the link is opened); counts on a plain view in the tests are "at least one" (the harness boots the
+  plugin twice; `Portal` registers its hooks once per request, as `CustomerData` does).
+- **No attachments and no product select on New ticket**: the portal's create route takes `{ project?, subject, message }` only.
+- **A WordPress site cannot hold two accounts with one address**, so the red team's second-account case needs no rule on this side.
+
+**The parts, by the brief's names.** `Portal\Shortcode` (the shortcode and where it may show), `Portal\Controller` (the three form posts at
+`template_redirect`, redirected back), `Portal\Views` (the template `templates/messages.php` with the model in words), `Portal\NoCache`
+(`send_headers`), `Sync\ProfileWatcher` (`profile_update`); with `Portal\PickedPage` (the option, the request match, the page's address),
+`Portal\PortalApi` (the six calls, the header), `Portal\Visitor` (the `PUT` and its fingerprint), `Portal\Centre` (the signed-in view's
+model), `Portal\Requests` (New ticket, Reply, the link), `Portal\LinkLimit` and `Portal\Notices` (every sentence a customer reads);
+`Portal` wires them beside `Forms`; `Admin\PortalView` and `Admin\PortalActions` are the settings section. `Forms\Projects` gains `idOf`.
+
+**Choices the brief left open.**
+
+- **The fingerprint** (the brief's "a stored fingerprint"): a hash of the trimmed, lower-cased address and the display name in the usermeta
+  `omnabase_portal_fingerprint`, kept only while OmnaBase answered `confirmed: true` and only for a user the plugin counts as known (a new
+  connection forgets every known user, and with them every fingerprint's effect). Same fingerprint: no `PUT`. A list that answers 404 (OmnaBase
+  no longer knows the visitor) forgets it, so the next view tells OmnaBase again.
+- **The New ticket form's token is printed in the page**, not fetched by a script as round four's form does (the coordinator's "reuse the
+  form's token plumbing" not taken): the message centre's page is never cached, so a printed token is never shared, and its forms then work
+  without JavaScript; round four's token also refuses a form sent within 3 seconds, which a returning customer's short answer can be. The
+  Idempotency-Key is `obwp-portal-` and 40 characters of a hash of the token, the site id and the words, so the same form sent twice is one
+  ticket and a fresh form (or other words) a new question. `assets/messages.js` only turns a form's button off after the first submit.
+- **The posts**: the forms post back to the picked page itself with `omnabase_do` (`new_ticket`, `reply`, `confirm`), the nonce
+  `omnabase_nonce` (action `omnabase_portal`), the token `omnabase_token`, round four's trap field `omnabase_hp` (New ticket; filled, nothing
+  goes and nothing is said), `subject` and `message`, and for Reply the ticket number `omnabase_ticket`. A post without the nonce, or by
+  nobody signed in, sends nothing. The redirect carries only what to show: `omnabase_ticket=<n>` and `omnabase_done=<notice>` (a code;
+  unknown codes show nothing).
+- **The address bar** may carry `omnabase_ticket` (only digits reach OmnaBase; anything else reads "not found" without a call),
+  `omnabase_after` (OmnaBase's cursor, checked for its characters) and `omnabase_done`.
+- **What a customer reads**: the list's status words (open "Open", pending "Answered", resolved "Resolved", archived "Closed") and the last
+  change as a date with its year (`j M Y`, translatable); a thread's messages as text (an HTML-only message loses its markup; a message whose
+  kind is not `you`, `team` or `other` is never shown); the refusals of a write in plain words (429 "could not be sent just now", 403 or a
+  gone project "cannot be sent here right now … by email", 400 "could not be sent … check it"), never a plan, a code or OmnaBase's text; the
+  link's sentence "We sent a link to a…@example.com. Open it within 24 hours." (the first character and the domain).
+- **The no-cache marking matches the request, not the content**: at `send_headers` the picked page is recognised from WordPress's parsed
+  request (`page_id`, `p`, `pagename`, or the static front page through WordPress's own Reading settings), then `nocache_headers()`,
+  `Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0`, `DONOTCACHEPAGE` and `litespeed_control_set_nocache`. The
+  shortcode on any other page, or with no page picked, shows a customer nothing (that page was never marked) and an administrator a note.
+- **A changed address** (`Sync\ProfileWatcher`): `profile_update` with a new address (other letters or spaces are no change) forgets the
+  fingerprint and, for a user OmnaBase knows, queues round two's `user_link` row (one waiting row per user), whose `PUT` is built from the
+  user when it is sent; WooCommerce's account edit saves through the same function, so it needs no hook of its own. OmnaBase clears the
+  confirmation, and the next view shows the prompt.
+- **The stylesheet**: the message centre's rules join `styles/form.css` and the one build (`bin/build-form-css.php` → `assets/form.css`,
+  the kit's tokens under `.ob-wp`), enqueued under the same handle and switched off by the same filter `omnabase_form_styles`; the prompt
+  mirrors the kit's `PortalConfirm` (a bordered box, its title, one line, the button).
+- **The settings section** (`.ob-wp-settings__portal`): the page select (published pages, at most 200, the current pick always listed),
+  saved through `admin-post.php` with `omnabase_save_portal` (nonce and `manage_options`; anything but a published page stores none), and
+  the shortcodes' help as a list (`[omnabase_messages]`, `guest="form"`, `[omnabase_form]`, its `project` and `subject`).
+- **The repository guard's option scan**: WordPress's own Reading settings (`show_on_front`, `page_on_front`) are read through constants in
+  `Portal\PickedPage`, since the guard counts every quoted option name as the plugin's own.
+- **Uninstall** removes the option `omnabase_portal` and the usermeta `omnabase_portal_fingerprint` and `omnabase_portal_links`.
+
+**Left for round six.** WooCommerce's My Account "Support" link (the brief's "when turned on", a switch on the screen); the "theme styles
+only" switch (Q4); a refused New ticket keeps nothing of what was typed (the customer writes it again); the privacy-policy text naming the
+message centre; the `.pot`.

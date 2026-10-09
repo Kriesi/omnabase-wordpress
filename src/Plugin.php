@@ -17,6 +17,8 @@ use OmnaBase\WordPress\Admin\ForumView;
 use OmnaBase\WordPress\Admin\Health;
 use OmnaBase\WordPress\Admin\Notices;
 use OmnaBase\WordPress\Admin\OutboxView;
+use OmnaBase\WordPress\Admin\PortalActions;
+use OmnaBase\WordPress\Admin\PortalView;
 use OmnaBase\WordPress\Admin\SettingsScreen;
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Api\Loopback;
@@ -39,7 +41,8 @@ defined( 'ABSPATH' ) || exit;
  * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
  * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form and its two
  * routes (`Forms`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum
- * settings, the customer-data switches, Retry and Discard) and the "reconnect needed" notice.
+ * settings, the message centre's page, the customer-data switches, Retry and Discard) and the "reconnect needed" notice. Everywhere too: the
+ * message centre (`Portal`: its shortcode, form posts, no-cache marking and the profile watcher).
  */
 final class Plugin {
 
@@ -61,10 +64,12 @@ final class Plugin {
 		$data->registerBackground();
 		$forum->registerBackground();
 		( new Forms( $this->info, $vault, $data ) )->register();
+		$portal = new Portal( $this->info, $vault, $data );
+		$portal->register();
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
 		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {
-			$this->bootAdmin( $vault, $log, $ping, $data, $forum );
+			$this->bootAdmin( $vault, $log, $ping, $data, $forum, $portal );
 		}
 	}
 
@@ -76,13 +81,14 @@ final class Plugin {
 	/**
 	 * The admin parts.
 	 *
-	 * @param Vault        $vault The vault.
-	 * @param DeliveryLog  $log   The last deliveries.
-	 * @param LastPing     $ping  The last ping.
-	 * @param CustomerData $data  The customer-data parts.
-	 * @param Forums       $forum The forum parts.
+	 * @param Vault        $vault  The vault.
+	 * @param DeliveryLog  $log    The last deliveries.
+	 * @param LastPing     $ping   The last ping.
+	 * @param CustomerData $data   The customer-data parts.
+	 * @param Forums       $forum  The forum parts.
+	 * @param Portal       $portal The message centre's parts.
 	 */
-	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping, CustomerData $data, Forums $forum ): void {
+	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping, CustomerData $data, Forums $forum, Portal $portal ): void {
 		$client  = new Client( $vault );
 		$info    = new ConnectionInfo();
 		$site    = new SiteCheck();
@@ -93,6 +99,7 @@ final class Plugin {
 		$actions->register();
 		( new DataActions( $data->switches, $data->sources, $data->table, $flash ) )->register();
 		( new ForumActions( $forum->settings, $flash ) )->register();
+		( new PortalActions( $portal->page, $flash ) )->register();
 		$connection = new ConnectionView( $vault, $client, $info, $site );
 		$facts      = new FactsView( $data->switches, $data->sources, $data->log );
 		$outbox     = new OutboxView( $data->table, $data->worker );
@@ -100,6 +107,7 @@ final class Plugin {
 			'connection' => array( $connection, 'build' ),
 			'health'     => array( $health, 'view' ),
 			'forum'      => array( new ForumView( $forum->settings ), 'build' ),
+			'portal'     => array( new PortalView( $portal->page ), 'build' ),
 			'facts'      => array( $facts, 'build' ),
 			'outbox'     => array( $outbox, 'build' ),
 		);

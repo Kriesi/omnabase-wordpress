@@ -8,8 +8,8 @@
  * outbox's schema version, every user's site id and "known to OmnaBase" mark (user meta), the outbox's two scheduled jobs and its table
  * `{prefix}omnabase_outbox`. Round three: the forum settings, the ticket number on every topic and OmnaBase's message id on every reply the
  * plugin posted (post meta), the subscriber-mail jobs. Round four: what the shortcode form keeps as transients (the time tokens, the counted
- * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Still to come: the best-effort `DELETE /me` (round six), more user meta (round
- * five).
+ * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Round five: the message centre's picked page (option), each user's fingerprint and
+ * confirmation-link times (user meta). Still to come: the best-effort `DELETE /me` (round six).
  *
  * @package OmnaBase
  */
@@ -27,6 +27,7 @@ $omnabase_options = array(
 	'omnabase_facts_log',
 	'omnabase_db_version',
 	'omnabase_forum',
+	'omnabase_portal',
 );
 
 foreach ( $omnabase_options as $omnabase_option ) {
@@ -37,6 +38,10 @@ foreach ( $omnabase_options as $omnabase_option ) {
 delete_metadata( 'user', 0, 'omnabase_pending_connect', '', true );
 delete_metadata( 'user', 0, 'omnabase_site_id', '', true );
 delete_metadata( 'user', 0, 'omnabase_known', '', true );
+
+// The message centre's per-user fingerprint and its record of confirmation links asked for.
+delete_metadata( 'user', 0, 'omnabase_portal_fingerprint', '', true );
+delete_metadata( 'user', 0, 'omnabase_portal_links', '', true );
 
 // Every topic's ticket number and every posted reply's OmnaBase message id.
 delete_post_meta_by_key( '_omnabase_ticket' );

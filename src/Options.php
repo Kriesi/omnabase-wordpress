@@ -48,6 +48,9 @@ final class Options {
 	 */
 	public const FORUM = 'omnabase_forum';
 
+	/** The message centre (round five): `[ 'page' => <page id> ]`, the page the administrator picked; read and written by `Portal\PickedPage` alone. */
+	public const PORTAL = 'omnabase_portal';
+
 	/**
 	 * All options, for uninstall.php and the structure guard.
 	 */
@@ -62,6 +65,7 @@ final class Options {
 		self::FACTS_LOG,
 		self::DB_VERSION,
 		self::FORUM,
+		self::PORTAL,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */
@@ -72,6 +76,15 @@ final class Options {
 
 	/** User meta: set once OmnaBase knows the user by their site id (the link was accepted, or OmnaBase asked by that id). */
 	public const KNOWN_META = 'omnabase_known';
+
+	/**
+	 * User meta: the message centre's fingerprint of what OmnaBase was last told about the user (a hash of the address and the name), kept only
+	 * while OmnaBase says the address is confirmed; a view with the same fingerprint sends no `PUT` (round five).
+	 */
+	public const PORTAL_FINGERPRINT_META = 'omnabase_portal_fingerprint';
+
+	/** User meta: when the user asked the message centre for a confirmation link, the last day's times (three a day, round five). */
+	public const PORTAL_LINKS_META = 'omnabase_portal_links';
 
 	/** Post meta: the OmnaBase ticket number a topic became. */
 	public const TICKET_META = '_omnabase_ticket';

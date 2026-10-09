@@ -63,6 +63,20 @@ final class Projects {
 	}
 
 	/**
+	 * A project's id by its slug ('' when the key has no such project).
+	 *
+	 * @param string $slug The project's slug.
+	 */
+	public function idOf( string $slug ): string {
+		foreach ( ConnectionInfo::projects( $this->connection->read()['projects'] ?? array() ) as $project ) {
+			if ( '' !== $slug && $slug === $project['slug'] ) {
+				return $project['id'];
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * The key's project slugs.
 	 *
 	 * @return string[]

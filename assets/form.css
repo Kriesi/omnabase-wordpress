@@ -2,27 +2,41 @@
    styles/form.css. Do not edit: change styles/form.css and build again. */
 
 .ob-wp {
+  --ob-gray-50: #f8f8f8;
+  --ob-gray-200: #e6e6e6;
   --ob-gray-300: #d4d4d4;
+  --ob-gray-500: #878787;
   --ob-gray-600: #636363;
   --ob-gray-900: #1a1a1a;
   --ob-amber-50: #fffaea;
   --ob-amber-500: #f2b705;
+  --ob-green-100: #e2f4e8;
+  --ob-blue-50: #f0f6fc;
   --ob-blue-500: #2271b1;
   --ob-blue-600: #135e96;
+  --ob-red-100: #fbe4e1;
   --ob-red-500: #d84a3f;
   --ob-space-1: 4px;
   --ob-space-2: 8px;
   --ob-space-3: 12px;
   --ob-space-4: 16px;
   --ob-space-5: 20px;
+  --ob-text-xs: 13px;
   --ob-text-sm: 14px;
+  --ob-text-base: 15px;
   --ob-radius-md: 6px;
+  --ob-radius-lg: 6px;
+  --ob-radius-full: 999px;
   --ob-bg-surface: #ffffff;
+  --ob-bg-muted: var(--ob-gray-50);
+  --ob-border: var(--ob-gray-200);
   --ob-border-strong: var(--ob-gray-300);
   --ob-text: var(--ob-gray-900);
   --ob-text-secondary: var(--ob-gray-600);
+  --ob-text-muted: var(--ob-gray-500);
   --ob-accent: var(--ob-blue-500);
   --ob-accent-hover: var(--ob-blue-600);
+  --ob-accent-soft: var(--ob-blue-50);
   --ob-on-accent: #ffffff;
   --ob-focus: var(--ob-blue-500);
   --ob-btn-primary-bg: var(--ob-accent);
@@ -30,7 +44,7 @@
   --ob-btn-primary-text: var(--ob-on-accent);
 }
 
-/* The shortcode form's own rules (the source; bin/build-form-css.php puts the kit's tokens above them into assets/form.css).
+/* The front end's own rules, the shortcode form's and (round five) the message centre's (the source; bin/build-form-css.php puts the kit's tokens above them into assets/form.css).
    Every rule names the plugin's own classes inside .ob-wp (where the variables live), so the theme's own styles are never touched; the
    theme's font and text colour carry through. */
 
@@ -143,6 +157,226 @@
 }
 
 .ob-wp-form-notice {
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border-left: 4px solid var(--ob-amber-500);
+  background: var(--ob-amber-50);
+}
+
+/* The message centre [omnabase_messages] (round five): the same tokens, the theme's font; its prompt mirrors the kit's PortalConfirm. */
+
+.ob-wp-messages {
+  display: grid;
+  gap: var(--ob-space-4);
+  max-width: 720px;
+  font: inherit;
+  color: inherit;
+}
+
+.ob-wp-messages .ob-wp-messages__title {
+  margin: var(--ob-space-2) 0 0;
+}
+
+.ob-wp-messages .ob-wp-messages__notice,
+.ob-wp-messages .ob-wp-messages__refusal {
+  margin: 0;
+  padding: var(--ob-space-3) var(--ob-space-4);
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-bg-muted);
+}
+
+.ob-wp-messages .ob-wp-messages__notice--ok {
+  background: var(--ob-green-100);
+}
+
+.ob-wp-messages .ob-wp-messages__notice--error {
+  background: var(--ob-red-100);
+}
+
+.ob-wp-messages .ob-wp-messages__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ob-space-3);
+  padding: var(--ob-space-4);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+  background: var(--ob-bg-surface);
+}
+
+.ob-wp-messages .ob-wp-messages__confirm-text {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.ob-wp-messages .ob-wp-messages__confirm-title {
+  margin: 0;
+  font-size: var(--ob-text-base);
+  font-weight: 600;
+}
+
+.ob-wp-messages .ob-wp-messages__confirm-line {
+  margin: 2px 0 0;
+  color: var(--ob-text-secondary);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp-messages .ob-wp-messages__confirm-form {
+  margin: 0;
+}
+
+.ob-wp-messages .ob-wp-messages__list,
+.ob-wp-messages .ob-wp-messages__thread {
+  display: grid;
+  gap: var(--ob-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ob-wp-messages .ob-wp-messages__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ob-space-2) var(--ob-space-3);
+  padding: var(--ob-space-3) var(--ob-space-4);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-bg-surface);
+}
+
+.ob-wp-messages .ob-wp-messages__subject {
+  flex: 1 1 240px;
+  min-width: 0;
+  color: var(--ob-accent);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ob-wp-messages .ob-wp-messages__status {
+  padding: 0 var(--ob-space-2);
+  border-radius: var(--ob-radius-full);
+  background: var(--ob-bg-muted);
+  font-size: var(--ob-text-xs);
+  font-weight: 600;
+}
+
+.ob-wp-messages .ob-wp-messages__status--open {
+  background: var(--ob-accent-soft);
+}
+
+.ob-wp-messages .ob-wp-messages__when,
+.ob-wp-messages .ob-wp-messages__number,
+.ob-wp-messages .ob-wp-messages__empty {
+  color: var(--ob-text-muted);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp-messages .ob-wp-messages__meta,
+.ob-wp-messages .ob-wp-messages__back,
+.ob-wp-messages .ob-wp-messages__paging {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ob-space-3);
+  margin: 0;
+}
+
+.ob-wp-messages .ob-wp-messages__message {
+  padding: var(--ob-space-3) var(--ob-space-4);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-bg-surface);
+}
+
+.ob-wp-messages .ob-wp-messages__message--you {
+  background: var(--ob-bg-muted);
+}
+
+.ob-wp-messages .ob-wp-messages__author {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ob-space-2);
+  margin: 0 0 var(--ob-space-1);
+}
+
+.ob-wp-messages .ob-wp-messages__body {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.ob-wp-messages .ob-wp-messages__form {
+  display: grid;
+  gap: var(--ob-space-3);
+}
+
+.ob-wp-messages .ob-wp-messages__field,
+.ob-wp-messages .ob-wp-messages__actions {
+  margin: 0;
+}
+
+.ob-wp-messages label {
+  display: grid;
+  gap: var(--ob-space-1);
+}
+
+.ob-wp-messages .ob-wp-messages__label {
+  font-size: var(--ob-text-sm);
+  font-weight: 600;
+}
+
+.ob-wp-messages .ob-wp-messages__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-bg-surface);
+  color: var(--ob-text);
+  font: inherit;
+}
+
+.ob-wp-messages .ob-wp-messages__text {
+  min-height: 7em;
+  resize: vertical;
+}
+
+.ob-wp-messages .ob-wp-messages__input:focus {
+  outline: 2px solid var(--ob-focus);
+  outline-offset: 1px;
+  border-color: var(--ob-focus);
+}
+
+.ob-wp-messages .ob-wp-messages__button {
+  display: inline-block;
+  padding: var(--ob-space-2) var(--ob-space-5);
+  border: 0;
+  border-radius: var(--ob-radius-md);
+  background: var(--ob-btn-primary-bg);
+  color: var(--ob-btn-primary-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ob-wp-messages .ob-wp-messages__button:hover {
+  background: var(--ob-btn-primary-hover);
+}
+
+.ob-wp-messages .ob-wp-messages__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* the New ticket form's honeypot, as the contact form's */
+.ob-wp-messages .ob-wp-form__trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ob-wp-messages-notice {
   padding: var(--ob-space-2) var(--ob-space-3);
   border-left: 4px solid var(--ob-amber-500);
   background: var(--ob-amber-50);
