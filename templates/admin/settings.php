@@ -4,12 +4,13 @@
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,connection:array{state:string,workspace:string,site:string,message:string}} $view
+ * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
 
 $omnabase_connection = $view['connection'];
+$omnabase_health     = $view['health'];
 ?>
 <div class="wrap ob-wp-settings">
 	<h1><?php esc_html_e( 'OmnaBase', 'omnabase' ); ?></h1>
@@ -24,31 +25,32 @@ $omnabase_connection = $view['connection'];
 			</p>
 		</div>
 	<?php endif; ?>
-
-	<h2><?php esc_html_e( 'Connection', 'omnabase' ); ?></h2>
-	<div class="ob-wp-settings__connection" data-state="<?php echo esc_attr( $omnabase_connection['state'] ); ?>">
-		<?php if ( 'connected' === $omnabase_connection['state'] ) : ?>
-			<p class="ob-wp-settings__connected">
+	<?php if ( null !== $view['appUrl'] ) : ?>
+		<div class="notice notice-warning inline ob-wp-settings__dev">
+			<p>
 				<?php
-				/* translators: %s: the OmnaBase workspace's name. */
-				echo esc_html( sprintf( __( 'Connected to %s', 'omnabase' ), $omnabase_connection['workspace'] ) );
+				/* translators: %s: the development address of OmnaBase's connect page. */
+				echo esc_html( sprintf( __( 'Development: Connect opens %s instead of app.omnabase.com.', 'omnabase' ), $view['appUrl'] ) );
 				?>
 			</p>
-			<?php if ( '' !== $omnabase_connection['site'] ) : ?>
-				<p class="description">
-					<?php
-					/* translators: %s: the site's name in OmnaBase. */
-					echo esc_html( sprintf( __( 'This site is known to OmnaBase as %s.', 'omnabase' ), $omnabase_connection['site'] ) );
-					?>
-				</p>
-			<?php endif; ?>
-		<?php elseif ( 'not_connected' === $omnabase_connection['state'] ) : ?>
-			<p><?php echo esc_html( $omnabase_connection['message'] ); ?></p>
-			<p class="description"><?php esc_html_e( 'Connecting your site arrives in the next version.', 'omnabase' ); ?></p>
-		<?php else : ?>
-			<p class="ob-wp-settings__error"><?php echo esc_html( $omnabase_connection['message'] ); ?></p>
-		<?php endif; ?>
-	</div>
+		</div>
+	<?php endif; ?>
+
+	<?php if ( null !== $view['notice'] ) : ?>
+		<div class="notice notice-<?php echo esc_attr( $view['notice']['type'] ); ?> inline ob-wp-settings__notice">
+			<p><?php echo esc_html( $view['notice']['message'] ); ?></p>
+		</div>
+	<?php endif; ?>
+
+	<h2><?php esc_html_e( 'Connection', 'omnabase' ); ?></h2>
+	<?php require __DIR__ . '/partials/connection.php'; ?>
+
+	<?php if ( 'not_connected' !== $omnabase_connection['state'] ) : ?>
+		<h2><?php esc_html_e( 'Health', 'omnabase' ); ?></h2>
+		<?php require __DIR__ . '/partials/health.php'; ?>
+	<?php endif; ?>
+
+	<?php require __DIR__ . '/partials/deliveries.php'; ?>
 
 	<p class="description ob-wp-settings__version">
 		<?php

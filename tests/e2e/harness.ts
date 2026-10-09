@@ -17,6 +17,8 @@ export const SITE_HOST = "wp.omnabase.test";
 export const SITE = `https://${SITE_HOST}`;
 export const WP_LOCAL = process.env.WP_LOCAL_URL ?? "http://localhost:8888";
 export const OMNABASE_E2E = process.env.OMNABASE_E2E_URL ?? `http://localhost:${process.env.OMNABASE_E2E_PORT ?? "3011"}`;
+/** OmnaBase's web app (the connect page), as `OMNABASE_APP_URL` in .wp-env.json names it */
+export const OMNABASE_APP = process.env.OMNABASE_APP_URL ?? "http://localhost:4391";
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const ADMIN_STATE = resolve(REPO, "tests/e2e/.auth/admin.json");
 
@@ -39,8 +41,23 @@ export async function routeSite(context: BrowserContext): Promise<void> {
     res.headers.forEach((v, k) => { if (!RESPONSE_HOP.has(k)) out[k] = v; });
     const cookies = res.headers.getSetCookie();
     if (cookies.length) out["set-cookie"] = cookies.join("\n"); // Playwright splits set-cookie on new lines
+    const next = inSiteRedirect(req.isNavigationRequest(), res.status, res.headers.get("location"), req.url());
+    if (next) {
+      // Chromium does not hand the redirect of a fulfilled answer back to this route, so the next address would meet real DNS (there is no
+      // wp.omnabase.test): the page sends the browser on itself, a fresh navigation this route takes again (replacing the history entry)
+      delete out.location;
+      await route.fulfill({ status: 200, headers: { ...out, "content-type": "text/html; charset=utf-8" }, body: `<!doctype html><title>Redirecting</title><script>location.replace(${JSON.stringify(next)})</script>` });
+      return;
+    }
     await route.fulfill({ status: res.status, headers: out, body: Buffer.from(await res.arrayBuffer()) });
   });
+}
+
+/** the absolute address a navigation's redirect leads to when it stays on the site (wp.omnabase.test), else null */
+function inSiteRedirect(navigation: boolean, status: number, location: string | null, from: string): string | null {
+  if (!navigation || status < 300 || status >= 400 || !location) return null;
+  const to = new URL(location, from);
+  return to.hostname === SITE_HOST ? to.toString() : null;
 }
 
 /** runs WP-CLI inside wp-env's cli container (the harness's `wp omnabase-test …` commands, the seed) */

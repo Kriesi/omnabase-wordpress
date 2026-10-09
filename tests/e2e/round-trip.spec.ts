@@ -1,7 +1,8 @@
 /**
- * Round zero's one flow: the workshop works end to end. The administrator opens Settings › OmnaBase on wp-env's WordPress (as
+ * Round zero's flow, kept as the workshop's smoke test: the administrator opens Settings › OmnaBase on wp-env's WordPress (as
  * https://wp.omnabase.test), WordPress calls OmnaBase's e2e server from inside Docker, and OmnaBase's server calls WordPress back
- * through the relay. Round one replaces the stored test key with a real connect.
+ * through the relay. The key comes from OmnaBase's test hook and is written into the vault by the harness's `set-key` (round one's real
+ * connect is connect.spec.ts); since round one the receiver exists, so the relayed webhook is checked and accepted.
  */
 import { expect, test } from "./fixtures";
 import { SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, wp } from "./harness";
@@ -20,6 +21,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => {
   wp("omnabase-test", "forget-key");
+  if (key) await publicApi(key, "DELETE", "/me"); // the minted key stops, so the next connect starts from a site without a live key
   await omnabaseHook("/api/test/relay", { reset: true });
 });
 
@@ -61,20 +63,22 @@ test("WordPress reaches OmnaBase and shows the workspace the key belongs to", as
 });
 
 /**
- * What it checks: OmnaBase's server reaches this WordPress through the relay: a signed webhook for a new ticket, addressed to
- *   https://wp.omnabase.test, passes OmnaBase's own address guard and arrives at wp-env.
- * Passes when: with the relay set, a webhook address on the site and a new ticket filed by the site's key, OmnaBase's webhook pass
- *   delivers one POST to /wp-json/omnabase/v1/events, and WordPress answers it (round zero has no receiver yet, so WordPress's own
- *   "no route" 404 is the proof the call arrived).
- * Fails when: the relay or the harness's https handling is broken, so no later round could test webhooks, forum replies or customer
- *   data travelling from OmnaBase to the site.
+ * What it checks: OmnaBase's server reaches this WordPress through the relay, and the site's receiver accepts OmnaBase's signed call: a
+ *   webhook for a new ticket, addressed to https://wp.omnabase.test, passes OmnaBase's own address guard, arrives at wp-env and is checked
+ *   with the webhook's secret.
+ * Passes when: with the relay set, a webhook address on the site (its secret stored in the site's vault) and a new ticket filed by the
+ *   site's key, OmnaBase's webhook pass delivers one POST to /wp-json/omnabase/v1/events and the site answers 200 (round zero, before the
+ *   receiver existed, proved the arrival by WordPress's own "no route" 404).
+ * Fails when: the relay, the harness's https handling or the receiver's signature check is broken, so no later round could test webhooks,
+ *   forum replies or customer data travelling from OmnaBase to the site.
  */
 test("OmnaBase reaches WordPress through the relay", async () => {
   const relay = await omnabaseHook<RelayAnswer>("/api/test/relay", { host: SITE_HOST, to: WP_LOCAL });
   expect(relay.routes).toEqual([{ host: SITE_HOST, to: WP_LOCAL }]);
 
-  const hook = await publicApi<{ webhook: { id: string } }>(key, "POST", "/webhooks", { url: `${SITE}/wp-json/omnabase/v1/events`, events: ["ticket.created"] });
+  const hook = await publicApi<{ webhook: { id: string }; secret: string }>(key, "POST", "/webhooks", { url: `${SITE}/wp-json/omnabase/v1/events`, events: ["ticket.created"] });
   expect(hook.status).toBe(201);
+  wp("omnabase-test", "set-key", key, `--webhooks=${hook.body.secret}`);
   try {
     const list = await publicApi<{ data: { projectId: string }[] }>(key, "GET", "/tickets?view=all-open&limit=1");
     expect(list.status).toBe(200);
@@ -84,7 +88,7 @@ test("OmnaBase reaches WordPress through the relay", async () => {
     await expect.poll(async () => {
       await omnabaseHook("/api/test/tick", { job: "webhooks" });
       return (await omnabaseHook<RelayAnswer>("/api/test/relay", {})).calls.filter((c) => c.url === `${SITE}/wp-json/omnabase/v1/events`);
-    }, { timeout: 20_000 }).toEqual([expect.objectContaining({ method: "POST", status: 404, excerpt: expect.stringContaining("rest_no_route") })]);
+    }, { timeout: 20_000 }).toEqual([expect.objectContaining({ method: "POST", status: 200, excerpt: expect.stringContaining('"ok":true') })]);
   } finally {
     await publicApi(key, "DELETE", `/webhooks/${hook.body.webhook.id}`);
   }

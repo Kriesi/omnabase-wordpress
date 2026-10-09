@@ -88,3 +88,62 @@ Built in this repository (no red-team tests in round zero; the builder wrote the
   run at once.
 - Found on the way, for OmnaBase: `GET /api/public/v1/tickets` without `view` answers `400 No such view` (`view: "all"`), while
   `docs/public-api.md` says `all` is the default; the flow passes `view=all-open`.
+
+## 2026-10-09 — M13 round one: Connect, the vault, the signed receivers, health, Disconnect
+
+The red team's tests came first (`docs/reviews/m13-round1-red-team-report.md`: 68 cases in 9 files, copied in unchanged; all green, none
+adjusted). OmnaBase's side (`DELETE /me`, `POST /me/ping`, `/me`'s slugs, own tickets only, the list's default) is recorded in OmnaBase's
+DECISIONS "M13 round one: Connect; the API's additions for the plugin". The coordinator's rulings are taken as given; what follows is what
+the brief left open.
+
+- **The parts, by the red team's names**: `Connect\Pkce`, `Connect\Flow` (the link and the way back), `Connect\ConnectState` (each
+  administrator's pending connect), `Connect\SiteCheck`, `Connect\ConnectionInfo`, `Connect\Disconnect`; `Security\Vault` and
+  `Security\Signature` (under `Security/`, not `Api/`: the red team's names stand); `Api\Client`, `Api\Loopback`; `Rest\Events`,
+  `Rest\Customer`, `Rest\SignedCall` (the receivers' shared door), `Rest\ReplayGuard`, `Rest\DeliveryLog`, `Rest\LastPing`;
+  `Admin\SettingsScreen`, `Admin\ConnectionView`, `Admin\Actions`, `Admin\Health`, `Admin\Notices`, `Admin\Flash`. Round zero's
+  `Api\StoredKey` and its test are gone.
+- **The pending connect expires after 10 minutes** (the coordinator's number; the brief said 15; the tests pass 9 and refuse 16). It lives in
+  the administrator's own user meta (`omnabase_pending_connect`: the state, the verifier sealed by the vault, the time), one per
+  administrator: a second click by the same administrator replaces the first, two administrators keep their own. A way back with another
+  state (or another administrator's) changes nothing, so a forged link cannot spoil a real connect; the right state is used once, also when
+  the exchange then fails.
+- **The vault**: one non-autoloaded option (`omnabase_vault`) holding a check value and the three credentials, each sealed with
+  `sodium_crypto_secretbox` and a fresh nonce. The key: `OMNABASE_ENCRYPTION_KEY` (32 bytes in base64 used as they are, any other value
+  hashed to 32 bytes), else a BLAKE2b hash of `wp_salt( 'auth' )` (WordPress answers that from `AUTH_KEY`/`AUTH_SALT`, or from salts it keeps
+  in the database when those are missing or the placeholder). `keySource()` says `constant`, `salts` or `database`; the screen says honestly
+  that a database key adds little and offers a freshly generated line for wp-config.php (with "then connect again": a new key cannot open
+  what the old one sealed). The vault also seals the pending verifier (`seal`/`open`), so nothing else touches its key.
+- **Messages after an action** travel in a transient for that administrator alone (`omnabase_notice_<user id>`, five minutes) and the
+  browser always lands on the clean settings address: the flow pins the address without code, state or message.
+- **The screen's address is https on an https site** (`SettingsScreen::url()`): `admin_url()` follows the scheme of the current request,
+  and OmnaBase's way back must be https. **Connect also shows beside a connection** (secondary, "Connect again" in its title): connecting again
+  is the brief's reconnect, which rotates the key.
+- **The receivers**: the signature in the `permission_callback` (the docs' recipe; `hash_equals`; five minutes either way). An empty vault and
+  an unreadable one both answer **503** (OmnaBase keeps retrying a fixable gap; never 410, never 2xx); a bad, missing, stale or `v0=`
+  signature **401**. The replay key is `X-OmnaBase-Delivery` (the payload's id only when the header is missing): handled ids are kept 30 days
+  in one option (at most 5 000), recorded only after the handling ran through; a listener that throws makes the answer 500 and the retry
+  handles it again. A handled ping records its time. The log keeps the last 20 rows (time, event, delivery id, ticket number, what the plugin
+  did: handled, repeat or failed), never content. `/customer` answers `{}` until round two.
+- **Check connection**: `GET /me`, then `POST /me/ping` (OmnaBase answers once it has called the site), then the site's own receiver (the
+  loopback, `Api\Loopback`, its address from `rest_url()`: the one call that does not go to OmnaBase, allowed by the coordinator's ruling).
+  OmnaBase → site counts as working only when the receiver recorded a ping after the check began; while none has, the screen says
+  "waiting" and reloads every 3 seconds for up to 30, then "not working" with the reason; a refused request or OmnaBase's `ok: false` shows
+  its reason at once. The loopback reads "unknown" on a network error (some hosts cannot call themselves), "working" only on the receiver's
+  own signature refusal.
+- **Disconnect** forgets the vault, the kept connection, the last check and the last ping whatever `DELETE /me` answered; a 401 counts as
+  "stopped already", anything else adds "revoke this site's key under Settings › Integrations › API keys". With an unreadable vault there is no
+  key to revoke with, so the same words show.
+- **WordPress's own options** are read without a literal option name (`get_bloginfo( 'name' )`, `$wp_rewrite->using_permalinks()`, dates
+  as `Y-m-d H:i`), because round zero's guard counts every literal option name in `src/` as the plugin's own.
+- **Uninstall** removes the six options, every administrator's pending connect (`delete_metadata`) and the message transients by prefix: a
+  prepared `DELETE … LIKE` in `uninstall.php`, the one place besides the coming outbox table class where SQL is allowed (WordPress has no
+  call for transients by prefix).
+- **The test layers**: the integration bootstrap lifts WordPress's `_config_wp_home`/`_config_wp_siteurl` filters, because wp-env's tests
+  config defines `WP_HOME`/`WP_SITEURL` and a test could otherwise never put the site on https or into a subfolder. The flows' route now
+  forwards a redirect that stays on `wp.omnabase.test` through the page itself: Chromium does not hand the redirect of a fulfilled answer
+  back to the route, so the clean address after the way back met real DNS (round zero never redirected within the site). The harness's
+  `set-key` writes the vault (`--webhooks=`/`--facts=` for the secrets); `round-trip.spec.ts` stores the webhook's secret that way and now
+  proves the receiver accepts OmnaBase's signed call (200, where round zero saw WordPress's 404), and revokes its key at the end.
+  `bin/omnabase-e2e.sh` starts OmnaBase's web app on Vite (4391) beside the API, as OmnaBase's own Playwright config does; the global setup
+  waits up to a minute for it. `.wp-env.json` names `OMNABASE_APP_URL` (`http://localhost:4391`) and defines no `OMNABASE_ENCRYPTION_KEY`
+  (the tests rotate the salts).

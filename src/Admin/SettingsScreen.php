@@ -8,15 +8,14 @@
 namespace OmnaBase\WordPress\Admin;
 
 use OmnaBase\WordPress\Api\ApiUrl;
-use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\PluginInfo;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only. Round zero shows the connection:
- * "Connected to <workspace>" when a stored key answers `GET /me`, else why not. Connect, the forums, the facts switches, the outbox
- * and health join it in later rounds.
+ * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only: the connection (Connect, Disconnect,
+ * Check connection), its health and the last webhook deliveries. The way back from OmnaBase's connect page arrives here too, handled at the
+ * page's load hook before anything is printed. The forums, the facts switches and the outbox join it in later rounds.
  */
 final class SettingsScreen {
 
@@ -26,25 +25,36 @@ final class SettingsScreen {
 	/**
 	 * Builds the screen.
 	 *
-	 * @param PluginInfo $info   The header fields (the version shown in the footer line).
-	 * @param Client     $client The API client.
+	 * @param PluginInfo     $info       The header fields (the version shown in the footer line).
+	 * @param ConnectionView $connection The connection section.
+	 * @param Health         $health     The health section.
+	 * @param Flash          $flash      The message from the last action.
+	 * @param Actions        $actions    The way back's handler.
 	 */
-	public function __construct( private PluginInfo $info, private Client $client ) {}
+	public function __construct( private PluginInfo $info, private ConnectionView $connection, private Health $health, private Flash $flash, private Actions $actions ) {}
+
+	/** The screen's address: https on an https site (OmnaBase's way back must be https), whatever the current request's scheme. */
+	public static function url(): string {
+		return admin_url( 'options-general.php?page=' . self::SLUG, 'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ) ? 'https' : 'admin' );
+	}
 
 	/** Registers the menu entry. */
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'addMenu' ) );
 	}
 
-	/** Adds Settings › OmnaBase. */
+	/** Adds Settings › OmnaBase and the way back at its load hook. */
 	public function addMenu(): void {
-		add_options_page(
+		$hook = add_options_page(
 			__( 'OmnaBase', 'omnabase' ),
 			__( 'OmnaBase', 'omnabase' ),
 			self::CAPABILITY,
 			self::SLUG,
 			array( $this, 'render' )
 		);
+		if ( $hook ) {
+			add_action( 'load-' . $hook, array( $this->actions, 'wayBack' ) );
+		}
 	}
 
 	/** Renders the screen. */
@@ -55,32 +65,11 @@ final class SettingsScreen {
 		$view = array(
 			'version'    => $this->info->version(),
 			'apiUrl'     => ApiUrl::override(),
-			'connection' => $this->connectionView(),
+			'appUrl'     => ApiUrl::appOverride(),
+			'notice'     => $this->flash->take( get_current_user_id() ),
+			'connection' => $this->connection->build(),
+			'health'     => $this->health->view(),
 		);
 		include $this->info->dir() . 'templates/admin/settings.php';
-	}
-
-	/**
-	 * What the connection section shows: a state (`connected`, `not_connected`, `error`) and its words.
-	 *
-	 * @return array{state:string,workspace:string,site:string,message:string}
-	 */
-	private function connectionView(): array {
-		$me = $this->client->me();
-		if ( is_wp_error( $me ) ) {
-			$state = 'omnabase_not_connected' === $me->get_error_code() ? 'not_connected' : 'error';
-			return array(
-				'state'     => $state,
-				'workspace' => '',
-				'site'      => '',
-				'message'   => $me->get_error_message(),
-			);
-		}
-		return array(
-			'state'     => 'connected',
-			'workspace' => isset( $me['workspace']['name'] ) ? (string) $me['workspace']['name'] : '',
-			'site'      => isset( $me['site']['name'] ) ? (string) $me['site']['name'] : '',
-			'message'   => '',
-		);
 	}
 }

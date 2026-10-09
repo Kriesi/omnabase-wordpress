@@ -9,9 +9,9 @@
  *    https://wp.omnabase.test, but the request arrives at http://localhost:8888 carrying `X-Forwarded-Host: wp.omnabase.test`
  *    (Playwright's route, OmnaBase's relay). For such a request WordPress is told it is on https at that host, so it builds
  *    https://wp.omnabase.test links and never redirects back to localhost. A plain request to localhost:8888 stays as it was.
- * 2. `wp omnabase-test set-key <key>` / `forget-key`: writes the site's OmnaBase key as if the site had connected, so a browser
- *    flow can test "Connected to …" before Connect exists (round one replaces the stored key with the vault and this command with
- *    a connect through the real page).
+ * 2. `wp omnabase-test set-key <key> [--webhooks=<secret>] [--facts=<secret>]` / `forget-key`: writes the site's OmnaBase key (and
+ *    its secrets) into the vault as if the site had connected, so a flow can test the receivers and "Connected to …" with a key minted
+ *    by OmnaBase's test hook; round one's own flow (connect.spec.ts) connects through the real page instead.
  *
  * @package OmnaBase
  */
@@ -41,23 +41,36 @@ if ( ! defined( 'OMNABASE_TEST_MODE' ) || true !== OMNABASE_TEST_MODE || 'local'
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	WP_CLI::add_command(
 		'omnabase-test set-key',
-		static function ( array $args ) {
-			if ( ! class_exists( \OmnaBase\WordPress\Api\StoredKey::class ) ) {
+		static function ( array $args, array $assoc ) {
+			if ( ! class_exists( \OmnaBase\WordPress\Security\Vault::class ) ) {
 				WP_CLI::error( 'The OmnaBase plugin is not active.' );
 			}
-			( new \OmnaBase\WordPress\Api\StoredKey() )->save( (string) ( $args[0] ?? '' ) );
-			WP_CLI::success( 'Key stored.' );
+			( new \OmnaBase\WordPress\Security\Vault() )->save(
+				array(
+					'key'      => (string) ( $args[0] ?? '' ),
+					'webhooks' => isset( $assoc['webhooks'] ) ? (string) $assoc['webhooks'] : null,
+					'facts'    => isset( $assoc['facts'] ) ? (string) $assoc['facts'] : null,
+				)
+			);
+			WP_CLI::success( 'Key stored in the vault.' );
 		},
-		array( 'shortdesc' => 'Store an OmnaBase key as if the site had connected (wp-env only).' )
+		array(
+			'shortdesc' => 'Store an OmnaBase key (and optionally its webhook and facts secrets) in the vault as if the site had connected (wp-env only).',
+			'synopsis'  => array(
+				array( 'type' => 'positional', 'name' => 'key' ),
+				array( 'type' => 'assoc', 'name' => 'webhooks', 'optional' => true ),
+				array( 'type' => 'assoc', 'name' => 'facts', 'optional' => true ),
+			),
+		)
 	);
 	WP_CLI::add_command(
 		'omnabase-test forget-key',
 		static function () {
-			if ( class_exists( \OmnaBase\WordPress\Api\StoredKey::class ) ) {
-				( new \OmnaBase\WordPress\Api\StoredKey() )->forget();
+			if ( class_exists( \OmnaBase\WordPress\Security\Vault::class ) ) {
+				( new \OmnaBase\WordPress\Security\Vault() )->clear();
 			}
 			WP_CLI::success( 'Key forgotten.' );
 		},
-		array( 'shortdesc' => 'Forget the stored OmnaBase key (wp-env only).' )
+		array( 'shortdesc' => 'Empty the OmnaBase vault (wp-env only).' )
 	);
 }

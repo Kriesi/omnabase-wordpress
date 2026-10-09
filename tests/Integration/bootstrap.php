@@ -25,3 +25,9 @@ tests_add_filter(
 );
 
 require $omnabase_tests_dir . '/includes/bootstrap.php';
+
+// wp-env's tests config defines WP_HOME and WP_SITEURL (http://localhost:8889), and WordPress then answers those constants for the
+// `home` and `siteurl` options whatever is stored. A test that puts the site on another address (https, a subfolder) does what a real
+// site does: it changes the stored options. So the two constant filters are lifted here, once, for the integration layer only.
+remove_filter( 'option_home', '_config_wp_home' );
+remove_filter( 'option_siteurl', '_config_wp_siteurl' );

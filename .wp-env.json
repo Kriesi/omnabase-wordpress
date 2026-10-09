@@ -17,7 +17,8 @@
 		"WP_ENVIRONMENT_TYPE": "local",
 		"OMNABASE_TEST_MODE": true,
 		"OMNABASE_TEST_HOST": "wp.omnabase.test",
-		"OMNABASE_API_URL": "http://host.docker.internal:3011"
+		"OMNABASE_API_URL": "http://host.docker.internal:3011",
+		"OMNABASE_APP_URL": "http://localhost:4391"
 	},
 	"lifecycleScripts": {
 		"afterStart": "wp-env run cli wp plugin activate omnabase woocommerce easy-digital-downloads bbpress license-manager-for-woocommerce plugin-check"

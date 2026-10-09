@@ -1,6 +1,6 @@
 <?php
 /**
- * Where the plugin calls OmnaBase.
+ * Where the plugin calls OmnaBase, and where it sends an administrator to connect.
  *
  * @package OmnaBase
  */
@@ -10,26 +10,32 @@ namespace OmnaBase\WordPress\Api;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * One pinned host: https://app.omnabase.com. The constant `OMNABASE_API_URL` (wp-config.php) points a development site at
- * another one, for instance OmnaBase's test server; the settings screen says so whenever it is set.
+ * One pinned host: https://app.omnabase.com, for the API and for the connect page. Two wp-config.php constants point a development site
+ * elsewhere: `OMNABASE_API_URL` (the API, for instance OmnaBase's test server) and `OMNABASE_APP_URL` (the connect page, for instance
+ * OmnaBase's web app on Vite); the settings screen says so whenever either is set.
  */
 final class ApiUrl {
 
 	public const PRODUCTION = 'https://app.omnabase.com';
 
-	/** The base address, without a trailing slash. */
+	/** The API's base address, without a trailing slash. */
 	public static function base(): string {
-		$override = self::override();
-		return null !== $override ? $override : self::PRODUCTION;
+		return self::override() ?? self::PRODUCTION;
 	}
 
 	/** The development address from `OMNABASE_API_URL`, or null when the plugin talks to production. */
 	public static function override(): ?string {
-		if ( ! defined( 'OMNABASE_API_URL' ) ) {
-			return null;
-		}
-		$url = rtrim( (string) constant( 'OMNABASE_API_URL' ), '/' );
-		return '' === $url ? null : $url;
+		return self::constantUrl( 'OMNABASE_API_URL' );
+	}
+
+	/** The app's base address (the connect page), without a trailing slash. */
+	public static function app(): string {
+		return self::appOverride() ?? self::PRODUCTION;
+	}
+
+	/** The development address from `OMNABASE_APP_URL`, or null when the connect page is production's. */
+	public static function appOverride(): ?string {
+		return self::constantUrl( 'OMNABASE_APP_URL' );
 	}
 
 	/**
@@ -39,5 +45,18 @@ final class ApiUrl {
 	 */
 	public static function publicApi( string $path ): string {
 		return self::base() . '/api/public/v1' . $path;
+	}
+
+	/**
+	 * A constant's address without its trailing slash, or null when undefined or empty.
+	 *
+	 * @param string $name The constant.
+	 */
+	private static function constantUrl( string $name ): ?string {
+		if ( ! defined( $name ) ) {
+			return null;
+		}
+		$url = rtrim( (string) constant( $name ), '/' );
+		return '' === $url ? null : $url;
 	}
 }
