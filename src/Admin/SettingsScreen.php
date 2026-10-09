@@ -14,8 +14,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only: the connection (Connect, Disconnect,
- * Check connection), its health and the last webhook deliveries. The way back from OmnaBase's connect page arrives here too, handled at the
- * page's load hook before anything is printed. The forums, the facts switches and the outbox join it in later rounds.
+ * Check connection), its health, the customer-data switches, the outbox and the last webhook deliveries. The way back from OmnaBase's
+ * connect page arrives here too, handled at the page's load hook before anything is printed. The forums join it in round three.
  */
 final class SettingsScreen {
 
@@ -25,13 +25,12 @@ final class SettingsScreen {
 	/**
 	 * Builds the screen.
 	 *
-	 * @param PluginInfo     $info       The header fields (the version shown in the footer line).
-	 * @param ConnectionView $connection The connection section.
-	 * @param Health         $health     The health section.
-	 * @param Flash          $flash      The message from the last action.
-	 * @param Actions        $actions    The way back's handler.
+	 * @param PluginInfo                    $info     The header fields (the version shown in the footer line).
+	 * @param Flash                         $flash    The message from the last action.
+	 * @param Actions                       $actions  The way back's handler.
+	 * @param array<string,callable():array> $sections Each section's view by name (`connection`, `health`, `facts`, `outbox`).
 	 */
-	public function __construct( private PluginInfo $info, private ConnectionView $connection, private Health $health, private Flash $flash, private Actions $actions ) {}
+	public function __construct( private PluginInfo $info, private Flash $flash, private Actions $actions, private array $sections ) {}
 
 	/** The screen's address: https on an https site (OmnaBase's way back must be https), whatever the current request's scheme. */
 	public static function url(): string {
@@ -63,13 +62,11 @@ final class SettingsScreen {
 			wp_die( esc_html__( 'Sorry, you are not allowed to manage OmnaBase.', 'omnabase' ) );
 		}
 		$view = array(
-			'version'    => $this->info->version(),
-			'apiUrl'     => ApiUrl::override(),
-			'appUrl'     => ApiUrl::appOverride(),
-			'notice'     => $this->flash->take( get_current_user_id() ),
-			'connection' => $this->connection->build(),
-			'health'     => $this->health->view(),
-		);
+			'version' => $this->info->version(),
+			'apiUrl'  => ApiUrl::override(),
+			'appUrl'  => ApiUrl::appOverride(),
+			'notice'  => $this->flash->take( get_current_user_id() ),
+		) + array_map( static fn ( callable $build ) => $build(), $this->sections );
 		include $this->info->dir() . 'templates/admin/settings.php';
 	}
 }

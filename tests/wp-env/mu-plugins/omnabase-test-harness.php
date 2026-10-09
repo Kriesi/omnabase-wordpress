@@ -3,7 +3,7 @@
  * Plugin Name: OmnaBase test harness (wp-env only)
  * Description: The local WordPress's test plumbing. Mapped into wp-env's mu-plugins by .wp-env.json; never part of the plugin's zip.
  *
- * Two things, both inert unless wp-config.php defines OMNABASE_TEST_MODE (wp-env's config does) on a `local` environment:
+ * Three things, all inert unless wp-config.php defines OMNABASE_TEST_MODE (wp-env's config does) on a `local` environment:
  *
  * 1. The harness's network (brief, round zero): the browser and OmnaBase's e2e server reach this WordPress as
  *    https://wp.omnabase.test, but the request arrives at http://localhost:8888 carrying `X-Forwarded-Host: wp.omnabase.test`
@@ -12,6 +12,9 @@
  * 2. `wp omnabase-test set-key <key> [--webhooks=<secret>] [--facts=<secret>]` / `forget-key`: writes the site's OmnaBase key (and
  *    its secrets) into the vault as if the site had connected, so a flow can test the receivers and "Connected to …" with a key minted
  *    by OmnaBase's test hook; round one's own flow (connect.spec.ts) connects through the real page instead.
+ * 3. The paid add-ons' fakes (M13 round two): when WooCommerce or EDD is active but WooCommerce Subscriptions, EDD Software Licensing or
+ *    EDD Recurring is not, the fake from the plugin's `tests/fakes/` stands in (each is inert when the real add-on is loaded), so the
+ *    browser flows and the seed can show subscriptions and licences. Never in the plugin's zip: the fakes and this file live under tests/.
  *
  * @package OmnaBase
  */
@@ -37,6 +40,24 @@ if ( ! defined( 'OMNABASE_TEST_MODE' ) || true !== OMNABASE_TEST_MODE || 'local'
 	add_filter( 'option_home', static fn () => $origin, 99 );
 	add_filter( 'option_siteurl', static fn () => $origin, 99 );
 } )();
+
+add_action(
+	'plugins_loaded',
+	static function () {
+		$fakes = WP_PLUGIN_DIR . '/omnabase/tests/fakes/';
+		$wanted = array(
+			'woocommerce-subscriptions.php' => class_exists( 'WooCommerce' ),
+			'edd-software-licensing.php'    => function_exists( 'EDD' ),
+			'edd-recurring.php'             => function_exists( 'EDD' ),
+		);
+		foreach ( $wanted as $file => $shop_active ) {
+			if ( $shop_active && is_readable( $fakes . $file ) ) {
+				require_once $fakes . $file;
+			}
+		}
+	},
+	1 // before the OmnaBase plugin boots (10), after every real plugin is loaded
+);
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	WP_CLI::add_command(

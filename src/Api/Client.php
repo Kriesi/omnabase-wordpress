@@ -94,6 +94,24 @@ final class Client {
 	}
 
 	/**
+	 * A call with the vault's key whose answer is kept whole, for the outbox: its status (null when no answer came), its headers with
+	 * lower-case names, its JSON body, and the network error in words.
+	 *
+	 * @param string     $method  The HTTP method.
+	 * @param string     $path    The path under /api/public/v1.
+	 * @param mixed|null $body    A JSON body, or null.
+	 * @param int        $timeout Seconds for the whole call.
+	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
+	 */
+	public function call( string $method, string $path, $body, int $timeout ): array {
+		$credentials = $this->vault->read();
+		if ( null === $credentials ) {
+			return array( 'status' => null, 'headers' => array(), 'body' => null, 'error' => __( 'This site is not connected to OmnaBase.', 'omnabase' ) );
+		}
+		return self::outcome( wp_remote_request( ApiUrl::publicApi( $path ), self::args( $method, $credentials['key'], $body, $timeout ) ) );
+	}
+
+	/**
 	 * One call to the pinned host.
 	 *
 	 * @param string      $method  The HTTP method.
@@ -104,6 +122,19 @@ final class Client {
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	private function send( string $method, string $path, ?string $key, $body, int $timeout ) {
+		return self::decode( wp_remote_request( ApiUrl::publicApi( $path ), self::args( $method, $key, $body, $timeout ) ) );
+	}
+
+	/**
+	 * The request's arguments: the key, JSON, the timeout, certificates checked, no redirect followed.
+	 *
+	 * @param string      $method  The HTTP method.
+	 * @param string|null $key     The key, or null.
+	 * @param mixed|null  $body    A JSON body, or null.
+	 * @param int         $timeout Seconds for the whole call.
+	 * @return array<string,mixed>
+	 */
+	private static function args( string $method, ?string $key, $body, int $timeout ): array {
 		$headers = array( 'Accept' => 'application/json' );
 		if ( null !== $key ) {
 			$headers['Authorization'] = 'Bearer ' . $key;
@@ -119,7 +150,25 @@ final class Client {
 			$args['headers']['Content-Type'] = 'application/json';
 			$args['body']                    = (string) wp_json_encode( $body );
 		}
-		return self::decode( wp_remote_request( ApiUrl::publicApi( $path ), $args ) );
+		return $args;
+	}
+
+	/**
+	 * An answer kept whole (the outbox decides what it means).
+	 *
+	 * @param array<string,mixed>|\WP_Error $response What wp_remote_request answered.
+	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
+	 */
+	private static function outcome( $response ): array {
+		if ( is_wp_error( $response ) ) {
+			return array( 'status' => null, 'headers' => array(), 'body' => null, 'error' => $response->get_error_message() );
+		}
+		$headers = array();
+		foreach ( wp_remote_retrieve_headers( $response ) as $name => $value ) {
+			$headers[ strtolower( (string) $name ) ] = is_array( $value ) ? (string) reset( $value ) : (string) $value;
+		}
+		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		return array( 'status' => (int) wp_remote_retrieve_response_code( $response ), 'headers' => $headers, 'body' => is_array( $body ) ? $body : null, 'error' => null );
 	}
 
 	/**

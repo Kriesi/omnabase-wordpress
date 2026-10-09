@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <!--
-  The integration layer: tests inside the wp-env tests environment (port 8889), against a real WordPress with WooCommerce, EDD and
-  bbPress, through WordPress's own test library and yoast/phpunit-polyfills. Run by `composer test:integration`
-  (bin/test-integration.sh), never directly on the Mac. Round zero has no integration test yet; round one adds the first.
+  The integration layer: tests inside the wp-env tests environment (port 8889), against a real WordPress, through WordPress's own test
+  library and yoast/phpunit-polyfills. Run by `composer test:integration` (bin/test-integration.sh), never directly on the Mac.
+
+  Two runs (M13 round two): the plain WordPress (every test outside the group "shops"), and, with OMNABASE_TEST_SHOPS=1, WordPress with
+  WooCommerce, EDD and License Manager for WooCommerce loaded (the group "shops": the customer-data and outbox tests). The shops' admin code
+  phones home and prints notices of its own, so the round-one tests keep a WordPress without them.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
@@ -15,4 +18,9 @@
       <directory suffix="Test.php">./tests/Integration</directory>
     </testsuite>
   </testsuites>
+  <groups>
+    <exclude>
+      <group>shops</group>
+    </exclude>
+  </groups>
 </phpunit>

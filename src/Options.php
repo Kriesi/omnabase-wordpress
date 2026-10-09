@@ -33,6 +33,15 @@ final class Options {
 	/** The delivery ids already handled, with the time, kept 30 days (OmnaBase's redelivery window). */
 	public const HANDLED = 'omnabase_handled';
 
+	/** The customer-data switches: `[ 'sources' => [ <source> => bool ], 'meta' => [ <usermeta key>, … ] ]`; every source off when missing. */
+	public const FACTS = 'omnabase_facts';
+
+	/** The last 20 facts calls answered: time, who was found (user, guest or nobody), the sections sent and the ones left out (never data). */
+	public const FACTS_LOG = 'omnabase_facts_log';
+
+	/** The outbox table's schema version; the table is made or changed on load when this is missing or older. */
+	public const DB_VERSION = 'omnabase_db_version';
+
 	/**
 	 * All options, for uninstall.php and the structure guard.
 	 */
@@ -43,10 +52,19 @@ final class Options {
 		self::LAST_PING,
 		self::DELIVERIES,
 		self::HANDLED,
+		self::FACTS,
+		self::FACTS_LOG,
+		self::DB_VERSION,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */
 	public const PENDING_CONNECT_META = 'omnabase_pending_connect';
+
+	/** User meta: the site's id for a user as OmnaBase knows it (`<user id>-<8 random characters>`), made once, gone with the user. */
+	public const SITE_ID_META = 'omnabase_site_id';
+
+	/** User meta: set once OmnaBase knows the user by their site id (the link was accepted, or OmnaBase asked by that id). */
+	public const KNOWN_META = 'omnabase_known';
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';

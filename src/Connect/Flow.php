@@ -115,6 +115,8 @@ final class Flow {
 		$me = $this->client->me();
 		$this->info->save( $answer, is_array( $me ) && is_array( $me['projects'] ?? null ) && array() !== $me['projects'] ? $me['projects'] : null );
 		$this->health->forget();
+		/** A new connection: OmnaBase on the other side may be another workspace, so what the site knew about the old one starts afresh. */
+		do_action( 'omnabase_connected' );
 		return array( 'success', __( 'Done: this site is now connected to OmnaBase.', 'omnabase' ) );
 	}
 

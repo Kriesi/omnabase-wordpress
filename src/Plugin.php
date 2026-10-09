@@ -9,9 +9,12 @@ namespace OmnaBase\WordPress;
 
 use OmnaBase\WordPress\Admin\Actions;
 use OmnaBase\WordPress\Admin\ConnectionView;
+use OmnaBase\WordPress\Admin\DataActions;
+use OmnaBase\WordPress\Admin\FactsView;
 use OmnaBase\WordPress\Admin\Flash;
 use OmnaBase\WordPress\Admin\Health;
 use OmnaBase\WordPress\Admin\Notices;
+use OmnaBase\WordPress\Admin\OutboxView;
 use OmnaBase\WordPress\Admin\SettingsScreen;
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Api\Loopback;
@@ -31,8 +34,9 @@ use OmnaBase\WordPress\Security\Vault;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers. In the admin:
- * Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way back) and the "reconnect needed" notice.
+ * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
+ * and the licence events (`CustomerData`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way
+ * back, the customer-data switches, Retry and Discard) and the "reconnect needed" notice.
  */
 final class Plugin {
 
@@ -49,10 +53,12 @@ final class Plugin {
 		$log   = new DeliveryLog();
 		$ping  = new LastPing();
 		$door  = new SignedCall( $vault );
+		$data  = new CustomerData( $vault );
+		$data->registerBackground();
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
-		( new Customer( $door ) )->register();
+		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {
-			$this->bootAdmin( $vault, $log, $ping );
+			$this->bootAdmin( $vault, $log, $ping, $data );
 		}
 	}
 
@@ -64,11 +70,12 @@ final class Plugin {
 	/**
 	 * The admin parts.
 	 *
-	 * @param Vault       $vault The vault.
-	 * @param DeliveryLog $log   The last deliveries.
-	 * @param LastPing    $ping  The last ping.
+	 * @param Vault        $vault The vault.
+	 * @param DeliveryLog  $log   The last deliveries.
+	 * @param LastPing     $ping  The last ping.
+	 * @param CustomerData $data  The customer-data parts.
 	 */
-	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping ): void {
+	private function bootAdmin( Vault $vault, DeliveryLog $log, LastPing $ping, CustomerData $data ): void {
 		$client  = new Client( $vault );
 		$info    = new ConnectionInfo();
 		$site    = new SiteCheck();
@@ -77,7 +84,17 @@ final class Plugin {
 		$flow    = new Flow( $client, $vault, new ConnectState( $vault ), $info, $site, $health );
 		$actions = new Actions( $flow, new Disconnect( $client, $vault, $info, $health, $ping ), $health, $flash );
 		$actions->register();
-		( new SettingsScreen( $this->info, new ConnectionView( $vault, $client, $info, $site ), $health, $flash, $actions ) )->register();
+		( new DataActions( $data->switches, $data->sources, $data->table, $flash ) )->register();
+		$connection = new ConnectionView( $vault, $client, $info, $site );
+		$facts      = new FactsView( $data->switches, $data->sources, $data->log );
+		$outbox     = new OutboxView( $data->table, $data->worker );
+		$sections   = array(
+			'connection' => array( $connection, 'build' ),
+			'health'     => array( $health, 'view' ),
+			'facts'      => array( $facts, 'build' ),
+			'outbox'     => array( $outbox, 'build' ),
+		);
+		( new SettingsScreen( $this->info, $flash, $actions, $sections ) )->register();
 		( new Notices( $vault ) )->register();
 	}
 }

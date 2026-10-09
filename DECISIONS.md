@@ -147,3 +147,98 @@ the brief left open.
   `bin/omnabase-e2e.sh` starts OmnaBase's web app on Vite (4391) beside the API, as OmnaBase's own Playwright config does; the global setup
   waits up to a minute for it. `.wp-env.json` names `OMNABASE_APP_URL` (`http://localhost:4391`) and defines no `OMNABASE_ENCRYPTION_KEY`
   (the tests rotate the salts).
+
+## 2026-10-09 — M13 round two: customer data, the shaper, the outbox, the licence copy
+
+The red team's tests came first (`docs/reviews/m13-round2-red-team-report.md`: 118 cases in 9 files, the contract oracle with its 58
+recorded verdicts, three fakes, and three replaced test-setup files, all copied in). Before: unit and structure 64 of 66 failing, integration
+46 of 48, the flow stopped at the missing section. After: all green; four test adjustments, listed below with their reasons. No OmnaBase
+change was needed. The words: *facts call*, OmnaBase's signed question to `/wp-json/omnabase/v1/customer`; *block*, the `omnabase` part of
+the answer; *usermeta*, extra fields per user; *outbox*, the lasting list of calls still to make; *WP-Cron*, WordPress's timer; *HPOS*,
+WooCommerce's newer order tables; *fake*, a stand-in for a paid add-on, test code only.
+
+**The coordinator's rulings, as built.**
+
+- **The contract wins over the brief's wording**: no display name, `found` or currency field; the currency sits inside the total
+  (`59.00 EUR`); nobody found is `{}`; guests are found by WooCommerce's billing address and by any address of an EDD customer.
+- **License Manager for WooCommerce 3.0.20** fires no action when a licence is edited or activated; its one licence event is
+  `lmfwc_event_post_order_license_keys` (an order's keys delivered). Its copy refreshes on that event and on the order's status change; an
+  admin's edit in License Manager alone refreshes nothing until the order changes.
+- **The red team's choices stand**: licences are left out last when an answer is too large (profile, subscriptions, orders first); a row
+  needs attention after 3 days of passing failures, never on a 429; `409 facts_failed` is retried, `409 no_endpoint` needs attention;
+  refreshes only for users OmnaBase knows; the banned usermeta list is the brief's parts plus `salt` and `capabilities`. The accepted cost:
+  `code` also bans `billing_postcode`, `key` every `*_key` field, `auth` an `author_*` field.
+- **The shops' tests are a second integration run** (`OMNABASE_TEST_SHOPS=1`, the group `shops`); round one's tests keep a plain WordPress.
+- **The development WordPress loads `tests/fakes`** through the test harness (the must-use plugin, never shipped) at `plugins_loaded`
+  priority 1, when WooCommerce or EDD is active and the paid add-on is not.
+
+**The parts, by the brief's names.** `Facts\Responder` (the call → the answer), `Facts\Identity` and `Facts\Person` (the site id first,
+else the user with that address, else a guest), `Facts\FactsSource` with seven sources under `Facts\Sources\` (`Profile`, `WooCommerce`,
+`WooSubscriptions`, `Edd`, `EddRecurring`, `EddSoftwareLicensing`, `LicenseManager`, plus `EddCustomer` and `Format` as helpers),
+`Facts\Shaper` with `Facts\Field` (one field's rules) and `Facts\ContractCheck` (the plugin's copy of the contract, the last word),
+`Facts\MetaPolicy` (the one banned list, shared with the picker), `Facts\Switches`, `Facts\FactsLog`; `Outbox\Table` (the one place for
+SQL), `Outbox\Policy`, `Outbox\Worker`, `Outbox\Queue`, `Outbox\Schedule`, `Outbox\Job`; `Sync\SiteId`, `Sync\KnownUsers`, `Sync\UserLink`,
+`Sync\LicenceRefresh`, `Sync\LicenceHooks`; `Admin\FactsView`, `Admin\OutboxView`, `Admin\DataActions`, `Admin\Guard` (the actions' nonce
+and permission check, now shared with round one's `Actions`). `CustomerData` wires them beside `Plugin`.
+
+**Choices the brief left open.**
+
+- **The answer**: `{ "omnabase": { "v": 1, … } }` when a section is present, `{}` otherwise (nothing switched on, nobody found). A user
+  found with a switched-on shop source but no records gets an empty list (`orders: []`: "no orders"); a guest without records gets no
+  section, so nobody found stays `{}`.
+- **Sections from two sources** (orders from WooCommerce and EDD, licences from EDD Software Licensing and License Manager, subscriptions
+  from both subscription add-ons) are merged; orders are then sorted by date, newest first, before the shaper keeps 20.
+- **WooCommerce orders**: a user's by account (`customer_id`), a guest's by billing address only. A registered user's earlier guest orders
+  under the same address are not shown (round three may add them). Orders come through `wc_get_orders` with its default order types
+  (never a literal `shop_order`). **The order link is the classic edit address** (`post.php?post=<id>&action=edit`) on both storages, so
+  both storages answer alike; WooCommerce forwards it to its newer order screen when HPOS is on. Admin links are https whenever the site is.
+- **Dates** are `Y-m-d`: a unix time in the site's time zone, a stored date string by its own date part (WooCommerce Subscriptions' UTC
+  dates, EDD Recurring's local ones). **Totals**: `number_format` with the shop's decimals and the currency code (`59.00 EUR`).
+- **Licence keys** are masked in the sources already (the full key never leaves the source class) and again in the shaper: `••••-` and
+  the last four characters; a key of four characters or fewer becomes `••••`. A lifetime EDD licence has no `expiresAt`. License Manager's
+  numeric statuses in words (`sold delivered active inactive`); it has no guest licences (they belong to an account).
+- **The shaper's size budget** is 127 KB of the encoded answer (128 KB less 1 KB of room), measured with `wp_json_encode` and no flags, as
+  WordPress's REST server sends it. If the licences alone are still too large, the oldest go one by one ("licences (the oldest)" in the
+  log). Meta keys over 64 characters are dropped, not cut (a cut name means nothing). An empty profile is `{}`; empty meta is left out.
+- **The log line** is a stored list, `omnabase_facts_log` (the last 20 answers: time, user/guest/nobody, the sections, the ones left out;
+  never an address or data), and the customer-data section shows the last answer's left-out sections. No `error_log` (WPCS flags it, and
+  most hosts hide it).
+- **The link** is queued only while a source is switched on (nothing is shared before), once per user (one waiting row per user), and a
+  user counts as known once OmnaBase accepted it (`omnabase_known`, user meta) or asked by the site id. **The refresh** is queued only
+  while a licence source is on (EDD Software Licensing or License Manager): it copies licences and nothing else.
+- **The outbox table** (`{prefix}omnabase_outbox`): `id kind subject_id dedupe_key state attempts next_at claimed_until last_error
+  created_at sent_at`, unix times, made on activation and on any load whose `omnabase_db_version` differs (version `1`). No payload column:
+  the body is built from the user when the row is sent (the brief), so the table holds no customer data. The dedupe key is not a unique
+  index (sent rows keep theirs for seven days); a new row is refused while one with the same key waits.
+- **The lock is a claim per row** (`claimed_until`, two minutes): an `UPDATE … WHERE claimed_until < now` that only one run can win, so
+  overlapping runs on two visits never send a row twice, and a crashed run frees its rows after two minutes. An option-based lock was not
+  atomic (`add_option` writes with `ON DUPLICATE KEY UPDATE`).
+- **The immediate try**: a new row schedules a one-off run (`omnabase_outbox_now`; the recurring hook cannot be used: WordPress refuses a
+  single event within ten minutes of another with the same hook) and wakes WP-Cron with `spawn_cron()` at the end of the request (not from
+  WP-Cron itself or WP-CLI), never inside the shop's own step. The recurring job is scheduled at `init` (WordPress's interval list is
+  translated, and translations load from `init` on); deactivation clears both.
+- **Retry** sets a row needing attention back to waiting, due now, with its tries and its three days started afresh; **Discard** marks it
+  `discarded`, kept seven days with the sent rows, then removed. "Send now" (the brief's third button) waits for round three.
+- **A new connection starts afresh**: `Connect\Flow` fires `omnabase_connected` after a successful exchange; every "known" mark is
+  forgotten (the workspace on the other side may be another one) and the sent and discarded rows go. Waiting and attention rows stay (never
+  dropped without the administrator).
+- **The picker** offers the usermeta keys of the 50 newest users plus any ticked before, never `_…`, banned or WordPress's own screen
+  preferences (`rich_editing`, `admin_color` …). Keys are stored only when well formed and not banned.
+- **The hooks register once per request**: the integration tests boot the plugin a second time (round one's helper), which would have
+  hooked a second worker to the same timer; `CustomerData::registerBackground()` keeps one.
+
+**Test adjustments (each with its reason in the test's comment).**
+
+1. `RoundTwoTestCase::askFacts` signs the test's own user in again after the facts call: round one's `deliver` logs out (as OmnaBase's
+   call is), so a screen test that asked first then rendered the screen or posted Discard as nobody and met WordPress's refusal.
+2. `FactsIdentityProfileTest`, the reused user number: the test's own renumbering by raw SQL makes WordPress warn "Cache key must not be an
+   empty string" (traced to `clean_user_cache` and `new WP_User` in the setup lines); the two warnings are declared expected.
+3. `RoundTwoScreenTest`: the helper `values()` reads an element's `value` attribute, so the outbox section's text and the descriptions'
+   texts came back blank (the first could never find the reason, the 30-word check could never fail); both queries now read text nodes.
+4. Round zero's structure guard: "a long random-looking string" skips a name made only of lower-case letters and underscores
+   (`woocommerce_order_status_changed`, `lmfwc_event_post_order_license_keys` are hook names, not secrets); its example still proves it.
+
+**Open for round three.** "Send now" on the outbox; a registered user's earlier guest orders; licences of guest orders in License Manager;
+health lines for the facts calls and a disabled WP-Cron; "unsupported version" checks per shop; an idempotency key column when topics join
+the outbox; the real paid add-ons (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing) are only proven against their fakes
+until the founder drops their zips into `paid/`.

@@ -54,6 +54,10 @@ final class RepositoryStructureTest extends TestCase {
 
 	/**
 	 * Patterns that look like a credential. The guard proves each one matches its example before trusting it.
+	 *
+	 * M13 round two (DECISIONS "Round two"): the long random-looking string skips a name made only of lower-case letters and underscores
+	 * (a WordPress hook or option name such as `woocommerce_order_status_changed`, which the shops' licence events need): no generated
+	 * secret looks like that, and the example still proves the pattern.
 	 */
 	private const SECRET_PATTERNS = array(
 		'an OmnaBase key'        => array( '/obw_[A-Za-z0-9]{20,}/', "'obw_k3j9x2qak3j9x2qak3j9x2qa_7Q2XAB'" ),
@@ -61,7 +65,7 @@ final class RepositoryStructureTest extends TestCase {
 		'a private key'          => array( '/-----BEGIN [A-Z ]*PRIVATE KEY-----/', '-----BEGIN RSA PRIVATE KEY-----' ),
 		'a Stripe-style key'     => array( '/\b[spr]k_(live|test)_[A-Za-z0-9]{10,}/', "'sk_live_0123456789ab'" ),
 		'an AWS access key'      => array( '/AKIA[0-9A-Z]{16}/', "'AKIAABCDEFGHIJKLMNOP'" ),
-		'a long random-looking string' => array( '/[\'"][A-Za-z0-9+\/=_-]{32,}[\'"]/', "'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='" ),
+		'a long random-looking string' => array( '/[\'"](?![a-z_]+[\'"])[A-Za-z0-9+\/=_-]{32,}[\'"]/', "'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='" ),
 	);
 
 	/**

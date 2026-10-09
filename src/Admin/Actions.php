@@ -39,11 +39,11 @@ final class Actions {
 
 	/** Connect: off to OmnaBase's connect page, or back with the reason the site cannot connect. */
 	public function connect(): void {
-		$this->guard( 'omnabase_connect' );
+		Guard::check( 'omnabase_connect' );
 		$start = $this->flow->start( wp_get_current_user() );
 		if ( null === $start['link'] ) {
 			$this->flash->set( get_current_user_id(), 'error', (string) $start['problem'] );
-			$this->backToScreen();
+			Guard::backToScreen();
 		}
 		$host = (string) wp_parse_url( ApiUrl::app(), PHP_URL_HOST );
 		add_filter( 'allowed_redirect_hosts', static fn ( $hosts ) => array_merge( (array) $hosts, array( $host ) ) );
@@ -53,17 +53,17 @@ final class Actions {
 
 	/** Disconnect: revoke and forget. */
 	public function disconnect(): void {
-		$this->guard( 'omnabase_disconnect' );
+		Guard::check( 'omnabase_disconnect' );
 		[ $type, $message ] = $this->disconnect->run();
 		$this->flash->set( get_current_user_id(), $type, $message );
-		$this->backToScreen();
+		Guard::backToScreen();
 	}
 
 	/** Check connection: both directions. */
 	public function check(): void {
-		$this->guard( 'omnabase_check' );
+		Guard::check( 'omnabase_check' );
 		$this->health->run();
-		$this->backToScreen();
+		Guard::backToScreen();
 	}
 
 	/** The way back from OmnaBase (`code` + `state`, or `error` + `state`), at the settings page's load hook. */
@@ -81,24 +81,6 @@ final class Actions {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		[ $type, $message ] = $this->flow->arrive( get_current_user_id(), $state, $code, $error );
 		$this->flash->set( get_current_user_id(), $type, $message );
-		$this->backToScreen();
-	}
-
-	/**
-	 * The form's nonce and the administrator's permission, or WordPress's own refusal.
-	 *
-	 * @param string $action The action, also the nonce's name.
-	 */
-	private function guard( string $action ): void {
-		check_admin_referer( $action );
-		if ( ! current_user_can( SettingsScreen::CAPABILITY ) ) {
-			wp_die( esc_html__( 'Sorry, you are not allowed to manage OmnaBase.', 'omnabase' ), 403 );
-		}
-	}
-
-	/** To the clean settings address. */
-	private function backToScreen(): void {
-		wp_safe_redirect( SettingsScreen::url() );
-		exit;
+		Guard::backToScreen();
 	}
 }

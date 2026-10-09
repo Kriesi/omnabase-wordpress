@@ -7,11 +7,13 @@
 
 namespace OmnaBase\WordPress\Rest;
 
+use OmnaBase\WordPress\Facts\Responder;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Signed with the facts secret (its own, never the webhook secret). Round one answers an empty object: OmnaBase's card then shows nothing
- * from the site, without an error. Round two answers the switched-on sources' facts.
+ * Signed with the facts secret (its own, never the webhook secret), checked before the handler runs. The handler only reads the call and
+ * hands it to the responder: the switched-on sources' facts, shaped to OmnaBase's contract, or `{}` (never `[]`).
  */
 final class Customer {
 
@@ -20,9 +22,10 @@ final class Customer {
 	/**
 	 * Builds the receiver.
 	 *
-	 * @param SignedCall $door The signature check.
+	 * @param SignedCall $door      The signature check.
+	 * @param Responder  $responder The answer.
 	 */
-	public function __construct( private SignedCall $door ) {}
+	public function __construct( private SignedCall $door, private Responder $responder ) {}
 
 	/** Registers the route at `rest_api_init`. */
 	public function register(): void {
@@ -42,8 +45,13 @@ final class Customer {
 		);
 	}
 
-	/** An empty facts object (`{}`, not `[]`). */
-	public function answer(): \WP_REST_Response {
-		return new \WP_REST_Response( new \stdClass(), 200 );
+	/**
+	 * The answer to a signed call.
+	 *
+	 * @param \WP_REST_Request $request The call.
+	 */
+	public function answer( \WP_REST_Request $request ): \WP_REST_Response {
+		$call = json_decode( (string) $request->get_body(), true );
+		return new \WP_REST_Response( $this->responder->respond( is_array( $call ) ? $call : array() ), 200 );
 	}
 }
