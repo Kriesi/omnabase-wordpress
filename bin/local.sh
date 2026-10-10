@@ -24,6 +24,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 NODE22="$HOME/.nvm/versions/node/v22.22.1/bin"
 [[ -d "$NODE22" ]] && export PATH="$NODE22:$PATH"
+export OMNABASE_LOCAL_SITES=1 # the local OmnaBase lets a site on a .localhost name connect (a LocalWP site; production never does)
 export TEST_DATABASE_URL_ADMIN="${TEST_DATABASE_URL_ADMIN:-postgres://postgres:test@127.0.0.1:5434/omnabase_test}" # OmnaBase's local test container
 API="http://localhost:${OMNABASE_E2E_PORT:-3011}"
 WEB="http://localhost:${OMNABASE_WEB_PORT:-4391}"
