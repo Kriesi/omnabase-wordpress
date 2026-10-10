@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Every action posted from the screen needs its form's nonce (a short-lived form token against forged requests) and `manage_options`;
- * afterwards the browser goes back to the clean settings address.
+ * afterwards the browser goes back to the clean settings address, on the action's tab.
  */
 final class Guard {
 
@@ -27,9 +27,13 @@ final class Guard {
 		}
 	}
 
-	/** To the clean settings address. */
-	public static function backToScreen(): void {
-		wp_safe_redirect( SettingsScreen::url() );
+	/**
+	 * To the clean settings address, on the tab the action came from (a slug from the fixed list; anything else opens Connection).
+	 *
+	 * @param string $tab The tab.
+	 */
+	public static function backToScreen( string $tab = Tabs::CONNECTION ): void {
+		wp_safe_redirect( SettingsScreen::url( Tabs::valid( $tab ) ) );
 		exit;
 	}
 }

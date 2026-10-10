@@ -10,7 +10,6 @@ namespace OmnaBase\WordPress;
 use OmnaBase\WordPress\Admin\Actions;
 use OmnaBase\WordPress\Admin\ConnectionView;
 use OmnaBase\WordPress\Admin\DataActions;
-use OmnaBase\WordPress\Admin\DisplayActions;
 use OmnaBase\WordPress\Admin\FactsView;
 use OmnaBase\WordPress\Admin\Flash;
 use OmnaBase\WordPress\Admin\ForumActions;
@@ -19,9 +18,11 @@ use OmnaBase\WordPress\Admin\Health;
 use OmnaBase\WordPress\Admin\HealthNotes;
 use OmnaBase\WordPress\Admin\Notices;
 use OmnaBase\WordPress\Admin\OutboxView;
-use OmnaBase\WordPress\Admin\PortalActions;
+use OmnaBase\WordPress\Admin\PagesActions;
+use OmnaBase\WordPress\Admin\PluginLinks;
 use OmnaBase\WordPress\Admin\PortalView;
 use OmnaBase\WordPress\Admin\SettingsScreen;
+use OmnaBase\WordPress\Admin\SetupLine;
 use OmnaBase\WordPress\Admin\ShortcodesView;
 use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Api\Loopback;
@@ -44,8 +45,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
  * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form and its two
- * routes (`Forms`). In the admin: Settings › OmnaBase, its actions (Connect, Disconnect, Check connection, the way back, the forum
- * settings, the message centre's page, the customer-data switches, Retry and Discard) and the "reconnect needed" notice. Everywhere too: the
+ * routes (`Forms`). In the admin: Settings › OmnaBase in five tabs, its actions (Connect, Disconnect, Check connection, the way back, the
+ * setup line's Dismiss, the forum settings, the Forms and messages tab's save, the customer-data switches, Retry, Discard and Send now), the
+ * Plugins list's Settings link and the "reconnect needed" notice. Everywhere too: the
  * message centre (`Portal`: its shortcode, form posts, no-cache marking, the profile watcher, My Account's link), and the privacy text,
  * exporter and eraser (`Privacy`).
  */
@@ -104,15 +106,19 @@ final class Plugin {
 		$actions = new Actions( $flow, new Disconnect( $client, $vault, $info, $health, $ping ), $health, $flash );
 		$actions->register();
 		$display = new Display();
+		$setup   = new SetupLine( $vault, $display, $flash );
+		$setup->register();
 		( new DataActions( $data->switches, $data->sources, $data->table, $data->queue, $flash ) )->register();
 		( new ForumActions( $forum->settings, $flash ) )->register();
-		( new PortalActions( $portal->page, $flash ) )->register();
-		( new DisplayActions( $display, $flash ) )->register();
+		( new PagesActions( $portal->page, $display, $flash ) )->register();
 		$sections = array(
+			'setup'      => array( $setup, 'build' ),
 			'connection' => array( new ConnectionView( $vault, $client, $info, $site ), 'build' ),
 			'health'     => array( $health, 'view' ),
+			'deliveries' => static fn () => array( 'rows' => $log->recent() ),
 		) + $this->settingsSections( $data, $forum, $portal, $display );
-		( new SettingsScreen( $this->info, $flash, $actions, $sections ) )->register();
+		( new SettingsScreen( $this->info, $flash, $actions, $sections, array( $data->table, 'attentionCount' ) ) )->register();
+		( new PluginLinks( plugin_basename( $this->info->mainFile() ) ) )->register();
 		( new Notices( $vault ) )->register();
 	}
 

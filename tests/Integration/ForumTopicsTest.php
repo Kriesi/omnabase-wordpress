@@ -1,5 +1,9 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the outbox's "topics waiting" line moves with the outbox to the
+ * Activity tab and the screen renders only the open tab (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1). The one line that
+ * read the screen in the daily-limit test now opens `openTab( 'activity' )` instead of the bare address. Nothing else changed.
+ *
  * M13 round three, the red team's failing tests: a topic in a marked forum becomes one public ticket on OmnaBase's `api` channel, through
  * the outbox, however it was made and however busy OmnaBase is.
  *
@@ -270,7 +274,7 @@ final class ForumTopicsTest extends RoundThreeTestCase {
 			$this->assertGreaterThanOrEqual( time() + 7200 - 60, self::nextAt( $row ) );
 		}
 		wp_set_current_user( $this->admin );
-		$screen = (string) preg_replace( '/\s+/', ' ', wp_strip_all_tags( $this->renderScreen() ) );
+		$screen = (string) preg_replace( '/\s+/', ' ', wp_strip_all_tags( $this->openTab( 'activity' ) ) );
 		$this->assertMatchesRegularExpression( '/\b10 topics waiting\b/i', $screen );
 		$this->assertMatchesRegularExpression( '/daily limit/i', $screen );
 

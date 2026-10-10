@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Thin handlers at `admin-post.php`: each checks its nonce and `manage_options`, calls the switches or the outbox's table, keeps a message
- * and goes back to the screen.
+ * and goes back to the tab it came from (Customer data, or Activity for the outbox's rows).
  */
 final class DataActions {
 
@@ -44,7 +44,7 @@ final class DataActions {
 		add_action( 'admin_post_' . self::SEND_NOW, array( $this, 'sendNow' ) );
 	}
 
-	/** Stores exactly the ticked sources and usermeta. */
+	/** Stores exactly the ticked sources and user fields. */
 	public function saveFacts(): void {
 		Guard::check( self::SAVE_FACTS );
 		$posted = isset( $_POST['omnabase_facts'] ) && is_array( $_POST['omnabase_facts'] ) ? wp_unslash( $_POST['omnabase_facts'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- the nonce is checked by Guard::check() above; each list is sanitised below.
@@ -54,7 +54,7 @@ final class DataActions {
 			self::keys( $posted['meta'] ?? array() )
 		);
 		$this->flash->set( get_current_user_id(), 'success', __( 'Customer data settings saved.', 'omnabase' ) );
-		Guard::backToScreen();
+		Guard::backToScreen( Tabs::DATA );
 	}
 
 	/** A row needing attention waits again, due now. */
@@ -62,15 +62,15 @@ final class DataActions {
 		Guard::check( self::RETRY );
 		$done = $this->table->retry( self::row(), time() );
 		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call will be sent again within a minute.', 'omnabase' ) : __( 'That call no longer needs attention.', 'omnabase' ) );
-		Guard::backToScreen();
+		Guard::backToScreen( Tabs::ACTIVITY );
 	}
 
 	/** A row is given up. */
 	public function discard(): void {
 		Guard::check( self::DISCARD );
 		$done = $this->table->discard( self::row(), time() );
-		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call was discarded: it will not be sent.', 'omnabase' ) : __( 'That call is no longer in the outbox.', 'omnabase' ) );
-		Guard::backToScreen();
+		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call was discarded: it will not be sent.', 'omnabase' ) : __( 'That call is no longer on its way.', 'omnabase' ) );
+		Guard::backToScreen( Tabs::ACTIVITY );
 	}
 
 	/** A waiting row is sent at once instead of at its next try. */
@@ -78,7 +78,7 @@ final class DataActions {
 		Guard::check( self::SEND_NOW );
 		$done = $this->queue->sendNow( self::row() );
 		$this->flash->set( get_current_user_id(), $done ? 'success' : 'info', $done ? __( 'The call is being sent now.', 'omnabase' ) : __( 'That call is no longer waiting.', 'omnabase' ) );
-		Guard::backToScreen();
+		Guard::backToScreen( Tabs::ACTIVITY );
 	}
 
 	/** The posted row id (the nonce was checked by the caller). */

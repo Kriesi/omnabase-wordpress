@@ -1,5 +1,13 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the `.pot` samples followed words that M14 changes on purpose
+ * (brief `docs/briefs/m14-settings-cleanup.md`, choices 1, 3 and 5; review S1: "`RoundSixStructureTest.php:48` requires `.pot` entries … for
+ * 'Outbox', 'Shortcodes' and the plugin's current header description. Choices 1, 3 and 5 change all three"). "Outbox" becomes "On its way to
+ * OmnaBase"; the header description is no longer a fixed sentence here but read from omnabase.php's header, so the `.pot` must hold whatever
+ * the header says (the new one ends "Set it up under Settings › OmnaBase.", pinned in `M14RoundOneStructureTest`); "Shortcodes" stays (the
+ * block keeps its `h2`). Four new samples join, one per new part of the screen: "Forms and messages", "What OmnaBase sent here",
+ * "Disconnected in OmnaBase", "Save". The rest of the guard is unchanged.
+ *
  * M13 round six, the red team's failing tests: the structure guard for "ready to hand out" (file-level checks, no WordPress needed).
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) "Round six": "`readme.txt` complete (description, external services,
@@ -45,7 +53,7 @@ final class RoundSixStructureTest extends TestCase {
 	private const TECHNICAL = array( '/^(SELECT|UPDATE|DELETE|INSERT|CREATE|DROP)\b/', '/no-store/', '/^Bearer $/', '/^put your unique phrase here$/', '/^OmnaBase message centre$/' );
 
 	/** Sentences the `.pot` must hold: one per part of the plugin (the screen, the form, the message centre, the outbox, the header). */
-	private const POT_SAMPLE = array( 'This site is not connected to OmnaBase yet.', 'Outbox', 'Retry', 'Discard', 'Message centre', 'Shortcodes', 'Connects your site to OmnaBase, the support inbox: forum topics, form messages and your customers\' orders on every ticket.' );
+	private const POT_SAMPLE = array( 'This site is not connected to OmnaBase yet.', 'On its way to OmnaBase', 'Retry', 'Discard', 'Message centre', 'Shortcodes', 'Forms and messages', 'What OmnaBase sent here', 'Disconnected in OmnaBase', 'Save' );
 
 	/**
 	 * What it checks: readme.txt is finished: every section WordPress.org shows, no placeholder left.
@@ -182,8 +190,9 @@ final class RoundSixStructureTest extends TestCase {
 	/**
 	 * What it checks: languages/omnabase.pot exists, belongs to this plugin and lists every sentence the code translates.
 	 * Passes when: the file exists with a header naming OmnaBase, the version 0.1.0 and the text domain; it holds the sample sentences (the
-	 *   settings screen, the outbox, the shortcodes, the plugin's description); and every first string of every translation call in src/,
-	 *   templates/ and the main file is one of its msgids.
+	 *   settings screen, its tabs and buttons, the outbox, the shortcodes, the fourth connection state) and the plugin's description exactly
+	 *   as omnabase.php's header says it; and every first string of every translation call in src/, templates/ and the main file is one of
+	 *   its msgids.
 	 * Fails when: translators start from a missing or old template, so new sentences stay English in every translation.
 	 */
 	public function test_the_pot_is_present_and_up_to_date(): void {
@@ -195,6 +204,8 @@ final class RoundSixStructureTest extends TestCase {
 		foreach ( self::POT_SAMPLE as $sentence ) {
 			$this->assertContains( $sentence, $ids );
 		}
+		$this->assertSame( 1, preg_match( '/^\s*\*\s*Description:\s*(.+?)\s*$/m', $this->read( 'omnabase.php' ), $header ), 'the header has a description' );
+		$this->assertContains( $header[1], $ids, 'the header description, as omnabase.php says it' );
 		$missing = array();
 		foreach ( array_merge( $this->filesUnder( 'src', 'php' ), $this->filesUnder( 'templates', 'php' ), array( 'omnabase.php' ) ) as $file ) {
 			foreach ( $this->translationCalls( $this->read( $file ) ) as [ $line, $strings ] ) {

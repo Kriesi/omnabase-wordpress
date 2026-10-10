@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * A run works at most 20 due rows (a backlog never makes one visit slow), each claimed first, so two overlapping runs never send one row
- * twice. Without a readable connection nothing is tried: rows wait for the administrator to reconnect. Each row's job says what to do with
+ * twice. Without a readable connection, or while OmnaBase refuses the key (401: disconnected in OmnaBase), nothing is tried: rows wait,
+ * their tries untouched, for the administrator to connect again. Each row's job says what to do with
  * it (send, wait, skip, ask the administrator); each answer goes through the policy (sent, waiting, needing attention). A call the job marks
  * idempotent carries the row's own Idempotency-Key, the same on every try. Sent and discarded rows are kept seven days.
  */
@@ -53,16 +54,24 @@ final class Worker {
 
 	/** One run (the WP-Cron job). */
 	public function run(): void {
-		if ( null === $this->vault->read() ) {
+		if ( ! $this->mayCall() ) {
 			return;
 		}
 		$now = time();
 		$this->table->purge( $now - self::KEEP_SECONDS );
 		foreach ( $this->table->due( $now, self::BATCH ) as $row ) {
+			if ( ! $this->mayCall() ) {
+				return;
+			}
 			if ( $this->table->claim( (int) $row['id'], $now ) ) {
 				$this->work( $row );
 			}
 		}
+	}
+
+	/** Whether the site may call OmnaBase: a readable key that OmnaBase has not refused (a refused one pauses the outbox until Connect). */
+	private function mayCall(): bool {
+		return null !== $this->vault->read() && ! $this->vault->isRevoked();
 	}
 
 	/**
@@ -96,7 +105,11 @@ final class Worker {
 			$this->table->finish( (int) $row['id'], (int) $row['attempts'], $this->decideWithout( $step, $row ), time() );
 			return;
 		}
-		$outcome  = $this->send( (array) $step->request, $row );
+		$outcome = $this->send( (array) $step->request, $row );
+		if ( 401 === $outcome['status'] ) {
+			$this->table->finish( (int) $row['id'], (int) $row['attempts'], Policy::paused( time() ), time() );
+			return;
+		}
 		$decision = $this->policy->decide( $outcome, array( 'attempts' => (int) $row['attempts'], 'created_at' => (int) $row['created_at'] ), time() );
 		$this->table->finish( (int) $row['id'], (int) $row['attempts'] + 1, $decision, time() );
 		if ( Policy::SENT === $decision['state'] && null !== $job ) {

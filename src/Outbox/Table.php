@@ -262,6 +262,12 @@ final class Table {
 		return array( 'waiting' => (int) ( $row['waiting'] ?? 0 ), 'attention' => (int) ( $row['attention'] ?? 0 ), 'sent' => (int) ( $row['sent'] ?? 0 ) );
 	}
 
+	/** How many rows need the administrator (the Activity tab's label and the menu's bubble): one small count. */
+	public function attentionCount(): int {
+		global $wpdb;
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE state = 'attention'", self::name() ) );
+	}
+
 	/**
 	 * The open rows (waiting or needing attention) of one kind about one subject (a user's id; 0 for the form messages, which carry their
 	 * person in the payload), at most 500: what the personal-data tools look at.

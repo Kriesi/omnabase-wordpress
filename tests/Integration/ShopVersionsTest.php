@@ -1,5 +1,9 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the screen renders only the open tab (brief
+ * `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1), and the "unsupported version" lines belong to the customer-data section, which
+ * moves to the Customer data tab; `unsupportedLines()` opens that tab instead of the bare address. The assertions are unchanged.
+ *
  * M13 round six, the red team's failing test: "unsupported version" per shop on the settings screen (the shops run).
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2), "Risks": "**WooCommerce and EDD change**: public functions only, each source
@@ -47,7 +51,7 @@ final class ShopVersionsTest extends RoundTwoTestCase {
 		$this->asAdminOnTheScreen( $this->admin );
 		$doc = new \DOMDocument();
 		libxml_use_internal_errors( true );
-		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $this->renderScreen() . '</div>' );
+		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $this->openTab( 'data' ) . '</div>' );
 		libxml_clear_errors();
 		$out = array();
 		foreach ( ( new \DOMXPath( $doc ) )->query( '//tr | //li | //p | //label' ) as $n ) {

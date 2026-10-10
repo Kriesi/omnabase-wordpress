@@ -80,6 +80,16 @@ final class Policy {
 		return self::result( self::WAITING, $now + $seconds, $reason );
 	}
 
+	/**
+	 * A row met OmnaBase's 401 (the key was revoked there): it waits, due at once, and goes with the first run after Connect.
+	 *
+	 * @param int $now The time now.
+	 * @return array{state:string,next_at:?int,reason:string}
+	 */
+	public static function paused( int $now ): array {
+		return self::result( self::WAITING, $now, __( 'Waiting: someone disconnected this site in OmnaBase. It goes once you click Connect.', 'omnabase' ) );
+	}
+
 	/** The reason a topic waits for OmnaBase's daily limit of new tickets from connected sites (the screen counts the rows that say it). */
 	public static function dailyLimit(): string {
 		return __( 'OmnaBase\'s daily limit for new tickets from connected sites is reached; the next try is when it said.', 'omnabase' );

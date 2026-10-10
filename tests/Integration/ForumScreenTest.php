@@ -1,5 +1,10 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the forum section moves to the Forums tab and the screen renders
+ * only the open tab (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1), so `section()` opens `?page=omnabase&tab=forums`
+ * instead of the bare address. The save test also asserts that the redirect opens the Forums tab (choice 1: "every save returns to the tab it
+ * came from"), on top of the old `page=omnabase` check. The forum labels' new words are pinned in `ForumsTabTest`; nothing here was loosened.
+ *
  * M13 round three, the red team's failing tests: Settings › OmnaBase gains the forum section (a tick per forum, the support user, the closing
  * line, the guest switch, closing on resolve).
  *
@@ -60,7 +65,7 @@ final class ForumScreenTest extends RoundThreeTestCase {
 		wp_set_current_user( $this->admin );
 		$doc = new \DOMDocument();
 		libxml_use_internal_errors( true );
-		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $this->renderScreen() . '</div>' );
+		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $this->openTab( 'forums' ) . '</div>' );
 		libxml_clear_errors();
 		$node = ( new \DOMXPath( $doc ) )->query( '//*[contains(concat(" ", normalize-space(@class), " "), " ob-wp-settings__forum ")]' )->item( 0 );
 		return $node ? (string) $doc->saveHTML( $node ) : '';
@@ -110,7 +115,7 @@ final class ForumScreenTest extends RoundThreeTestCase {
 	 * What it checks: Saving the forum section stores exactly what the administrator chose.
 	 * Passes when: ticking only Support and Off topic, choosing Nina as the support user, a closing line, guests off and closing on resolve on,
 	 *   then saving, leaves the forum option with exactly those forums, Nina, the line, guests false and closing true, and goes back to the
-	 *   screen.
+	 *   screen's Forums tab.
 	 * Fails when: ticks are lost, a forum stays marked after unticking it, or the switches cannot be turned off.
 	 */
 	public function test_saving_stores_exactly_the_choices(): void {
@@ -118,6 +123,7 @@ final class ForumScreenTest extends RoundThreeTestCase {
 
 		$this->assertNotNull( $back );
 		$this->assertStringContainsString( 'page=omnabase', (string) $back );
+		$this->assertSame( 'forums', $this->tabIn( $back ), 'back on the Forums tab' );
 		$saved = (array) get_option( self::FORUM_OPTION, array() );
 		$this->assertEqualsCanonicalizing( array( $this->publicForum, $this->unmarkedForum ), array_map( 'intval', (array) ( $saved['forums'] ?? array() ) ) );
 		$this->assertSame( $this->moderator, (int) ( $saved['support_user'] ?? 0 ) );

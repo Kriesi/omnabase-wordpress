@@ -1,7 +1,7 @@
 <?php
 /**
- * Settings › OmnaBase: the forum section (a tick per forum, the support user, the closing line, guests, closing on resolve). Included by
- * settings.php.
+ * Settings › OmnaBase: the forum section (a tick per forum, who answers on the forum, the line under each answer, who may send topics,
+ * closing on resolve). Included by the Forums tab.
  *
  * @package OmnaBase
  *
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 	<?php if ( ! $omnabase_forum['active'] ) : ?>
 		<p class="description"><?php esc_html_e( 'Install and activate bbPress to send forum topics to OmnaBase.', 'omnabase' ); ?></p>
 	<?php else : ?>
-		<p class="description"><?php esc_html_e( 'Topics in the ticked forums become tickets, and your team\'s answers appear on the forum under the support user.', 'omnabase' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Topics in the ticked forums become tickets, and your team\'s answers appear on the forum under the name you choose below.', 'omnabase' ); ?></p>
 		<ul class="ob-wp-settings__forum-rules">
 			<li><?php esc_html_e( 'Topics in hidden forums are not public; every other forum is public to OmnaBase.', 'omnabase' ); ?></li>
 			<li><?php esc_html_e( 'Replies by the topic\'s author and by moderators are sent.', 'omnabase' ); ?></li>
@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
 			<?php endif; ?>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="omnabase-support-user"><?php esc_html_e( 'Support user', 'omnabase' ); ?></label></th>
+					<th scope="row"><label for="omnabase-support-user"><?php esc_html_e( 'Who answers on the forum', 'omnabase' ); ?></label></th>
 					<td>
 						<select id="omnabase-support-user" name="omnabase_forum[support_user]">
 							<option value=""><?php esc_html_e( '— Choose a moderator —', 'omnabase' ); ?></option>
@@ -54,19 +54,26 @@ defined( 'ABSPATH' ) || exit;
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="omnabase-closing-line"><?php esc_html_e( 'Closing line', 'omnabase' ); ?></label></th>
+					<th scope="row"><label for="omnabase-closing-line"><?php esc_html_e( 'Line under each answer', 'omnabase' ); ?></label></th>
 					<td>
 						<input type="text" class="regular-text" id="omnabase-closing-line" name="omnabase_forum[closing_line]" value="<?php echo esc_attr( $omnabase_forum['closingLine'] ); ?>">
-						<p class="description"><?php esc_html_e( 'The line under each answer; {agent} becomes the team member\'s name and {workspace} your workspace\'s.', 'omnabase' ); ?></p>
+						<p class="description"><?php esc_html_e( '{agent} becomes the team member\'s name and {workspace} your workspace\'s.', 'omnabase' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Guests', 'omnabase' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Who may send topics', 'omnabase' ); ?></th>
 					<td>
-						<label>
-							<input type="checkbox" name="omnabase_forum[guests]" value="1" <?php checked( $omnabase_forum['guests'] ); ?>>
-							<?php esc_html_e( 'Send guests\' topics too', 'omnabase' ); ?>
-						</label>
+						<fieldset>
+							<legend class="screen-reader-text"><?php esc_html_e( 'Who may send topics', 'omnabase' ); ?></legend>
+							<label>
+								<input type="radio" name="omnabase_forum[guests]" value="0" <?php checked( ! $omnabase_forum['guests'] ); ?>>
+								<?php esc_html_e( 'Members only', 'omnabase' ); ?>
+							</label><br>
+							<label>
+								<input type="radio" name="omnabase_forum[guests]" value="1" <?php checked( $omnabase_forum['guests'] ); ?>>
+								<?php esc_html_e( 'Guests too', 'omnabase' ); ?>
+							</label>
+						</fieldset>
 						<p class="description"><?php esc_html_e( 'Guests\' email addresses are unchecked: anyone can type any address.', 'omnabase' ); ?></p>
 					</td>
 				</tr>
@@ -81,9 +88,9 @@ defined( 'ABSPATH' ) || exit;
 				</tr>
 			</table>
 			<?php if ( 0 === $omnabase_forum['supportUser'] ) : ?>
-				<p class="ob-wp-settings__forum-warning"><?php esc_html_e( 'Choose a support user: until then your team\'s answers wait at OmnaBase.', 'omnabase' ); ?></p>
+				<p class="ob-wp-settings__forum-warning"><?php esc_html_e( 'Choose who answers on the forum: until then your team\'s answers wait at OmnaBase.', 'omnabase' ); ?></p>
 			<?php endif; ?>
-			<?php submit_button( __( 'Save forum settings', 'omnabase' ), 'primary', 'omnabase_forum_submit', true ); ?>
+			<?php submit_button( __( 'Save', 'omnabase' ), 'primary', 'omnabase_forum_submit', true ); ?>
 		</form>
 	<?php endif; ?>
 </div>

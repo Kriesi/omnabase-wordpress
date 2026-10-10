@@ -1,5 +1,14 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the settings screen becomes five tabs and renders only the open
+ * one (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1, S3), so every test that reads a section must open its tab first.
+ * Added below `renderScreen()` (which stays as it was: the address without a tab, so the Connection tab): `openTab( $tab )` renders the
+ * screen with `&tab=<tab>` in the address; `tabIn( $location )` reads which tab a redirect opens; `visibleText()` and `bannedIn()` are the
+ * plain-words guard's reading of a page (choice 3); `formsIn()`, `formFields()` and `postFields()` read and send a tab's forms the way a
+ * browser does; `navTabs()`, `openTabs()`, `countClass()`, `submitsOf()` and `formDepth()` read the tab row, the sections and the buttons;
+ * `plantOutboxRow()` makes an outbox row the real way (the outbox's own table and policy). Nothing existing was removed or loosened. The
+ * builder may rename `openTab()` and the other helpers (and tell the red team); the M14 tests call them by these names.
+ *
  * M13 round one, the red team's integration helpers (inside wp-env's tests WordPress): a site on https with pretty permalinks, an
  * administrator on Settings › OmnaBase, OmnaBase faked at the HTTP layer (WordPress's `pre_http_request` filter answers every outgoing
  * call and records it), redirects caught (the `wp_redirect` filter throws, so a handler's `exit` never runs), signed calls to the two
@@ -251,6 +260,292 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 			$html = (string) ob_get_clean();
 		}
 		return $html;
+	}
+
+	/* ---------- M14 round one: the tabs, the plain words, the forms (the red team) ---------- */
+
+	/** The five tabs by their address slug, in order, with their labels (M14 brief, choice 1). */
+	protected const TABS = array(
+		'connection' => 'Connection',
+		'data'       => 'Customer data',
+		'forums'     => 'Forums',
+		'pages'      => 'Forms and messages',
+		'activity'   => 'Activity',
+	);
+
+	/**
+	 * The one banned list (M14 brief, choice 3; review S2): none of these may stand in a visible line of any tab; they may appear only inside a
+	 * "Details" or "Advanced" block. Matched as whole words; `REST` with its case, every other word in any case.
+	 */
+	protected const BANNED = array( 'wp-json', 'REST', 'WP-Cron', 'cron', 'DISABLE_WP_CRON', 'HMAC', 'signature', 'usermeta', 'meta key', 'salts', 'encryption key', 'nonce', 'endpoint', 'webhook', 'scope', 'JSON', 'HTTP', '401', '409', '5xx' );
+
+	/** Banned nouns whose plural is caught too ("webhooks", "endpoints"): a whole-word rule must not let the plural slip through. */
+	private const BANNED_PLURALS = array( 'signature', 'meta key', 'encryption key', 'nonce', 'endpoint', 'webhook', 'scope' );
+
+	/**
+	 * The settings screen's HTML with a tab in its address (`options-general.php?page=omnabase&tab=<tab>`), as an administrator's browser opens
+	 * it; an empty tab opens the address without one. The address is put back afterwards.
+	 *
+	 * @param string $tab A tab's slug (`connection`, `data`, `forums`, `pages`, `activity`), anything else, or ''.
+	 */
+	protected function openTab( string $tab ): string {
+		$get      = $_GET;
+		$request  = $_REQUEST;
+		$_GET     = array( 'page' => 'omnabase' ) + ( '' === $tab ? array() : array( 'tab' => $tab ) );
+		$_REQUEST = $_GET;
+		try {
+			return $this->renderScreen();
+		} finally {
+			$_GET     = $get;
+			$_REQUEST = $request;
+		}
+	}
+
+	/**
+	 * Which tab a redirect opens: the `tab` of its address, or `connection` (the default tab) when it names none. Asserts it is the settings
+	 * screen.
+	 *
+	 * @param string|null $location Where a handler redirected.
+	 */
+	protected function tabIn( ?string $location ): string {
+		$this->assertNotNull( $location, 'the action sends the browser back to the settings screen' );
+		$this->assertStringContainsString( 'options-general.php', (string) $location );
+		parse_str( (string) wp_parse_url( (string) $location, PHP_URL_QUERY ), $query );
+		$this->assertSame( 'omnabase', $query['page'] ?? null, 'back on Settings › OmnaBase' );
+		return (string) ( $query['tab'] ?? 'connection' );
+	}
+
+	/** Some HTML as a document (one wrapping div), for XPath. */
+	protected static function htmlDocument( string $html ): \DOMDocument {
+		$doc = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $html . '</div>' );
+		libxml_clear_errors();
+		return $doc;
+	}
+
+	/** The nodes matching an XPath query in some HTML. */
+	protected static function query( string $html, string $xpath ): \DOMNodeList {
+		return ( new \DOMXPath( self::htmlDocument( $html ) ) )->query( $xpath );
+	}
+
+	/** The XPath condition "has this class". */
+	protected static function hasClass( string $class ): string {
+		return "contains(concat(' ', normalize-space(@class), ' '), ' {$class} ')";
+	}
+
+	/** A node's words, spaces collapsed. */
+	protected static function wordsOf( \DOMNode $node ): string {
+		$parts = array();
+		foreach ( ( new \DOMXPath( $node->ownerDocument ) )->query( './/text()', $node ) as $t ) {
+			$parts[] = $t->nodeValue;
+		}
+		return trim( (string) preg_replace( '/\s+/u', ' ', implode( ' ', $parts ) ) );
+	}
+
+	/** The HTML of a node. */
+	protected static function outer( \DOMNode $node ): string {
+		return (string) $node->ownerDocument->saveHTML( $node );
+	}
+
+	/**
+	 * The words a person sees on a page without opening anything: scripts and styles left out, every `<details>` block whose summary reads
+	 * "Details" or "Advanced" left out (closed by default; that is where technical words may live), each text node read on its own (so two
+	 * cells never run together), and web addresses (`https://…`) dropped, since an address is not a sentence.
+	 *
+	 * @param string $html A rendered tab.
+	 */
+	protected static function visibleText( string $html ): string {
+		$doc   = self::htmlDocument( $html );
+		$xpath = new \DOMXPath( $doc );
+		foreach ( iterator_to_array( $xpath->query( '//script | //style | //template' ) ) as $node ) {
+			$node->parentNode?->removeChild( $node );
+		}
+		foreach ( iterator_to_array( $xpath->query( '//details' ) ) as $details ) {
+			$summary = $xpath->query( './summary', $details )->item( 0 );
+			if ( null !== $summary && preg_match( '/^\s*(Details|Advanced)\b/u', (string) $summary->textContent ) ) {
+				$details->parentNode?->removeChild( $details );
+			}
+		}
+		$text = self::wordsOf( $doc->documentElement );
+		return trim( (string) preg_replace( '/\s+/u', ' ', (string) preg_replace( '~\b[a-z][a-z0-9+.-]*://\S+~i', ' ', $text ) ) );
+	}
+
+	/**
+	 * Every banned word found in a text, each with a little of its surroundings (empty when the text is clean).
+	 *
+	 * @param string $text Visible words.
+	 * @return string[]
+	 */
+	protected static function bannedIn( string $text ): array {
+		$found = array();
+		foreach ( self::BANNED as $word ) {
+			$body   = str_replace( ' ', '\s+', preg_quote( $word, '/' ) ) . ( in_array( $word, self::BANNED_PLURALS, true ) ? 's?' : '' );
+			$flags  = 'REST' === $word ? 'u' : 'iu';
+			$edge   = '[\p{L}\p{N}_-]';
+			$needle = '/(?<!' . $edge . ')' . $body . '(?!' . $edge . ')/' . $flags;
+			if ( preg_match_all( $needle, $text, $m, PREG_OFFSET_CAPTURE ) ) {
+				foreach ( $m[0] as [ $hit, $at ] ) {
+					$found[] = '"' . $word . '" in "…' . substr( $text, max( 0, $at - 50 ), strlen( $hit ) + 100 ) . '…"';
+				}
+			}
+		}
+		return $found;
+	}
+
+	/**
+	 * The forms of some HTML, each with the admin-post action it names (its hidden `action` field) and every field it would send.
+	 *
+	 * @return array<int,array{action:string,fields:array<string,string>,node:\DOMElement}>
+	 */
+	protected static function formsIn( string $html ): array {
+		$out = array();
+		foreach ( self::query( $html, '//form' ) as $form ) {
+			$fields = self::formFields( $form );
+			$out[]  = array( 'action' => (string) ( $fields['action'] ?? '' ), 'fields' => $fields, 'node' => $form );
+		}
+		return $out;
+	}
+
+	/**
+	 * Every field a form would send, as a browser does: unticked boxes and unchosen radios left out, a select's chosen option, no buttons.
+	 *
+	 * @param \DOMElement $form The form.
+	 * @return array<string,string|string[]>
+	 */
+	protected static function formFields( \DOMElement $form ): array {
+		$xpath  = new \DOMXPath( $form->ownerDocument );
+		$fields = array();
+		foreach ( $xpath->query( './/input | .//textarea | .//select', $form ) as $el ) {
+			$name = (string) $el->getAttribute( 'name' );
+			$type = strtolower( (string) $el->getAttribute( 'type' ) );
+			if ( '' === $name || in_array( $type, array( 'submit', 'button', 'reset', 'image' ), true ) || ( in_array( $type, array( 'checkbox', 'radio' ), true ) && ! $el->hasAttribute( 'checked' ) ) ) {
+				continue;
+			}
+			if ( 'select' === $el->nodeName ) {
+				$picked = $xpath->query( './/option[@selected]', $el )->item( 0 ) ?? $xpath->query( './/option', $el )->item( 0 );
+				$value  = $picked instanceof \DOMElement ? (string) $picked->getAttribute( 'value' ) : '';
+			} else {
+				$value = 'textarea' === $el->nodeName ? (string) $el->textContent : ( $el->hasAttribute( 'value' ) ? (string) $el->getAttribute( 'value' ) : 'on' );
+			}
+			self::putField( $fields, $name, $value );
+		}
+		return $fields;
+	}
+
+	/**
+	 * Puts a posted field where PHP would ($_POST's nesting for `a[b][]`).
+	 *
+	 * @param array  $fields The fields so far.
+	 * @param string $name   The field's name.
+	 * @param string $value  Its value.
+	 */
+	protected static function putField( array &$fields, string $name, string $value ): void {
+		parse_str( $name . '=' . rawurlencode( $value ), $one );
+		$fields = array_merge_recursive( $fields, $one );
+	}
+
+	/**
+	 * Posts fields to their admin-post handler as the current user (the handler named by the `action` field); answers where it redirected.
+	 *
+	 * @param array<string,mixed> $fields The fields (with `action` and the form's nonce unless left out).
+	 * @param bool                $nonce  Whether the nonce goes with them.
+	 */
+	protected function postFields( array $fields, bool $nonce = true ): ?string {
+		if ( ! $nonce ) {
+			$fields = array_filter( $fields, static fn ( $k ) => ! preg_match( '/nonce/i', (string) $k ), ARRAY_FILTER_USE_KEY );
+		}
+		$action = (string) ( $fields['action'] ?? '' );
+		$this->assertNotSame( '', $action, 'the form names its admin-post action' );
+		$_POST    = $fields;
+		$_REQUEST = $fields;
+		try {
+			do_action( 'admin_post_' . $action );
+		} catch ( Redirected $r ) {
+			return $r->location;
+		} catch ( \WPDieException $e ) {
+			return null;
+		} finally {
+			$_POST    = array();
+			$_REQUEST = array();
+		}
+		return null;
+	}
+
+	/**
+	 * An outbox row made the way the outbox makes it (its own table and its own policy's decision about an answer): one that needs the
+	 * administrator (OmnaBase refused it for good, a 409) or one that waits (OmnaBase answered 503 and the row tries again later).
+	 *
+	 * @param bool $attention Needs attention (true) or waits (false).
+	 * @return int The row's id.
+	 */
+	protected function plantOutboxRow( bool $attention ): int {
+		global $wpdb;
+		$table = new \OmnaBase\WordPress\Outbox\Table();
+		$table->maybeInstall();
+		$user = (int) self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		$this->assertTrue( $table->add( 'licence_refresh', $user, 'licence_refresh:' . $user . ':' . wp_generate_password( 6, false ), time() ), 'the outbox took the row' );
+		$id      = (int) $wpdb->insert_id;
+		$outcome = $attention
+			? array( 'status' => 409, 'headers' => array(), 'body' => array( 'error' => array( 'code' => 'conflict', 'message' => 'The customer was merged into another one' ) ), 'error' => null )
+			: array( 'status' => 503, 'headers' => array(), 'body' => null, 'error' => null );
+		$table->finish( $id, 1, ( new \OmnaBase\WordPress\Outbox\Policy() )->decide( $outcome, array( 'attempts' => 0, 'created_at' => time() ), time() ), time() );
+		$state = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT state FROM %i WHERE id = %d', \OmnaBase\WordPress\Outbox\Table::name(), $id ) );
+		$this->assertSame( $attention ? 'attention' : 'waiting', $state, 'the planted row is in the state the test needs' );
+		return $id;
+	}
+
+	/**
+	 * The tab links in order: slug => label (spaces collapsed).
+	 *
+	 * @return array<string,string>
+	 */
+	protected static function navTabs( string $html ): array {
+		$out = array();
+		foreach ( self::query( $html, '//a[' . self::hasClass( 'nav-tab' ) . ']' ) as $a ) {
+			parse_str( (string) wp_parse_url( html_entity_decode( (string) $a->getAttribute( 'href' ) ), PHP_URL_QUERY ), $q );
+			$out[ (string) ( $q['tab'] ?? '' ) ] = self::wordsOf( $a );
+		}
+		return $out;
+	}
+
+	/** The slugs of the tab links marked open. */
+	protected static function openTabs( string $html ): array {
+		$out = array();
+		foreach ( self::query( $html, '//a[' . self::hasClass( 'nav-tab' ) . ' and ' . self::hasClass( 'nav-tab-active' ) . ']' ) as $a ) {
+			parse_str( (string) wp_parse_url( html_entity_decode( (string) $a->getAttribute( 'href' ) ), PHP_URL_QUERY ), $q );
+			$out[] = (string) ( $q['tab'] ?? '' );
+		}
+		return $out;
+	}
+
+	/** How many elements carry a class in some HTML. */
+	protected static function countClass( string $html, string $class ): int {
+		return self::query( $html, '//*[' . self::hasClass( $class ) . ']' )->length;
+	}
+
+	/** The words of the submit buttons inside a form (a `<button>`'s text or an input's value), each with whether it is primary. */
+	protected static function submitsOf( \DOMElement $form ): array {
+		$out = array();
+		foreach ( ( new \DOMXPath( $form->ownerDocument ) )->query( ".//button[not(@type) or @type='submit'] | .//input[@type='submit']", $form ) as $b ) {
+			$out[] = array(
+				'words'   => 'input' === $b->nodeName ? trim( (string) $b->getAttribute( 'value' ) ) : self::wordsOf( $b ),
+				'primary' => (bool) preg_match( '/(^|\s)button-primary(\s|$)/', (string) $b->getAttribute( 'class' ) ),
+			);
+		}
+		return $out;
+	}
+
+	/** The deepest nesting of `<form>` tags in raw HTML (an HTML parser would silently drop an inner form, so the raw tags are counted). */
+	protected static function formDepth( string $html ): int {
+		$depth = 0;
+		$max   = 0;
+		preg_match_all( '#<(/?)form\b#i', $html, $m );
+		foreach ( $m[1] as $closing ) {
+			$depth += '' === $closing ? 1 : -1;
+			$max    = max( $max, $depth );
+		}
+		return $max;
 	}
 
 	/** The admin notices of an ordinary admin page (the dashboard) for a user. */

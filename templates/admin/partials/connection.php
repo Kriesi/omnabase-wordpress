@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings › OmnaBase: the connection section (Connect, Disconnect, Check connection). Included by settings.php.
+ * Settings › OmnaBase: the connection box (Connect, Disconnect, Check connection) in its four states. Included by the Connection tab.
  *
  * @package OmnaBase
  *
@@ -29,26 +29,14 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 				?>
 			</p>
 		<?php endif; ?>
-		<table class="form-table" role="presentation">
-			<tr>
-				<th scope="row"><?php esc_html_e( 'Project', 'omnabase' ); ?></th>
-				<td class="ob-wp-settings__projects"><?php echo esc_html( array() !== $omnabase_connection['projects'] ? implode( ', ', $omnabase_connection['projects'] ) : __( 'Every project', 'omnabase' ) ); ?></td>
-			</tr>
-			<tr>
-				<th scope="row"><?php esc_html_e( 'Permissions', 'omnabase' ); ?></th>
-				<td class="ob-wp-settings__scopes">
-					<?php foreach ( $omnabase_connection['scopes'] as $omnabase_scope ) : ?>
-						<code><?php echo esc_html( $omnabase_scope ); ?></code>
-					<?php endforeach; ?>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><?php esc_html_e( 'Key', 'omnabase' ); ?></th>
-				<td class="ob-wp-settings__key"><code><?php echo esc_html( $omnabase_connection['keyHint'] ); ?></code></td>
-			</tr>
-		</table>
+		<p class="ob-wp-settings__projects">
+			<?php
+			/* translators: %s: the OmnaBase project (or projects) this site's messages go to. */
+			echo esc_html( sprintf( __( 'Messages go to: %s', 'omnabase' ), array() !== $omnabase_connection['projects'] ? implode( ', ', $omnabase_connection['projects'] ) : __( 'every project', 'omnabase' ) ) );
+			?>
+		</p>
 		<?php if ( '' !== $omnabase_connection['liveError'] ) : ?>
-			<p class="ob-wp-settings__error"><?php echo esc_html( $omnabase_connection['liveError'] ); ?></p>
+			<p class="ob-wp-settings__error"><?php esc_html_e( 'OmnaBase did not answer just now, so this shows the connection as it was last known.', 'omnabase' ); ?></p>
 		<?php endif; ?>
 		<div class="ob-wp-settings__buttons">
 			<form method="post" action="<?php echo esc_url( $omnabase_action_url ); ?>" class="ob-wp-settings__form">
@@ -62,6 +50,14 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 			require __DIR__ . '/disconnect.php';
 			?>
 		</div>
+	<?php elseif ( 'revoked' === $omnabase_connection['state'] ) : ?>
+		<p class="ob-wp-settings__error"><strong><?php esc_html_e( 'Disconnected in OmnaBase', 'omnabase' ); ?></strong></p>
+		<p class="description"><?php esc_html_e( 'Someone disconnected this site in OmnaBase. Click Connect to connect it again.', 'omnabase' ); ?></p>
+		<?php if ( null !== $omnabase_connection['problem'] ) : ?>
+			<p class="ob-wp-settings__error"><?php echo esc_html( $omnabase_connection['problem'] ); ?></p>
+		<?php else : ?>
+			<?php require __DIR__ . '/connect.php'; ?>
+		<?php endif; ?>
 	<?php elseif ( 'reconnect' === $omnabase_connection['state'] ) : ?>
 		<p class="ob-wp-settings__error"><strong><?php esc_html_e( 'OmnaBase: reconnect needed', 'omnabase' ); ?></strong></p>
 		<p class="description"><?php esc_html_e( 'The stored connection can no longer be read because the site\'s secret keys changed. Connect again to receive replies.', 'omnabase' ); ?></p>

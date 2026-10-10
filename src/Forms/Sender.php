@@ -61,14 +61,15 @@ final class Sender {
 	}
 
 	/**
-	 * Whether the failure may pass by waiting (the outbox's own reading): no answer, a 5xx, or an earlier try with the key still running.
+	 * Whether the failure may pass by waiting (the outbox's own reading): no answer, a 5xx, an earlier try with the key still running, or
+	 * OmnaBase's 401 (someone disconnected the site there: the message waits for Connect, like the outbox's other rows).
 	 *
 	 * @param array{status:?int,body:?array} $outcome The answer.
 	 */
 	private static function passing( array $outcome ): bool {
 		$status = $outcome['status'];
 		$reason = $outcome['body']['error']['details']['reason'] ?? '';
-		return null === $status || $status >= 500 || ( 409 === $status && 'idempotency_in_flight' === $reason );
+		return null === $status || 401 === $status || $status >= 500 || ( 409 === $status && 'idempotency_in_flight' === $reason );
 	}
 
 	/** The address a visitor whose message was refused writes to: the site's own, unless a filter names another. */

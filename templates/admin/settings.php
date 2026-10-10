@@ -1,16 +1,14 @@
 <?php
 /**
- * Settings › OmnaBase: the screen's markup. Rendered by SettingsScreen::render() with `$view`.
+ * Settings › OmnaBase: the screen's frame (the title, the development notices, the last action's message, the tab row) and the open tab.
+ * Rendered by SettingsScreen::render() with `$view`; each tab's template reads its own sections from it.
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},connection:array<string,mixed>,health:array<string,mixed>,healthNotes:array{factsAt:int,cronOff:bool},forum:array<string,mixed>,portal:array<string,mixed>,shortcodes:array<string,mixed>,facts:array<string,mixed>,outbox:array<string,mixed>} $view
+ * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},tab:string,tabs:array<int,array{slug:string,label:string,url:string,active:bool}>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
-
-$omnabase_connection = $view['connection'];
-$omnabase_health     = $view['health'] + $view['healthNotes'];
 ?>
 <div class="wrap ob-wp-settings">
 	<h1><?php esc_html_e( 'OmnaBase', 'omnabase' ); ?></h1>
@@ -42,27 +40,13 @@ $omnabase_health     = $view['health'] + $view['healthNotes'];
 		</div>
 	<?php endif; ?>
 
-	<h2><?php esc_html_e( 'Connection', 'omnabase' ); ?></h2>
-	<?php require __DIR__ . '/partials/connection.php'; ?>
+	<nav class="nav-tab-wrapper ob-wp-settings__tabs" aria-label="<?php esc_attr_e( 'OmnaBase settings', 'omnabase' ); ?>">
+		<?php foreach ( $view['tabs'] as $omnabase_tab ) : ?>
+			<a href="<?php echo esc_url( $omnabase_tab['url'] ); ?>" class="nav-tab<?php echo $omnabase_tab['active'] ? ' nav-tab-active' : ''; ?>"<?php echo $omnabase_tab['active'] ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $omnabase_tab['label'] ); ?></a>
+		<?php endforeach; ?>
+	</nav>
 
-	<?php if ( 'not_connected' !== $omnabase_connection['state'] ) : ?>
-		<h2><?php esc_html_e( 'Health', 'omnabase' ); ?></h2>
-		<?php require __DIR__ . '/partials/health.php'; ?>
-	<?php endif; ?>
-
-	<?php
-	$omnabase_forum      = $view['forum'];
-	$omnabase_facts      = $view['facts'];
-	$omnabase_outbox     = $view['outbox'];
-	$omnabase_portal     = $view['portal'];
-	$omnabase_shortcodes = $view['shortcodes'];
-	require __DIR__ . '/partials/forum.php';
-	require __DIR__ . '/partials/portal.php';
-	require __DIR__ . '/partials/shortcodes.php';
-	require __DIR__ . '/partials/facts.php';
-	require __DIR__ . '/partials/outbox.php';
-	require __DIR__ . '/partials/deliveries.php';
-	?>
+	<?php require __DIR__ . '/tabs/' . $view['tab'] . '.php'; ?>
 
 	<p class="description ob-wp-settings__version">
 		<?php

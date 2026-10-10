@@ -1,5 +1,11 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: WooCommerce's My Account switch moves to the "Forms and
+ * messages" tab, inside the Shortcodes block of that tab's one save form (brief `docs/briefs/m14-settings-cleanup.md`, choice 1: "the
+ * message centre's page picker, the 'theme's styles only' switch, WooCommerce's My Account link, one save action `omnabase_save_pages`").
+ * The first test now finds the switch inside the Shortcodes block of that tab (stronger than "somewhere on the screen"); `flip()` reads it
+ * on that tab. Nothing else changed.
+ *
  * M13 round six, the red team's failing tests: WooCommerce's My Account gets a "Support" link to the message centre, behind a switch.
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) choice 9: "`[omnabase_messages]` on the page the admin picks (a 'Support'
@@ -44,12 +50,18 @@ final class MyAccountLinkTest extends RoundSixTestCase {
 
 	/**
 	 * What it checks: Without the switch, WooCommerce's My Account menu is left as WooCommerce made it.
-	 * Passes when: the settings screen offers the "My Account" switch, unticked, and the My Account menu has no "Support" item.
+	 * Passes when: the Forms and messages tab offers the "My Account" switch inside its Shortcodes block, unticked, and the My Account menu
+	 *   has no "Support" item.
 	 * Fails when: the plugin changes a shop's account menu the owner never asked to change, or the owner cannot find the switch.
 	 */
 	public function test_off_by_default_no_support_link(): void {
-		$box = self::checkbox( $this->screen(), self::SWITCH );
+		// Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): the tab's one save form wraps the whole Shortcodes
+		// block, so the block's own HTML holds no form and the form-reading helper found nothing in it. The switch is read with its form from
+		// the whole tab, and a second assertion still pins it inside the Shortcodes block.
+		$html = $this->screen( 'pages' );
+		$box  = self::checkbox( $html, self::SWITCH );
 		$this->assertNotNull( $box, 'the switch is offered while WooCommerce is active' );
+		$this->assertSame( 1, self::nodes( self::section( $html, 'ob-wp-settings__shortcodes' ), "//input[@type='checkbox'][@name='" . $box['name'] . "']" )->length, 'the switch inside the Shortcodes block' );
 		$this->assertFalse( $box['checked'] );
 		$this->asUserOnTheFront( $this->ada );
 		$this->assertNull( self::supportItem() );

@@ -1,4 +1,9 @@
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the customer-data section moves to the Customer data tab, which
+ * has one save form ending in one primary "Save" (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1, S3). `switchSources()`
+ * opens `&tab=data`, clicks the tab's "Save" button by its words, and also expects to come back to the data tab. The switches' names, the
+ * checks after saving and every flow on OmnaBase's side are unchanged.
+ *
  * M13 round two, the red team's failing flow: the team sees the shop on the ticket. The site connects for real (Connect, OmnaBase's page,
  * the founder approves Team Kriesi › Enfold: OmnaBase then holds the site's customer endpoint and the plugin its secret), the administrator
  * switches customer-data sources on, a ticket arrives from the seeded WooCommerce customer Ada, and the founder opens it in OmnaBase's web
@@ -107,13 +112,13 @@ async function founderSignsIn(browser: Browser): Promise<void> {
 
 /** the customer-data switches on the settings screen: exactly these on */
 async function switchSources(page: Page, on: string[]): Promise<void> {
-  await page.goto(SETTINGS);
+  await page.goto(`${SETTINGS}&tab=data`);
   const section = page.locator(".ob-wp-settings__facts");
   for (const box of await section.locator('input[type="checkbox"][name="omnabase_facts[sources][]"]').all()) {
     await box.setChecked(on.includes((await box.getAttribute("value")) ?? ""));
   }
-  await section.locator('[type="submit"]').first().click();
-  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php" && u.searchParams.get("tab") === "data");
   for (const source of on) await expect(section.locator(`input[name="omnabase_facts[sources][]"][value="${source}"]`), source).toBeChecked();
 }
 

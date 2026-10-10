@@ -3,6 +3,9 @@
  * https://wp.omnabase.test), WordPress calls OmnaBase's e2e server from inside Docker, and OmnaBase's server calls WordPress back
  * through the relay. The key comes from OmnaBase's test hook and is written into the vault by the harness's `set-key` (round one's real
  * connect is connect.spec.ts); since round one the receiver exists, so the relayed webhook is checked and accepted.
+ *
+ * M14 round one, the builder: ADJUSTED, NOT WEAKENED. The menu link is found inside the admin menu by a name starting with "OmnaBase" (the
+ * count bubble may follow it); the test's PM lines are unchanged.
  */
 import { expect, test } from "./fixtures";
 import { SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, wp } from "./harness";
@@ -42,7 +45,10 @@ test("the settings screen renders under Settings › OmnaBase", async ({ page })
   await expect(page.getByText("This site is not connected to OmnaBase yet.")).toBeVisible();
   await expect(page.getByText("Development: this site talks to http://host.docker.internal:3011 instead of app.omnabase.com.")).toBeVisible();
   await expect(page.getByText("OmnaBase for WordPress 0.1.0")).toBeVisible();
-  await expect(page.getByRole("link", { name: "OmnaBase", exact: true }).first()).toHaveAttribute("href", /options-general\.php\?page=omnabase/);
+  // Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): while an earlier flow leaves a call needing attention,
+  // the menu entry carries WordPress's count bubble after "OmnaBase" ("OmnaBase 2 calls need attention" to a screen reader), so the exact
+  // name no longer matched. The link is found by a name that starts with "OmnaBase"; its address is checked as before.
+  await expect(page.locator("#adminmenu").getByRole("link", { name: /^OmnaBase(\s|$)/ }).first()).toHaveAttribute("href", /options-general\.php\?page=omnabase/);
 });
 
 /**

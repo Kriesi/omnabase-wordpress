@@ -1,6 +1,7 @@
 <?php
 /**
- * Settings › OmnaBase: the outbox section (what waits, what needs attention; Send now, Retry and Discard). Included by settings.php.
+ * Settings › OmnaBase: the outbox section, "On its way to OmnaBase" (what waits, what needs attention; Send now, Retry and Discard), its
+ * rows' last answer from OmnaBase behind "Details". Included by the Activity tab.
  *
  * @package OmnaBase
  *
@@ -13,8 +14,8 @@ $omnabase_counts = $omnabase_outbox['counts'];
 $omnabase_topics = $omnabase_outbox['topics'];
 ?>
 <div class="ob-wp-settings__outbox">
-	<h2><?php esc_html_e( 'Outbox', 'omnabase' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'Calls to OmnaBase still to make, tried every minute until they go; nothing is dropped without you.', 'omnabase' ); ?></p>
+	<h2><?php esc_html_e( 'On its way to OmnaBase', 'omnabase' ); ?></h2>
+	<p class="description"><?php esc_html_e( 'What this site still has to send to OmnaBase, tried every minute until it goes; nothing is dropped without you.', 'omnabase' ); ?></p>
 	<ul class="ob-wp-settings__outbox-counts">
 		<li>
 			<?php
@@ -74,7 +75,16 @@ $omnabase_topics = $omnabase_outbox['topics'];
 						);
 						?>
 					</td>
-					<td><?php echo esc_html( '' !== $omnabase_row['reason'] ? $omnabase_row['reason'] : '—' ); ?></td>
+					<td>
+						<?php if ( '' !== $omnabase_row['reason'] ) : ?>
+							<details class="ob-wp-settings__details">
+								<summary><?php esc_html_e( 'Details', 'omnabase' ); ?></summary>
+								<?php echo esc_html( $omnabase_row['reason'] ); ?>
+							</details>
+						<?php else : ?>
+							—
+						<?php endif; ?>
+					</td>
 					<td>
 						<?php
 						$omnabase_actions = 'attention' === $omnabase_row['state']

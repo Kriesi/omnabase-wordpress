@@ -18,22 +18,22 @@ OmnaBase is a shared support inbox for small teams. This plugin connects your Wo
 * **bbPress forums.** Topics in the forums you tick become tickets; your team's answers appear as forum replies under one support user, with a closing line you can word. Moderators' replies reach the ticket too.
 * **A contact form.** Put `[omnabase_form]` on any page: messages become tickets, with your project's product list, licence field and privacy link. Bots and double clicks file nothing.
 * **A message centre.** Put `[omnabase_messages]` on a page you pick: signed-in customers read and answer their tickets there, and see their earlier email conversations and forum topics once they confirm their address. A "Support" link in WooCommerce's My Account leads there if you want one.
-* **Nothing gets lost.** Calls to OmnaBase wait in an outbox when OmnaBase cannot be reached and go out once it is back; Settings › OmnaBase shows what waits, with Send now, Retry and Discard.
+* **Nothing gets lost.** What the site sends to OmnaBase waits on your site when OmnaBase cannot be reached and goes out once it is back; the Activity tab of Settings › OmnaBase shows what waits, with Send now, Retry and Discard.
 * **Your theme's look.** The form and the message centre bring a small stylesheet in your theme's font; one switch leaves them to your theme alone.
-* **Health at a glance.** Check connection tests both directions, and the screen warns about anything that would stop the plugin working (a turned-off WP-Cron, an outdated shop plugin).
+* **Health at a glance.** One line on the Connection tab says whether the connection works both ways, and the screen warns about anything that would stop the plugin working, such as WordPress's timer turned off or an outdated shop plugin.
 
 The plugin needs an OmnaBase workspace and a site with a public https address.
 
 = Shortcodes =
 
 * `[omnabase_form]` the contact form. `project="slug"` names one of your site's projects (needed when it has several); `subject="…"` fills in the subject.
-* `[omnabase_messages]` the message centre, on the page picked under Settings › OmnaBase. `guest="form"` shows the contact form to visitors who are not signed in; `project="slug"` names the project new questions go to.
+* `[omnabase_messages]` the message centre, on the page picked on the Forms and messages tab of Settings › OmnaBase. `guest="form"` shows the contact form to visitors who are not signed in; `project="slug"` names the project new questions go to.
 
 == Installation ==
 
 1. Upload the plugin's zip under Plugins › Add New Plugin › Upload Plugin, and activate it.
-2. Open Settings › OmnaBase and click Connect. Approve the connection on OmnaBase: you come back connected.
-3. Turn on what you need on the same screen: the customer-data sources, the forums to send, the message centre's page.
+2. Open Settings › OmnaBase and click Connect on the Connection tab. Approve the connection on OmnaBase: you come back connected.
+3. Turn on what you need, each on its own tab: the sources on Customer data, the forums to send on Forums, the message centre's page on Forms and messages.
 4. Put `[omnabase_form]` or `[omnabase_messages]` on a page.
 
 Connect needs pretty permalinks (Settings › Permalinks, anything but "Plain"), https, and WordPress installed at the root of its domain.
@@ -50,23 +50,27 @@ No. The plugin makes no call to OmnaBase until an administrator clicks Connect, 
 
 = Which customer data does my team see? =
 
-Only the sources you tick under Settings › OmnaBase: the profile (registered since, roles and the user fields you pick), orders, subscriptions and licences. Passwords, tokens and keys are never sent, even when ticked.
+Only the sources you tick on the Customer data tab of Settings › OmnaBase: the profile (registered since, roles and the user fields you pick), orders, subscriptions and licences. Passwords, tokens and keys are never sent, even when ticked.
 
 = What happens when OmnaBase cannot be reached? =
 
-Topics, replies, licence changes and form messages wait in the plugin's outbox and are sent once OmnaBase answers again. Nothing is dropped without you.
+Topics, replies, licence changes and form messages wait on your site and are sent once OmnaBase answers again; the Activity tab shows them. Nothing is dropped without you.
 
-= My host turned WP-Cron off. Does the plugin still work? =
+= My host turned WordPress's timer (WP-Cron) off. Does the plugin still work? =
 
-Yes, if a real cron job on your server calls wp-cron.php every minute. Settings › OmnaBase warns while WP-Cron is turned off.
+Yes, as long as your host runs the timer from the server every minute instead. The Connection tab of Settings › OmnaBase warns while the timer is off.
 
 = Can I use my theme's styles for the form? =
 
-Yes. Tick "Use the theme's styles only" in the Shortcodes section of Settings › OmnaBase, and the plugin loads no stylesheet of its own.
+Yes. Tick "Use the theme's styles only" on the Forms and messages tab of Settings › OmnaBase, and the plugin loads no stylesheet of its own.
 
 = What happens when I delete the plugin? =
 
-It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, the outbox, user and post meta, scheduled jobs. Your tickets stay in OmnaBase.
+It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs. Your tickets stay in OmnaBase.
+
+= Someone disconnected my site in OmnaBase. What now? =
+
+The Connection tab says "Disconnected in OmnaBase", and the site stops calling OmnaBase. Click Connect to connect it again; anything that was waiting goes out then.
 
 == External services ==
 

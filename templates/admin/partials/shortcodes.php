@@ -1,6 +1,7 @@
 <?php
 /**
- * Settings › OmnaBase: the Shortcodes section (both shortcodes and their attributes, the front-end switches). Included by settings.php.
+ * Settings › OmnaBase: the Shortcodes block (both shortcodes and their attributes, the front-end switches), inside the Forms and messages
+ * tab's one form.
  *
  * @package OmnaBase
  *
@@ -16,27 +17,22 @@ defined( 'ABSPATH' ) || exit;
 		<li><code>[omnabase_form]</code> <?php esc_html_e( 'the contact form, on any page: visitors\' messages become tickets.', 'omnabase' ); ?></li>
 		<li><code>project="slug"</code> <?php esc_html_e( 'which of this site\'s projects gets the messages; needed when the site has several.', 'omnabase' ); ?></li>
 		<li><code>subject="…"</code> <?php esc_html_e( 'the words the subject field starts with.', 'omnabase' ); ?></li>
-		<li><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre for signed-in customers; it works only on the page picked under Message centre.', 'omnabase' ); ?></li>
+		<li><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre for signed-in customers; it works only on the message centre page picked above.', 'omnabase' ); ?></li>
 		<li><code>guest="form"</code> <?php esc_html_e( 'visitors who are not signed in get the contact form instead of a login link.', 'omnabase' ); ?></li>
 		<li><code>project="slug"</code> <?php esc_html_e( 'in the message centre: the project new questions go to.', 'omnabase' ); ?></li>
 	</ul>
-	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-		<input type="hidden" name="action" value="omnabase_save_display">
-		<?php wp_nonce_field( 'omnabase_save_display' ); ?>
+	<p>
+		<label for="omnabase-theme-only">
+			<input type="checkbox" id="omnabase-theme-only" name="omnabase_theme_only" value="1" <?php checked( $omnabase_shortcodes['themeOnly'] ); ?>>
+			<?php esc_html_e( 'Use the theme\'s styles only: the form and the message centre load no OmnaBase stylesheet.', 'omnabase' ); ?>
+		</label>
+	</p>
+	<?php if ( $omnabase_shortcodes['shop'] ) : ?>
 		<p>
-			<label for="omnabase-theme-only">
-				<input type="checkbox" id="omnabase-theme-only" name="omnabase_theme_only" value="1" <?php checked( $omnabase_shortcodes['themeOnly'] ); ?>>
-				<?php esc_html_e( 'Use the theme\'s styles only: the form and the message centre load no OmnaBase stylesheet.', 'omnabase' ); ?>
+			<label for="omnabase-my-account">
+				<input type="checkbox" id="omnabase-my-account" name="omnabase_my_account" value="1" <?php checked( $omnabase_shortcodes['myAccount'] ); ?>>
+				<?php esc_html_e( 'Add "Support" to WooCommerce\'s My Account menu, leading to the message centre page.', 'omnabase' ); ?>
 			</label>
 		</p>
-		<?php if ( $omnabase_shortcodes['shop'] ) : ?>
-			<p>
-				<label for="omnabase-my-account">
-					<input type="checkbox" id="omnabase-my-account" name="omnabase_my_account" value="1" <?php checked( $omnabase_shortcodes['myAccount'] ); ?>>
-					<?php esc_html_e( 'Add "Support" to WooCommerce\'s My Account menu, leading to the message centre page.', 'omnabase' ); ?>
-				</label>
-			</p>
-		<?php endif; ?>
-		<?php submit_button( __( 'Save display settings', 'omnabase' ), 'secondary', 'omnabase-save-display', false ); ?>
-	</form>
+	<?php endif; ?>
 </div>

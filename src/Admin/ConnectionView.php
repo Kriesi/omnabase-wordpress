@@ -15,9 +15,10 @@ use OmnaBase\WordPress\Security\Vault;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Three states: `connected` (the vault reads), `not_connected` (empty), `reconnect` (the vault can no longer be read). Connected shows the
- * workspace, the site, the projects, the permissions and the key by its last four; OmnaBase's live `GET /me` wins, the connection kept from
- * the exchange stands in while OmnaBase cannot be reached. The full key never leaves this class.
+ * Four states: `connected` (the vault reads), `not_connected` (empty), `reconnect` (the vault can no longer be read), `revoked` (OmnaBase
+ * answered 401: someone disconnected the site there; no call is made until Connect). Connected shows the workspace, the site, the projects,
+ * the permissions in words and the key by its last four; OmnaBase's live `GET /me` wins, the connection kept from the exchange stands in
+ * while OmnaBase cannot be reached. The full key never leaves this class.
  */
 final class ConnectionView {
 
@@ -34,7 +35,7 @@ final class ConnectionView {
 	/**
 	 * The section's data.
 	 *
-	 * @return array{state:string,workspace:string,site:string,projects:string[],scopes:string[],keyHint:string,liveError:string,problem:?string}
+	 * @return array{state:string,workspace:string,site:string,projects:string[],scopes:string[],keyHint:string,liveError:string,problem:?string} `scopes` in words
 	 */
 	public function build(): array {
 		$view = array(
@@ -52,7 +53,8 @@ final class ConnectionView {
 			$view['state'] = Vault::UNREADABLE === $this->vault->state() ? 'reconnect' : 'not_connected';
 			return $view;
 		}
-		return array_merge( $view, $this->connected( $credentials['key'] ) );
+		$connected = $this->vault->isRevoked() ? array() : $this->connected( $credentials['key'] );
+		return $this->vault->isRevoked() ? array( 'state' => 'revoked' ) + $view : array_merge( $view, $connected );
 	}
 
 	/**
@@ -71,7 +73,7 @@ final class ConnectionView {
 			'workspace' => (string) ( $from['workspace']['name'] ?? ( $kept['workspace']['name'] ?? '' ) ),
 			'site'      => (string) ( $from['site']['name'] ?? '' ),
 			'projects'  => array_map( static fn ( array $p ) => $p['name'], $projects ),
-			'scopes'    => ConnectionInfo::strings( $from['scopes'] ?? ( $kept['scopes'] ?? array() ) ),
+			'scopes'    => PermissionWords::of( ConnectionInfo::strings( $from['scopes'] ?? ( $kept['scopes'] ?? array() ) ) ),
 			'keyHint'   => 'obw_…' . substr( $key, -4 ),
 			'liveError' => is_wp_error( $live ) ? $live->get_error_message() : '',
 		);

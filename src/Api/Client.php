@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Every call goes to the pinned host with the vault's key in the Authorization header (the exchange alone carries none: the site has no
  * key yet), certificates checked, no redirect followed. An answer is an array, or a `WP_Error` naming what went wrong in words; the key and
- * the secrets never appear in an error, and OmnaBase's raw answer is never echoed (only its `error.message`).
+ * the secrets never appear in an error, and OmnaBase's raw answer is never echoed (only its `error.message`). OmnaBase's 401 to a call with
+ * the key means someone disconnected the site there: the vault is marked, and no further call with the key is made until Connect.
  */
 final class Client {
 
@@ -123,7 +124,19 @@ final class Client {
 				? new \WP_Error( 'omnabase_unreadable', __( 'The stored connection can no longer be read: connect the site again.', 'omnabase' ) )
 				: new \WP_Error( 'omnabase_not_connected', __( 'This site is not connected to OmnaBase yet.', 'omnabase' ) );
 		}
-		return $this->send( $method, $path, $credentials['key'], $body, $timeout );
+		if ( $this->vault->isRevoked() ) {
+			return self::revokedError();
+		}
+		$answer = $this->send( $method, $path, $credentials['key'], $body, $timeout );
+		if ( is_wp_error( $answer ) && 401 === (int) ( $answer->get_error_data()['status'] ?? 0 ) ) {
+			$this->vault->markRevoked();
+		}
+		return $answer;
+	}
+
+	/** The answer while OmnaBase refuses the key: no call is made until Connect (a 401 in its data, as OmnaBase would answer). */
+	private static function revokedError(): \WP_Error {
+		return new \WP_Error( 'omnabase_revoked', __( 'Someone disconnected this site in OmnaBase. Click Connect to connect it again.', 'omnabase' ), array( 'status' => 401 ) );
 	}
 
 	/**
@@ -139,12 +152,17 @@ final class Client {
 	 */
 	public function call( string $method, string $path, $body, int $timeout, array $headers = array() ): array {
 		$credentials = $this->vault->read();
-		if ( null === $credentials ) {
-			return array( 'status' => null, 'headers' => array(), 'body' => null, 'error' => __( 'This site is not connected to OmnaBase.', 'omnabase' ) );
+		if ( null === $credentials || $this->vault->isRevoked() ) {
+			$why = null === $credentials ? __( 'This site is not connected to OmnaBase.', 'omnabase' ) : self::revokedError()->get_error_message();
+			return array( 'status' => null, 'headers' => array(), 'body' => null, 'error' => $why );
 		}
 		$args            = self::args( $method, $credentials['key'], $body, $timeout );
 		$args['headers'] = $headers + $args['headers'];
-		return self::outcome( wp_remote_request( ApiUrl::publicApi( $path ), $args ) );
+		$outcome         = self::outcome( wp_remote_request( ApiUrl::publicApi( $path ), $args ) );
+		if ( 401 === $outcome['status'] ) {
+			$this->vault->markRevoked();
+		}
+		return $outcome;
 	}
 
 	/**

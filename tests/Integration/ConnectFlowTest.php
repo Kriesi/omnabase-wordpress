@@ -1,5 +1,12 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the permissions are shown in words, not as codes (brief
+ * `docs/briefs/m14-settings-cleanup.md`, choice 1: "the Permissions (as words: 'Read and write tickets, read and write customers, forms, the
+ * message centre') and the Key's last four behind a 'Details' disclosure"; review S2). `test_the_screen_shows_the_connection_its_permissions_
+ * and_the_keys_last_four` looked for the six codes (`tickets:read` …) in the page; it now looks for the same six permissions in words, online
+ * and offline (kept from the exchange), and asserts the codes are gone. The key's last four and the workspace checks are unchanged (they read
+ * the HTML, where Details' content still is). Every other test here is unchanged.
+ *
  * M13 round one, the red team's failing tests: Connect in a real WordPress (the Connect button, the link to OmnaBase's connect page, the
  * way back onto the settings page, the one-time exchange, the refusals).
  *
@@ -106,8 +113,9 @@ final class ConnectFlowTest extends RoundOneTestCase {
 	/**
 	 * What it checks: After connecting, the screen says where the site is connected, what it may do and which key it holds, without the
 	 *   key itself; the workspace and the permissions are kept, so they show even while OmnaBase cannot be reached.
-	 * Passes when: the screen reads "Connected to Team Kriesi", names the project Enfold, lists the six permissions and shows the key as
-	 *   "obw_…7Q2X" (its last four), never in full; with OmnaBase unreachable it still names Team Kriesi and the six permissions.
+	 * Passes when: the screen reads "Connected to Team Kriesi", names the project Enfold, says the six permissions in words (read and write
+	 *   tickets, read and write customers, forms, the message centre; no code such as tickets:read) and shows the key as "obw_…7Q2X" (its
+	 *   last four), never in full; with OmnaBase unreachable it still names Team Kriesi and the permissions in words.
 	 * Fails when: the admin cannot tell which workspace or permissions the site has, the full key is printed into the page, or the
 	 *   connection seems to vanish whenever OmnaBase is briefly down.
 	 */
@@ -119,17 +127,30 @@ final class ConnectFlowTest extends RoundOneTestCase {
 		$html = $this->renderScreen();
 		$this->assertStringContainsString( 'Connected to Team Kriesi', $html );
 		$this->assertStringContainsString( 'Enfold', $html );
-		foreach ( self::SCOPES as $scope ) {
-			$this->assertStringContainsString( $scope, $html );
-		}
+		self::assertPermissionsInWords( $html, 'online' );
 		$this->assertStringContainsString( 'obw_…7Q2X', $html );
 		$this->assertStringNotContainsString( self::KEY, $html );
 
 		$this->answers = array();
 		$offline       = $this->renderScreen();
 		$this->assertStringContainsString( 'Team Kriesi', $offline, 'kept from the exchange' );
+		self::assertPermissionsInWords( $offline, 'the permissions are kept from the exchange' );
+	}
+
+	/**
+	 * The six permissions in words (M14: "Read and write tickets, read and write customers, forms, the message centre"), and no permission
+	 * code left in the page's text.
+	 *
+	 * @param string $html  The screen.
+	 * @param string $where For the message.
+	 */
+	private static function assertPermissionsInWords( string $html, string $where ): void {
+		$text = (string) preg_replace( '/\s+/', ' ', wp_strip_all_tags( $html ) );
+		foreach ( array( '/read and write tickets/i', '/read and write customers/i', '/\bforms?\b/i', '/message centre/i' ) as $words ) {
+			self::assertMatchesRegularExpression( $words, $text, $where );
+		}
 		foreach ( self::SCOPES as $scope ) {
-			$this->assertStringContainsString( $scope, $offline, 'the permissions are kept from the exchange' );
+			self::assertStringNotContainsString( $scope, $text, "{$where}: the code {$scope} is said in words" );
 		}
 	}
 

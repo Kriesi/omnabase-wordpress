@@ -1,4 +1,9 @@
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the page picker moves to the "Forms and messages" tab, which has
+ * one save form for the picker and the Shortcodes block, ending in one primary "Save" (brief `docs/briefs/m14-settings-cleanup.md`, choice 1:
+ * "one save action `omnabase_save_pages`"; review S1, S3). The picker test opens `&tab=pages`, clicks the tab's "Save" button by its words, and
+ * also expects to come back to the pages tab. The picker's names, the check after saving and every flow on the front are unchanged.
+ *
  * M13 round five, the red team's failing flow: the message centre from a signed-in customer's browser to OmnaBase and back. The site connects
  * for real (as form.spec.ts does), the administrator picks the message centre's page on the settings screen, and a customer of this run (Mia,
  * made for the run so no earlier run's confirmation carries over) has an earlier mail conversation with Team Kriesi and a forum topic filed
@@ -222,12 +227,12 @@ test.afterAll(async () => {
  * Fails when: the owner cannot say where the message centre lives, so no page is protected from caching.
  */
 test("the administrator picks the message centre's page", async ({ page }) => {
-  await page.goto(SETTINGS);
+  await page.goto(`${SETTINGS}&tab=pages`);
   const section = page.locator(".ob-wp-settings__portal");
   await expect(section).toBeVisible();
   await section.locator('select[name="omnabase_portal[page]"]').selectOption(pageId);
-  await section.locator('[type="submit"]').first().click();
-  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php" && u.searchParams.get("tab") === "pages");
   await expect(page.locator('.ob-wp-settings__portal select[name="omnabase_portal[page]"]')).toHaveValue(pageId);
 });
 

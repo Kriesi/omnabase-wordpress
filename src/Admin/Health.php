@@ -39,6 +39,9 @@ final class Health {
 
 	/** Runs the check and keeps its results. */
 	public function run(): void {
+		if ( $this->vault->isRevoked() ) {
+			return; // disconnected in OmnaBase: no call until Connect
+		}
 		$at   = time();
 		$me   = $this->client->me();
 		$ping = $this->client->ping();
@@ -101,7 +104,7 @@ final class Health {
 		if ( false === ( $answer['ok'] ?? null ) ) {
 			$status = isset( $answer['status'] ) ? (int) $answer['status'] : 0;
 			/* translators: %d: the HTTP status the site answered OmnaBase's ping with. */
-			$message = $status ? sprintf( __( 'OmnaBase called the site, which answered %d.', 'omnabase' ), $status ) : (string) ( $answer['message'] ?? __( 'OmnaBase could not reach the site.', 'omnabase' ) );
+			$message = $status ? sprintf( __( 'OmnaBase called this site and was turned away (the site answered %d).', 'omnabase' ), $status ) : (string) ( $answer['message'] ?? __( 'OmnaBase could not reach the site.', 'omnabase' ) );
 			return array( 'requested' => false, 'message' => $message );
 		}
 		return array( 'requested' => true, 'message' => '' );
@@ -123,8 +126,8 @@ final class Health {
 			return array( 'result' => 'failed', 'message' => (string) ( $request['message'] ?? '' ) );
 		}
 		if ( time() - $at > self::PING_WAIT_SECONDS ) {
-			return array( 'result' => 'failed', 'message' => __( 'No ping from OmnaBase arrived within 30 seconds: a security plugin or the server may block it.', 'omnabase' ) );
+			return array( 'result' => 'failed', 'message' => __( 'No test message from OmnaBase arrived within 30 seconds: a security plugin or the server may block it.', 'omnabase' ) );
 		}
-		return array( 'result' => 'waiting', 'message' => __( 'Waiting for OmnaBase\'s ping…', 'omnabase' ) );
+		return array( 'result' => 'waiting', 'message' => __( 'Waiting for OmnaBase\'s test message…', 'omnabase' ) );
 	}
 }

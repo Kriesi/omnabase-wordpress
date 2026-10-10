@@ -1,4 +1,13 @@
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the timer warning is rewritten in plain words and "WP-Cron" joins
+ * the one banned list (brief `docs/briefs/m14-settings-cleanup.md`, choice 1: "the timer warning stays visible when it applies, in plain words
+ * ('Your host turned WordPress's timer off: ask them to run it every minute, or messages to OmnaBase wait for visitors')"; choice 3; review
+ * S1: "`tests/e2e/cron-health.spec.ts` … require the visible word 'WP-Cron' and the block `.ob-wp-settings__health`. … Keep
+ * `.ob-wp-settings__health` on the status line's wrapper. Rewrite cron-health's check to the new plain words"; S2: the line without file
+ * names). So WARNING now matches the plain sentence (the timer, off, every minute) instead of "WP-Cron … turned off" + "cron job"; the test
+ * also asserts the warning is visible on the open page (not folded into Details) and that it holds no banned word. The block's class, the
+ * switch through WP-CLI and the "gone again" half are unchanged.
+ *
  * M13 round six, the red team's failing flow: health warns when WordPress's scheduler is switched off, and stops warning when it is back.
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) choice 3, health: "warnings for disabled WP-Cron, plain permalinks, a stored
@@ -25,7 +34,18 @@ import { expect, test } from "./fixtures";
 import { SITE_HOST, omnabaseHook, publicApi, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
-const WARNING = /WP-Cron[^.]*(turned off|disabled|switched off)|(turned off|disabled|switched off)[^.]*WP-Cron/i;
+/** the plain warning: WordPress's timer is off, and what to ask the host (run it every minute) */
+const WARNING = /\btimer\b[^.]*\boff\b[^.]*every minute|every minute[^.]*\btimer\b[^.]*\boff\b/i;
+/** the one banned list (M14 brief, choice 3): whole words, REST with its case, plurals of the nouns */
+const BANNED: { word: string; plural: boolean }[] = [
+  "wp-json", "REST", "WP-Cron", "cron", "DISABLE_WP_CRON", "HMAC", "signature", "usermeta", "meta key", "salts", "encryption key", "nonce",
+  "endpoint", "webhook", "scope", "JSON", "HTTP", "401", "409", "5xx",
+].map((word) => ({ word, plural: ["signature", "meta key", "encryption key", "nonce", "endpoint", "webhook", "scope"].includes(word) }));
+const bannedIn = (text: string): string[] =>
+  BANNED.filter(({ word, plural }) => {
+    const body = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+") + (plural ? "s?" : "");
+    return new RegExp(`(?<![\\p{L}\\p{N}_-])${body}(?![\\p{L}\\p{N}_-])`, word === "REST" ? "u" : "iu").test(text);
+  }).map(({ word }) => word);
 
 test.describe.configure({ mode: "serial" });
 
@@ -52,20 +72,23 @@ test.afterAll(async () => {
 });
 
 /**
- * What it checks: An owner whose host switched WordPress's scheduler off learns it on Settings › OmnaBase, with what to do.
- * Passes when: with DISABLE_WP_CRON set, the health section names WP-Cron as turned off and says a real (server) cron job is needed; with
- *   the constant removed, that warning is gone.
- * Fails when: forum topics and licence changes wait in the outbox for ever on such a host and nobody is told why, or the warning stays
- *   after the host fixed it.
+ * What it checks: An owner whose host switched WordPress's timer off learns it on Settings › OmnaBase, in plain words, with what to do.
+ * Passes when: with the timer switched off (DISABLE_WP_CRON set), the status block on the Connection tab shows, without opening anything, a
+ *   line saying WordPress's timer is off and asking the host to run it every minute, and that line holds no developer word (no "WP-Cron",
+ *   "cron", "DISABLE_WP_CRON"); with the switch removed, that line is gone.
+ * Fails when: forum topics and licence changes wait for ever on such a host and nobody is told why, the owner is told about "WP-Cron" and
+ *   "wp-cron.php", the warning hides behind "Details", or it stays after the host fixed it.
  */
-test("health warns while WP-Cron is turned off", async ({ page }) => {
+test("health warns while WordPress's timer is turned off", async ({ page }) => {
   wp("config", "set", "DISABLE_WP_CRON", "true", "--raw", "--type=constant");
   try {
     await afterConfigChange(page);
     await page.goto(SETTINGS);
     const health = page.locator(".ob-wp-settings__health");
     await expect(health).toContainText(WARNING);
-    await expect(health).toContainText(/(real|server|system) cron|cron job/i);
+    const line = health.getByText(WARNING).first();
+    await expect(line, "the warning is on the open page, not folded away").toBeVisible();
+    expect(bannedIn((await line.innerText()).replace(/\bhttps?:\/\/\S+/g, " ")), "the warning speaks plainly").toEqual([]);
   } finally {
     unsetCron();
   }

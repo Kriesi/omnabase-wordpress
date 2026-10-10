@@ -1,5 +1,10 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the settings screen becomes five tabs and renders only the open
+ * one (brief `docs/briefs/m14-settings-cleanup.md`, choice 1), so "the screen" alone would now search only the Connection tab. The leak test
+ * now also renders every tab after "Check connection" and searches each for the stored values; the last-four check still reads the
+ * Connection tab's HTML (the key's last four sit there, inside Details). Stronger than before, nothing removed.
+ *
  * M13 round one, the red team's failing tests: the key and the two secrets never leave the vault: not into a page (HTML or JS), not into a
  * REST answer, not into a log.
  *
@@ -23,9 +28,9 @@ final class SecretsNeverRenderedTest extends RoundOneTestCase {
 
 	/**
 	 * What it checks: After a real connect, none of the three stored values appears in anything the site prints or answers.
-	 * Passes when: the settings screen (connected, offline, and after "Check connection"), the admin pages' notices, head and footer
-	 *   scripts, the front page's head and footer, the two receivers' answers and the REST index hold neither the key, nor the webhook
-	 *   secret, nor the facts secret; the screen does show the key's last four.
+	 * Passes when: the settings screen (connected, offline, after "Check connection", and each of its five tabs), the admin pages' notices,
+	 *   head and footer scripts, the front page's head and footer, the two receivers' answers and the REST index hold neither the key, nor
+	 *   the webhook secret, nor the facts secret; the screen does show the key's last four.
 	 * Fails when: the key or a secret is printed into a page or a script variable (any visitor, browser extension or page cache could copy
 	 *   it and act as the site in OmnaBase).
 	 */
@@ -45,6 +50,9 @@ final class SecretsNeverRenderedTest extends RoundOneTestCase {
 		}
 		$this->asAdminOnTheScreen( $this->admin );
 		$out['the screen after Check connection'] = $this->renderScreen();
+		foreach ( array_keys( self::TABS ) as $tab ) {
+			$out[ "the {$tab} tab" ] = $this->openTab( $tab );
+		}
 		$out['the admin head and footer']         = get_echo( 'do_action', array( 'admin_enqueue_scripts', 'settings_page_omnabase' ) ) . get_echo( 'do_action', array( 'admin_head' ) ) . get_echo( 'wp_print_scripts' ) . get_echo( 'do_action', array( 'admin_footer' ) ) . get_echo( 'do_action', array( 'admin_print_footer_scripts' ) );
 		$this->answers                            = array();
 		$out['the screen offline']                = $this->renderScreen();

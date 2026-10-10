@@ -1,5 +1,13 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the screen renders only the open tab (brief
+ * `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1). `screen()` takes the tab to open (`connection` by default, as the bare address
+ * opens), and `flip()` reads its switch from the "Forms and messages" tab (`pages`), where both of round six's switches (theme styles only,
+ * My Account) now live inside the Shortcodes block of that tab's one save form. `flip()` still posts every field of the switch's form, so the
+ * merged form's page pick travels with it unchanged. `postAdmin()` now nests bracketed field names the way PHP reads a browser's post
+ * (`omnabase_portal[page]` arrives as `$_POST['omnabase_portal']['page']`): before M14 no switch's form held such a field, and without it
+ * the merged form would post the page pick under a name no handler reads. Nothing else changed.
+ *
  * M13 round six, the red team's integration helpers (inside wp-env's tests WordPress): round five's connected site with its message centre,
  * plus the settings screen read and sent the way an administrator's browser does it: a section found by its class, a checkbox found by the
  * words of its label, a form found by its button, every field the form holds posted to `admin-post.php` (so hidden fields, action names and
@@ -28,10 +36,14 @@ abstract class RoundSixTestCase extends RoundFiveTestCase {
 		$this->answers = array( 'GET /api/public/v1/me' => self::answer( 200, self::meAnswer() ) ) + $this->answers;
 	}
 
-	/** The settings screen as the administrator sees it. */
-	protected function screen(): string {
+	/**
+	 * The settings screen as the administrator sees it, on one tab (M14: only the open tab is rendered).
+	 *
+	 * @param string $tab The tab's slug; `connection` is what the bare address opens.
+	 */
+	protected function screen( string $tab = 'connection' ): string {
 		$this->asAdminOnTheScreen( $this->admin );
-		return $this->renderScreen();
+		return $this->openTab( $tab );
 	}
 
 	/** The HTML of the first element whose class holds the name, or ''. */
@@ -85,9 +97,10 @@ abstract class RoundSixTestCase extends RoundFiveTestCase {
 	 * @param string $label A regular expression for the switch's label.
 	 * @param bool   $on    Ticked or not.
 	 * @param bool   $nonce Whether the form's nonce is sent.
+	 * @param string $tab   The tab the switch lives on (M14: round six's switches sit on Forms and messages).
 	 */
-	protected function flip( string $label, bool $on, bool $nonce = true ): void {
-		$box = self::checkbox( $this->screen(), $label );
+	protected function flip( string $label, bool $on, bool $nonce = true, string $tab = 'pages' ): void {
+		$box = self::checkbox( $this->screen( $tab ), $label );
 		$this->assertNotNull( $box, 'the settings screen offers the switch ' . $label . ' inside a form' );
 		$fields = $box['fields'];
 		if ( $on ) {
@@ -146,6 +159,7 @@ abstract class RoundSixTestCase extends RoundFiveTestCase {
 		if ( ! $nonce ) {
 			$fields = array_filter( $fields, static fn ( $k ) => ! preg_match( '/nonce/i', (string) $k ), ARRAY_FILTER_USE_KEY );
 		}
+		parse_str( http_build_query( $fields ), $fields ); // M14: as PHP reads a browser's post (`omnabase_portal[page]` becomes a nested field)
 		$action = (string) ( $fields['action'] ?? '' );
 		$this->assertNotSame( '', $action, 'the form names its admin-post action' );
 		$_POST    = $fields;

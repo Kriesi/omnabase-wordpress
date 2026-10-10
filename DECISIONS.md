@@ -647,3 +647,88 @@ in its round's entry. Not deployed anywhere, not released: the first zip waits f
 `tests/fakes/` (loaded by the wp-env harness when the real add-on is absent, never shipped). When the founder drops the real zips into
 `paid/`, map them in `.wp-env.override.json` (git-ignored), and run `composer test:integration` and `npx playwright test tests/e2e/facts.spec.ts`
 against them; the sources read only the add-ons' public functions, and "unsupported version" names any that is too old.
+
+## 2026-10-10 — A local loop for clicking through by hand
+
+The founder asked whether the connector works on the local wp-env WordPress. Against production it cannot: the plugin connects only a site
+on https at port 443 (SiteCheck) and OmnaBase makes the key only for a site it can call back from the internet (the exchange's reachability
+check); a local site would need a public https tunnel, which is not built. Against OmnaBase's own e2e stack it works the way the browser
+flows prove it, so `bin/local.sh` (up / browser / stack / check / code / status / down) and `bin/local-browser.ts` wrap exactly that: wp-env,
+the seed, the e2e stack on 3011 and 4391, the relay, and a headed Playwright Chromium whose route makes `https://wp.omnabase.test` reach
+wp-env (no port 443: LocalWP's router holds 80 and 443; no certificate; the Mac's hosts file untouched), with the e2e server's captured mails
+printed in the terminal. Development-only scripts under `bin/`, never in the zip; the profile under `tests/e2e/.auth/` (git-ignored).
+
+## 2026-10-10 — M14 Settings cleanup: ordered (rounds one and two here)
+
+The founder's order and the brief live in the OmnaBase repository (`docs/briefs/m14-settings-cleanup.md` draft 2; DECISIONS "2026-10-10 —
+M14 Settings cleanup: ordered"). Here: round one (five tabs, one save per settings tab, the status line with Details and Advanced, the
+fourth state "Disconnected in OmnaBase", the plain words under one banned list, the setup line, the Settings link) and round two (the
+shortcode builder dialog with Copy and "Create the page for me" published at once, the first-display marks, the Activity count and the
+menu bubble). Defaults the founder took: publish at once; the bubble yes; no daily site report. A Gutenberg block stays a later option:
+two tags do not justify a build step and a block-editor dependency, and the builder serves classic and block editors alike.
+
+## 2026-10-10 — M14 round one: tabs and words
+
+Built: Settings › OmnaBase in five tabs (`?page=omnabase&tab=connection|data|forums|pages|activity`, WordPress's `nav-tab` row, only the
+open tab built and printed; `Admin\Tabs` holds the list, the open tab and the row), one save form with one primary "Save" per settings tab
+(`omnabase_save_facts`, `omnabase_save_forum`, `omnabase_save_pages`; the old portal and display handlers merged into `Admin\PagesActions`),
+every save and action back on its tab (`Guard::backToScreen( $tab )`), the status line (`Admin\StatusLine`) in the kept
+`ob-wp-settings__health`, the "Details" and "Advanced" blocks, the permissions in words (`Admin\PermissionWords`), the fourth state
+`revoked` ("Disconnected in OmnaBase"), the setup line (`Admin\SetupLine`), the Activity tab in words with its count and the menu bubble,
+the Plugins list's Settings link (`Admin\PluginLinks`) and the header's "Set it up under Settings › OmnaBase.", readme, changelog and `.pot`.
+No `admin.js`: the 3-second reload while a check waits and the Disconnect confirmation stay inline. None of the red team's pinned names was
+renamed (report "Shapes pinned").
+
+Rulings (the coordinator's, recorded here):
+
+- **Disconnected in OmnaBase pauses everything.** OmnaBase's 401 to any call made with the key (only a missing, wrong or revoked key gets
+  one: `docs/public-api.md`) marks the vault; from then on the client makes no call with the key at all (the screen's `GET /me`, Check
+  connection, the outbox, the form, the message centre) until Connect saves a new key or Disconnect clears the vault. The mark lives inside
+  the vault's own option beside the key, so it can never outlive the key it is about, and no new option exists for it. **The outbox pauses
+  too**: a row that meets the 401 goes back to waiting, due at once, its tries untouched (`Policy::paused()`), the run stops at once, and the
+  timer's later runs return before trying anything; after Connect the rows go with the next run (`RevokedOutboxTest`, the builder's test of
+  this ruling). A form message sent meanwhile waits like one sent during an outage. OmnaBase reporting that the site's own receiver answered
+  401 (inside a 200 ping answer) never counts: that is the site's side, not a revoked key.
+- **The Forums step is left out of the setup line where bbPress is not active** (the Forums tab stays and says what to install); with bbPress
+  it is the third of four steps.
+
+Decided where the brief left it open:
+
+- **One "Details" on the Connection tab**, inside the status block: what the key may do (in words), its last four, OmnaBase's own words when
+  it did not answer, the three directions with their `data-check`/`data-result` marks, the last customer-data call. The brief names one
+  disclosure, and the red team's `openDetails()` in `connect.spec.ts` and `settings-tabs.spec.ts` clicks the closed ones by position (a
+  second one shifts the positions and the flow waits for ever). The connection box keeps, visible, "Connected to …", the site's name in
+  OmnaBase (`round-trip.spec.ts` reads it) and "Messages go to: Enfold" (`connect.spec.ts` reads the project).
+- **Which states show what**: the status block in the connected and the "reconnect needed" states (as before, minus the new revoked state,
+  whose last check means nothing); the "Advanced" block in every state, last on the tab; in the revoked state only the Connect button (no
+  Check connection, no Disconnect: there is nothing to check, and OmnaBase already stopped the key).
+- **The setup line**: Connect is done while the vault holds a key OmnaBase has not refused; Customer data and Forums once their tab was saved
+  (their option exists); the form step once `omnabase_display['first_shown']` holds a mark (round two writes it; saving the switches keeps it).
+  Dismiss stores `omnabase_setup` (`Options::ALL`, `uninstall.php`). Each step's link has the accessible name "Setup step: …", so it never
+  shares a name with the tab of the same words (`settings-tabs.spec.ts` finds the tabs by exact name).
+- **The tab address**: every tab link names its tab, Connection included (the tests read the slug from each link); `Guard::backToScreen()`
+  always names the tab; the return address Connect registers at OmnaBase stays the bare `options-general.php?page=omnabase`.
+- **The Activity count**: one small `COUNT(*)` of rows needing attention per admin page for the menu's bubble (WordPress's `awaiting-mod`
+  markup after an unchanged "OmnaBase", the number repeated for screen readers); the settings screen's tab row counts once more on its own
+  view ("Activity · 2"), because the tests (rightly) expect a fresh number after rows change within one request.
+- **Plain words outside the screen's text**: an outbox row's last answer (it carries OmnaBase's status number, such as 409) sits behind a
+  per-row "Details"; delivery events in words with "Something else" for an event the plugin does not know; the deliveries section is always
+  printed (with "Nothing yet."), its class on the wrapper instead of the table; the permalinks refusal reads "Connect needs page addresses
+  other than "Plain": …"; the check rows' messages say "test message" for the ping; the permissions read "Read and write tickets", "Read
+  and write customers", "Send contact forms", "Run the message centre" (an unknown code is shown as it is).
+- **The guest choice** is two radio buttons, "Members only" (`0`) and "Guests too" (`1`); the stored yes/no is unchanged.
+
+Tests adjusted by the builder (each with the reason in its comment):
+
+- `ShortcodesSectionTest::test_the_theme_styles_switch_is_offered_and_off_by_default` and `MyAccountLinkTest::test_off_by_default_no_support_link`:
+  the red team read the switch "with its form" from the Shortcodes block's own HTML, but the tab's one save form wraps the whole block
+  (pinned by `PagesTabTest`), so that excerpt can hold no form. The switch is now read with its form from the whole tab, and a second
+  assertion pins it inside the Shortcodes block. Not weaker: both facts are still asserted.
+- `ForumsTabTest::test_labels_say_what_each_setting_does`: the forum run's fixture leaves `guests` unset, which means "guests too" (M13's
+  decided default), so "Members only" could not be the picked choice the test expected. The test stores guests off first, the state its
+  assertion describes; every assertion is unchanged.
+- `round-trip.spec.ts`: the menu link is found inside the admin menu by a name starting with "OmnaBase" (the red team's point 11: the count
+  bubble extends the link's accessible name); its address is checked as before.
+
+Left for round two (as ordered): the shortcode builder dialog with Copy and "Create the page for me", the `<noscript>` fallback, recording
+the first-display marks when a tag renders.

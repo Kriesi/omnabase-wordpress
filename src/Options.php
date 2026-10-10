@@ -52,10 +52,14 @@ final class Options {
 	public const PORTAL = 'omnabase_portal';
 
 	/**
-	 * The front-end switches (round six): `[ 'theme_only' => bool, 'my_account' => bool ]`, the "theme styles only" switch and WooCommerce's
-	 * My Account "Support" link; both off when missing. Read and written by `Forms\Display` alone.
+	 * The front-end switches (round six): `[ 'theme_only' => bool, 'my_account' => bool, 'first_shown' => [ <tag> => <time> ] ]`, the "theme
+	 * styles only" switch, WooCommerce's My Account "Support" link (both off when missing) and when each tag first showed on the public site
+	 * (M14). Read and written by `Forms\Display` alone.
 	 */
 	public const DISPLAY = 'omnabase_display';
+
+	/** The settings screen's setup line (M14): `[ 'dismissed' => <time> ]` once the administrator dismissed it. Read and written by `Admin\SetupLine` alone. */
+	public const SETUP = 'omnabase_setup';
 
 	/**
 	 * All options, for uninstall.php and the structure guard.
@@ -73,6 +77,7 @@ final class Options {
 		self::FORUM,
 		self::PORTAL,
 		self::DISPLAY,
+		self::SETUP,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */

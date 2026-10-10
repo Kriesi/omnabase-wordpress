@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * A thin handler at `admin-post.php`: its nonce (a short-lived form token) and `manage_options`, then the forum settings store exactly what
- * was ticked and chosen, and the browser goes back to the screen.
+ * was ticked and chosen, and the browser goes back to the Forums tab. The guest choice arrives as `1` ("Guests too") or `0` ("Members only").
  */
 final class ForumActions {
 
@@ -45,6 +45,6 @@ final class ForumActions {
 			! empty( $posted['close_resolved'] )
 		);
 		$this->flash->set( get_current_user_id(), 'success', __( 'Forum settings saved.', 'omnabase' ) );
-		Guard::backToScreen();
+		Guard::backToScreen( Tabs::FORUMS );
 	}
 }

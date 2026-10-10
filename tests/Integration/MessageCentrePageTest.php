@@ -1,5 +1,11 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the page picker moves to the "Forms and messages" tab, which has
+ * one save form for the picker and the Shortcodes block together (brief `docs/briefs/m14-settings-cleanup.md`, choice 1: "one save action
+ * `omnabase_save_pages` (the two handlers of today merge; `MessageCentrePageTest` posts the new one)"; review S1, S3). So `section()` opens
+ * `?page=omnabase&tab=pages`, and `save()` posts `omnabase_save_pages` (with its nonce of the same name) instead of `omnabase_save_portal`.
+ * The assertions are unchanged: the pick is stored only with the nonce, only by an administrator.
+ *
  * M13 round five, the red team's failing tests: the page the administrator picks, kept out of every cache, and the settings screen's choice of
  * it (inside wp-env's tests WordPress, the plain run).
  *
@@ -28,6 +34,9 @@ namespace OmnaBase\WordPress\Tests\Integration;
 final class MessageCentrePageTest extends RoundFiveTestCase {
 
 	private const NOCACHE_ACTION = 'litespeed_control_set_nocache';
+
+	/** The Forms and messages tab's one save action (M14 round one), replacing round five's `omnabase_save_portal`. */
+	private const SAVE_PAGES = 'omnabase_save_pages';
 
 	/**
 	 * What it checks: The picked page is marked "never cache" while WordPress sends its headers, before anything of the page is built; other
@@ -149,21 +158,21 @@ final class MessageCentrePageTest extends RoundFiveTestCase {
 	/** The settings screen's message-centre section, as the administrator sees it (empty when missing). */
 	private function section(): string {
 		$this->asAdminOnTheScreen( $this->admin );
-		$nodes = self::nodes( $this->renderScreen(), '//*[contains(concat(" ", normalize-space(@class), " "), " ob-wp-settings__portal ")]' );
+		$nodes = self::nodes( $this->openTab( 'pages' ), '//*[contains(concat(" ", normalize-space(@class), " "), " ob-wp-settings__portal ")]' );
 		return $nodes->length ? (string) $nodes->item( 0 )->ownerDocument->saveHTML( $nodes->item( 0 ) ) : '';
 	}
 
 	/**
-	 * Posts the message-centre section's form to `admin-post.php` as the current user.
+	 * Posts the Forms and messages tab's form (the message-centre picker's field) to `admin-post.php` as the current user.
 	 *
 	 * @param array<string,string> $fields The fields under `omnabase_portal`.
 	 * @param bool                 $nonce  Whether the nonce is sent.
 	 */
 	private function save( array $fields, bool $nonce = true ): void {
-		$_POST    = array( 'action' => self::SAVE_PORTAL, 'omnabase_portal' => $fields ) + ( $nonce ? array( '_wpnonce' => wp_create_nonce( self::SAVE_PORTAL ) ) : array() );
+		$_POST    = array( 'action' => self::SAVE_PAGES, 'omnabase_portal' => $fields ) + ( $nonce ? array( '_wpnonce' => wp_create_nonce( self::SAVE_PAGES ) ) : array() );
 		$_REQUEST = $_POST;
 		try {
-			do_action( 'admin_post_' . self::SAVE_PORTAL );
+			do_action( 'admin_post_' . self::SAVE_PAGES );
 		} catch ( Redirected $r ) {
 			unset( $r );
 		} catch ( \WPDieException $e ) {

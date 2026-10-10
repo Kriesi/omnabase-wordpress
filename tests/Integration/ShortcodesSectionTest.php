@@ -1,5 +1,10 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the Shortcodes block moves to the "Forms and messages" tab, keeping
+ * its class `ob-wp-settings__shortcodes`, its `h2` "Shortcodes" and the theme switch inside it (brief `docs/briefs/m14-settings-cleanup.md`,
+ * choice 1; review S1: "the `ShortcodesSectionTest` moves with it"). Every read of the screen now opens that tab (`screen( 'pages' )`), and
+ * `flip()` reads its switch there too. The assertions are unchanged.
+ *
  * M13 round six, the red team's failing tests: the settings screen's own "Shortcodes" section and its "theme styles only" switch.
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) choice 2: "the shortcodes; the message-centre page"; Q4 (the founder's
@@ -31,7 +36,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	 * Fails when: a site owner has to guess the shortcodes or what an attribute does, or the help grows into paragraphs nobody reads.
 	 */
 	public function test_the_shortcodes_section_names_both_shortcodes_and_their_attributes(): void {
-		$section = self::section( $this->screen(), 'ob-wp-settings__shortcodes' );
+		$section = self::section( $this->screen( 'pages' ), 'ob-wp-settings__shortcodes' );
 		$this->assertNotSame( '', $section, 'the Shortcodes section' );
 		$this->assertCount( 1, iterator_to_array( self::nodes( $section, "//h2[normalize-space(.)='Shortcodes']" ) ), 'its own heading "Shortcodes" (a section of the screen, not a note under another one)' );
 		$text = self::text( $section );
@@ -53,8 +58,13 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	 * Fails when: the switch is missing, or starts on so a new site's form looks unstyled.
 	 */
 	public function test_the_theme_styles_switch_is_offered_and_off_by_default(): void {
-		$box = self::checkbox( self::section( $this->screen(), 'ob-wp-settings__shortcodes' ), self::THEME_ONLY );
-		$this->assertNotNull( $box, 'the switch inside the Shortcodes section' );
+		// Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): the tab's one save form wraps the whole Shortcodes
+		// block, so the block's own HTML holds no form and the form-reading helper found nothing in it. The switch is read with its form from
+		// the whole tab, and a second assertion still pins it inside the Shortcodes block.
+		$html = $this->screen( 'pages' );
+		$box  = self::checkbox( $html, self::THEME_ONLY );
+		$this->assertNotNull( $box, 'the switch, inside the tab\'s save form' );
+		$this->assertSame( 1, self::nodes( self::section( $html, 'ob-wp-settings__shortcodes' ), "//input[@type='checkbox'][@name='" . $box['name'] . "']" )->length, 'the switch inside the Shortcodes section' );
 		$this->assertFalse( $box['checked'] );
 
 		self::freshQueue();
@@ -101,7 +111,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	 */
 	public function test_the_switch_needs_the_forms_token(): void {
 		$this->flip( self::THEME_ONLY, true, false );
-		$box = self::checkbox( $this->screen(), self::THEME_ONLY );
+		$box = self::checkbox( $this->screen( 'pages' ), self::THEME_ONLY );
 		$this->assertNotNull( $box );
 		$this->assertFalse( $box['checked'], 'still off' );
 		self::freshQueue();

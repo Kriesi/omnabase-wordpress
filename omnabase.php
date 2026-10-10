@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       OmnaBase
  * Plugin URI:        https://omnabase.com/wordpress
- * Description:       Connects your site to OmnaBase, the support inbox: forum topics, form messages and your customers' orders on every ticket.
+ * Description:       Connects your site to OmnaBase, the support inbox: forum topics, form messages and your customers' orders on every ticket. Set it up under Settings › OmnaBase.
  * Version:           0.1.0
  * Requires at least: 6.8
  * Requires PHP:      8.1

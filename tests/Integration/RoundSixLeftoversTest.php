@@ -1,5 +1,10 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the outbox moves to the Activity tab and the health lines to the
+ * Connection tab's status block (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1). The two "Send now" tests read the outbox
+ * from `screen( 'activity' )`; the facts-call test keeps reading `.ob-wp-settings__health` on the Connection tab (where the line now sits
+ * inside the status block's Details, still in the page). The assertions are unchanged.
+ *
  * M13 round six, the red team's failing tests: the leftovers the earlier rounds handed to round six, one small test each (the plain run).
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) choice 2: "**the outbox** (waiting, needing attention, sent today; the next
@@ -50,7 +55,7 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 	 */
 	public function test_send_now_sends_a_waiting_row_at_once(): void {
 		$this->waitingFormRow();
-		$form = self::formWithButton( self::section( $this->screen(), 'ob-wp-settings__outbox' ), 'Send now' );
+		$form = self::formWithButton( self::section( $this->screen( 'activity' ), 'ob-wp-settings__outbox' ), 'Send now' );
 		$this->assertNotNull( $form, '"Send now" for the waiting row' );
 		$this->calls = array();
 
@@ -68,7 +73,7 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 	 */
 	public function test_send_now_needs_the_forms_token(): void {
 		$this->waitingFormRow();
-		$form = self::formWithButton( self::section( $this->screen(), 'ob-wp-settings__outbox' ), 'Send now' );
+		$form = self::formWithButton( self::section( $this->screen( 'activity' ), 'ob-wp-settings__outbox' ), 'Send now' );
 		$this->assertNotNull( $form, '"Send now" for the waiting row' );
 		$this->calls = array();
 

@@ -22,7 +22,7 @@ final class SiteCheck {
 			return __( 'Connect needs the site on https: OmnaBase calls the site back only over https on the standard port.', 'omnabase' );
 		}
 		if ( ! $this->prettyPermalinks() ) {
-			return __( 'Connect needs pretty permalinks (Settings › Permalinks, anything but "Plain"), so the site has the /wp-json/ addresses OmnaBase calls.', 'omnabase' );
+			return __( 'Connect needs page addresses other than "Plain": pick any other choice under Settings › Permalinks, so OmnaBase can reach this site.', 'omnabase' );
 		}
 		if ( '' !== trim( (string) ( $home['path'] ?? '' ), '/' ) || strtolower( rest_url() ) !== $this->origin() . '/wp-json/' ) {
 			return __( 'Connect needs WordPress at the root of its domain: OmnaBase cannot call a site installed in a subfolder.', 'omnabase' );

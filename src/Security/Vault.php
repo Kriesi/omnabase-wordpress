@@ -18,7 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * (`keySource()` says "database" and the screen says so).
  *
  * A check value is encrypted beside the credentials: when the salts change (a security plugin's "log everyone out"), it no longer opens and
- * the vault reads "unreadable", never garbage. Nothing else reads or writes the vault's option (the structure guard checks).
+ * the vault reads "unreadable", never garbage. Nothing else reads or writes the vault's option (the structure guard checks). When OmnaBase
+ * refuses the key (401), the vault keeps a "revoked" mark beside it until the next save or clear.
  */
 final class Vault {
 
@@ -86,6 +87,23 @@ final class Vault {
 	/** Forgets everything the vault holds. */
 	public function clear(): void {
 		delete_option( Options::VAULT );
+	}
+
+	/**
+	 * Marks the stored key as refused by OmnaBase (it answered 401: someone disconnected the site there). The mark lives beside the key, so a
+	 * new key (Connect saves afresh) or Disconnect (clear) ends it.
+	 */
+	public function markRevoked(): void {
+		$stored = $this->stored();
+		if ( is_array( $stored ) && empty( $stored['revoked'] ) ) {
+			update_option( Options::VAULT, array( 'revoked' => time() ) + $stored, false );
+		}
+	}
+
+	/** Whether OmnaBase refused the stored key (the site's calls stop until Connect). */
+	public function isRevoked(): bool {
+		$stored = $this->stored();
+		return is_array( $stored ) && ! empty( $stored['revoked'] );
 	}
 
 	/** Where the encryption key comes from: `constant` (OMNABASE_ENCRYPTION_KEY), `salts` (real salt constants) or `database`. */

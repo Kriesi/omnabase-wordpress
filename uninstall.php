@@ -11,7 +11,7 @@
  * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Round five: the message centre's picked page (option), each user's fingerprint and
  * confirmation-link times (user meta). Round six: first a best-effort `DELETE /me` that stops the site's key at OmnaBase (only when the vault
  * holds a readable key; whatever OmnaBase answers, the removal goes on), then the front-end switches (option) and the message centre's kept
- * words of a refused question (user meta).
+ * words of a refused question (user meta). M14: the settings screen's dismissed setup line (option).
  *
  * @package OmnaBase
  */
@@ -41,6 +41,7 @@ $omnabase_options = array(
 	'omnabase_forum',
 	'omnabase_portal',
 	'omnabase_display',
+	'omnabase_setup',
 );
 
 foreach ( $omnabase_options as $omnabase_option ) {

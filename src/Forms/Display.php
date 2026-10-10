@@ -13,12 +13,14 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Both switches live in one option and start off: the contact form and the message centre bring the plugin's small stylesheet until the
- * administrator asks for the theme's styles alone, and My Account stays as WooCommerce made it until the link is turned on.
+ * administrator asks for the theme's styles alone, and My Account stays as WooCommerce made it until the link is turned on. The same option
+ * keeps the first-display marks (`first_shown`), which saving the switches leaves alone.
  */
 final class Display {
 
 	private const THEME_ONLY = 'theme_only';
 	private const MY_ACCOUNT = 'my_account';
+	private const FIRST_SHOWN = 'first_shown';
 
 	/** Whether the administrator asked for the theme's styles alone. */
 	public function themeOnly(): bool {
@@ -37,7 +39,21 @@ final class Display {
 	 * @param bool $my_account The My Account link.
 	 */
 	public function save( bool $theme_only, bool $my_account ): void {
-		update_option( Options::DISPLAY, array( self::THEME_ONLY => $theme_only, self::MY_ACCOUNT => $my_account ), false );
+		$stored = get_option( Options::DISPLAY, array() );
+		$kept   = is_array( $stored ) ? $stored : array();
+		update_option( Options::DISPLAY, array( self::THEME_ONLY => $theme_only, self::MY_ACCOUNT => $my_account ) + $kept, false );
+	}
+
+	/**
+	 * When each tag first showed on the public site (`[ 'form' => <time>, 'messages' => <time> ]`; empty until then). Round two records it;
+	 * the settings screen's setup line reads it.
+	 *
+	 * @return array<string,int>
+	 */
+	public function firstShown(): array {
+		$stored = get_option( Options::DISPLAY, array() );
+		$marks  = is_array( $stored ) && is_array( $stored[ self::FIRST_SHOWN ] ?? null ) ? $stored[ self::FIRST_SHOWN ] : array();
+		return array_map( 'intval', array_filter( $marks ) );
 	}
 
 	/** Whether the form and the message centre load the plugin's stylesheet: the switch, then the filter. */

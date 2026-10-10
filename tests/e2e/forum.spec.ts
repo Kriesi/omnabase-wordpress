@@ -1,4 +1,9 @@
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the forum section moves to the Forums tab, which has one save form
+ * ending in one primary "Save" (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1, S3). The settings test opens `&tab=forums`,
+ * clicks the tab's "Save" button by its words, and also expects to come back to the forums tab. The fields, the checks after saving and every
+ * flow on OmnaBase's side are unchanged.
+ *
  * M13 round three, the red team's failing flow: the forum and the inbox, both ways. The site connects for real (as facts.spec.ts does), the
  * administrator marks the Support (public) and Staff (hidden) forums and picks the support user, Ada posts a topic through bbPress's own form,
  * the outbox files it, and the founder sees it in OmnaBase's inbox marked "Public on wp.omnabase.test" with no customer facts beside it. The
@@ -203,13 +208,13 @@ test.afterAll(async () => {
  * Fails when: the forum settings cannot be made or do not stick.
  */
 test("the administrator marks the forums and picks the support user", async ({ page }) => {
-  await page.goto(SETTINGS);
+  await page.goto(`${SETTINGS}&tab=forums`);
   const section = page.locator(".ob-wp-settings__forum");
   await expect(section).toBeVisible();
   for (const [title, id] of Object.entries(forums)) await section.locator(`input[name="omnabase_forum[forums][]"][value="${id}"]`).setChecked(title !== "Members");
   await section.locator('select[name="omnabase_forum[support_user]"]').selectOption({ label: "Support" });
-  await section.locator('[type="submit"]').first().click();
-  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForURL((u) => u.pathname === "/wp-admin/options-general.php" && u.searchParams.get("tab") === "forums");
   await expect(section.locator(`input[name="omnabase_forum[forums][]"][value="${forums.Support}"]`)).toBeChecked();
   await expect(section.locator(`input[name="omnabase_forum[forums][]"][value="${forums.Staff}"]`)).toBeChecked();
   await expect(section.locator(`input[name="omnabase_forum[forums][]"][value="${forums.Members}"]`)).not.toBeChecked();

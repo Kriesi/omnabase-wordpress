@@ -1,5 +1,12 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: OmnaBase's 401 now has a state of its own, "Disconnected in
+ * OmnaBase" (brief `docs/briefs/m14-settings-cleanup.md`, choice 1, the fourth state; review log B4). `test_a_refused_key_shows_as_a_failed_check`
+ * asserted only that the "me" row was not "ok"; in the fourth state the check rows are no longer the place this is said, so the test now asserts
+ * the stronger, more specific outcome: the connection box is in the `revoked` state and says "Disconnected in OmnaBase" (and, where a "me"
+ * row is still printed, it is not "ok"). Every other test here is unchanged: the check rows keep their `data-check`/`data-result` marks inside
+ * the Connection tab's Details (review S1), which the default address opens.
+ *
  * M13 round one, the red team's failing tests: Disconnect, reconnect, "Check connection" and the "reconnect needed" warning in a real
  * WordPress.
  *
@@ -152,9 +159,10 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 	}
 
 	/**
-	 * What it checks: When OmnaBase refuses the key, "Check connection" says so.
-	 * Passes when: with `GET /me` answering 401, the screen's first result is not "ok".
-	 * Fails when: a revoked key still shows as a working connection.
+	 * What it checks: When OmnaBase refuses the key, "Check connection" says so, as the fourth state "Disconnected in OmnaBase".
+	 * Passes when: with `GET /me` answering 401, the Connection tab's connection box is in the `revoked` state and reads "Disconnected in
+	 *   OmnaBase"; a "me" row, if one is still printed, is not "ok".
+	 * Fails when: a revoked key still shows as a working connection, or only as a failed row the owner has to interpret.
 	 */
 	public function test_a_refused_key_shows_as_a_failed_check(): void {
 		$this->connectFully();
@@ -169,8 +177,10 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 			$this->followQuery( $location );
 		}
 		$this->asAdminOnTheScreen( $this->admin );
-		$result = self::attr( $this->renderScreen(), '//*[@data-check="me"]', 'data-result' );
-		$this->assertNotNull( $result );
+		$html = $this->openTab( 'connection' );
+		$this->assertSame( 'revoked', self::attr( $html, '//*[contains(@class,"ob-wp-settings__connection")]', 'data-state' ) );
+		$this->assertStringContainsString( 'Disconnected in OmnaBase', wp_strip_all_tags( $html ) );
+		$result = self::attr( $html, '//*[@data-check="me"]', 'data-result' );
 		$this->assertNotSame( 'ok', $result );
 	}
 

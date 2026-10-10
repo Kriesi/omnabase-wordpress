@@ -1,5 +1,11 @@
 <?php
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the customer-data section moves to the Customer data tab and
+ * the outbox to the Activity tab, and the screen renders only the open tab (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1).
+ * Each test opens the tab its section lives on (`openTab( 'data' )`, `openTab( 'activity' )`); the 30-word test reads both tabs. The user
+ * fields now sit behind the closed "Choose user fields" disclosure, still inside `.ob-wp-settings__facts`, so the picker's XPath is unchanged.
+ * The assertions are unchanged.
+ *
  * M13 round two, the red team's failing tests: Settings › OmnaBase gains the customer-data section (a switch per source, the usermeta
  * picker) and the outbox section (what waits, what needs attention, Retry and Discard).
  *
@@ -81,7 +87,7 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 	 * Fails when: an administrator cannot choose what is shared, or a source starts out shared without their say.
 	 */
 	public function test_a_switch_per_detected_source_all_off(): void {
-		$html = $this->renderScreen();
+		$html = $this->openTab( 'data' );
 
 		$offered = self::values( $html, '//*[contains(@class,"ob-wp-settings__facts")]//input[@type="checkbox" and @name="omnabase_facts[sources][]"]' );
 		$checked = self::values( $html, '//*[contains(@class,"ob-wp-settings__facts")]//input[@type="checkbox" and @name="omnabase_facts[sources][]" and @checked]' );
@@ -127,7 +133,7 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 		update_user_meta( $ada, 'session_tokens', array( 'x' => array() ) );
 		update_user_meta( $ada, 'api_token', 'tok' );
 
-		$offered = self::values( $this->renderScreen(), '//*[contains(@class,"ob-wp-settings__facts")]//input[@name="omnabase_facts[meta][]"]' );
+		$offered = self::values( $this->openTab( 'data' ), '//*[contains(@class,"ob-wp-settings__facts")]//input[@name="omnabase_facts[meta][]"]' );
 
 		$this->assertContains( 'billing_country', $offered );
 		foreach ( array( '_private_flag', 'session_tokens', 'api_token' ) as $hidden ) {
@@ -144,7 +150,7 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 	 */
 	public function test_a_row_needing_attention_shows_with_its_reason_and_retry(): void {
 		$row  = $this->rowNeedingAttention();
-		$html = $this->renderScreen();
+		$html = $this->openTab( 'activity' );
 
 		// Builder's adjustment (DECISIONS "Round two"): `values()` reads an element's `value` attribute, so the section's text is read
 		// through its text nodes (the element itself answered blank strings, and the reason could never be found in them).
@@ -187,7 +193,7 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 		$this->rowNeedingAttention();
 		// Builder's adjustment (DECISIONS "Round two"): each description's text, through its text nodes (`values()` read the elements'
 		// blank `value` attributes, so every count was zero and the check could not fail).
-		$texts = self::values( $this->renderScreen(), '//*[contains(@class,"ob-wp-settings__facts") or contains(@class,"ob-wp-settings__outbox")]//*[contains(concat(" ",@class," ")," description ")]/text()' );
+		$texts = self::values( $this->openTab( 'data' ) . $this->openTab( 'activity' ), '//*[contains(@class,"ob-wp-settings__facts") or contains(@class,"ob-wp-settings__outbox")]//*[contains(concat(" ",@class," ")," description ")]/text()' );
 
 		$this->assertNotEmpty( $texts, 'each section has its one-line description' );
 		foreach ( $texts as $text ) {

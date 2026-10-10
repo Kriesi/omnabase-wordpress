@@ -26,8 +26,14 @@ section is never changed again. At release the top section is copied into readme
 * Added: A "theme styles only" switch: the contact form and the message centre then follow your theme's look alone.
 * Added: A suggested privacy-policy text under Settings › Privacy names OmnaBase and what each feature sends; WordPress's tools to export and erase personal data now include what the plugin stores.
 * Added: "Send now" on the outbox sends a waiting call at once instead of at its next try.
-* Added: Health shows when OmnaBase last asked your site for customer data, and warns when WP-Cron is turned off on your site.
+* Added: Health shows when OmnaBase last asked your site for customer data, and warns when WordPress's timer (WP-Cron) is turned off on your site.
 * Added: The customer-data settings say when a shop plugin is older than the version the plugin supports.
 * Added: When a new question in the message centre cannot be sent, the customer finds their words still in the form.
 * Added: Ready for translation: every text on screen can be translated, with a translation template included.
 * Added: Deleting the plugin also stops the site's key at OmnaBase.
+* Changed: Settings › OmnaBase is now organised in five tabs (Connection, Customer data, Forums, Forms and messages, Activity), and each tab with settings has one Save button.
+* Changed: The settings screen speaks plain words: one line says whether the connection works both ways, and the technical detail waits behind "Details" and "Advanced".
+* Added: When someone disconnects the site in OmnaBase, the settings screen says "Disconnected in OmnaBase" and offers Connect; until then the site stops calling OmnaBase, and anything waiting to be sent goes once you connect again.
+* Added: A setup line on the Connection tab shows the steps (Connect, Customer data, Forums, Add the form to a page) and ticks each one off as you do it.
+* Added: The Activity tab and the Settings menu show how many calls to OmnaBase need your attention.
+* Added: A Settings link on the Plugins list leads straight to Settings › OmnaBase.

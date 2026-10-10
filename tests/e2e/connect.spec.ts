@@ -1,4 +1,12 @@
 /**
+ * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1,
+ * S2): the permissions are shown in words, and they and the key's last four wait behind a closed "Details" on the Connection tab; the way
+ * back from Connect returns to the Connection tab, whose address may carry `&tab=connection`. So `expectConnected()` now checks that the
+ * key's last four are hidden until "Details" is opened, opens it, and then expects the six permissions in words (read and write tickets,
+ * read and write customers, forms, the message centre) and no permission code on the page; the key checks open "Details" before looking;
+ * `approve()` accepts the clean address with or without `&tab=connection` (still without the code or state). The check rows' marks, the
+ * buttons and every OmnaBase-side assertion are unchanged.
+ *
  * M13 round one, the red team's failing flow: Connect end to end in a browser. The administrator clicks Connect on Settings › OmnaBase
  * (wp-env's WordPress as https://wp.omnabase.test), lands on OmnaBase's real connect page (the web app on 4391, served by the e2e stack),
  * signs in as the founder by a mailed code, approves, and is back on the settings screen "Connected to Team Kriesi" with the permissions;
@@ -35,6 +43,8 @@ const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const APP = process.env.OMNABASE_APP_URL ?? "http://localhost:4391";
 const FOUNDER = "kriesi@example.test";
 const SCOPES = ["tickets:read", "tickets:write", "customers:read", "customers:write", "forms:write", "portal"];
+/** the same six permissions in words (M14 brief, choice 1) */
+const PERMISSIONS = [/read and write tickets/i, /read and write customers/i, /\bforms?\b/i, /message centre/i];
 const FULL_KEY = /obw_[A-Za-z0-9_-]{20,}/;
 type RelayAnswer = { calls: { url: string; method: string; status: number | null; excerpt: string }[] };
 type SiteRow = { host: string | null; keyLast4: string };
@@ -80,13 +90,21 @@ async function approve(page: Page): Promise<void> {
   await page.getByLabel("Project").selectOption({ label: "Enfold" });
   await page.getByRole("button", { name: /^Approve/ }).click();
   await page.waitForURL((u) => u.hostname === SITE_HOST);
-  await expect(page, "back on the settings page, without the code or state in the address").toHaveURL(`${SITE}${SETTINGS}`);
+  const clean = new RegExp(`^${(SITE + SETTINGS).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(&tab=connection)?$`);
+  await expect(page, "back on the settings page's Connection tab, without the code or state in the address").toHaveURL(clean);
+}
+/** opens every closed "Details" disclosure on the page (the Connection tab keeps the key and the permissions there) */
+async function openDetails(page: Page): Promise<void> {
+  for (const summary of await page.locator("details:not([open]) > summary", { hasText: /^\s*Details/ }).all()) await summary.click();
 }
 async function expectConnected(page: Page): Promise<void> {
   await expect(page.locator(".ob-wp-settings__connection")).toHaveAttribute("data-state", "connected");
   await expect(page.getByText("Connected to Team Kriesi")).toBeVisible();
   await expect(page.getByText("Enfold").first()).toBeVisible();
-  for (const scope of SCOPES) await expect(page.getByText(scope, { exact: false }).first(), scope).toBeVisible();
+  await expect(page.getByText(/obw_…\w{4}/).first(), "the key's last four wait behind Details").toBeHidden();
+  await openDetails(page);
+  for (const words of PERMISSIONS) await expect(page.getByText(words).first(), String(words)).toBeVisible();
+  for (const scope of SCOPES) await expect(page.locator(".wrap"), `the code ${scope} is said in words`).not.toContainText(scope);
   expect(await page.content(), "the key is never in the page").not.toMatch(FULL_KEY);
 }
 
@@ -107,8 +125,8 @@ test.afterAll(async () => {
 /**
  * What it checks: The round's story: an administrator connects the site without copying a key.
  * Passes when: Connect leads to OmnaBase's connect page for wp.omnabase.test; after the founder signs in by code and approves Team Kriesi's
- *   project Enfold, the browser is back on the clean settings address, which reads "Connected to Team Kriesi", names Enfold and the six
- *   permissions, and shows the key only by the last four OmnaBase lists for the site.
+ *   project Enfold, the browser is back on the clean settings address (its Connection tab), which reads "Connected to Team Kriesi", names
+ *   Enfold, and behind "Details" says the six permissions in words and shows the key only by the last four OmnaBase lists for the site.
  * Fails when: a site owner has to copy a key by hand, the way back loses the connection, or the key is printed into the page.
  */
 test("connect end to end: Connect, approve on OmnaBase, back connected", async ({ page }) => {
@@ -118,6 +136,7 @@ test("connect end to end: Connect, approve on OmnaBase, back connected", async (
   const rows = await liveSites();
   expect(rows, "one live key for the site at OmnaBase").toHaveLength(1);
   firstLast4 = rows[0]!.keyLast4;
+  await openDetails(page);
   await expect(page.getByText(`obw_…${firstLast4}`)).toBeVisible();
 });
 
@@ -156,6 +175,7 @@ test("connecting again rotates the key", async ({ page }) => {
   const rows = await liveSites();
   expect(rows).toHaveLength(1);
   expect(rows[0]!.keyLast4, "a new key").not.toBe(firstLast4);
+  await openDetails(page);
   await expect(page.getByText(`obw_…${rows[0]!.keyLast4}`)).toBeVisible();
 });
 
