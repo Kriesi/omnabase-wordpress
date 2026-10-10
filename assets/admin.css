@@ -1,0 +1,76 @@
+/*
+ * Settings › OmnaBase: the shortcode builder's dialog (M14 round two). WordPress's own admin look; only the dialog's frame, the two cards
+ * and the offer of an existing page are styled here.
+ */
+.ob-wp-builder {
+	box-sizing: border-box;
+	width: calc(100% - 32px);
+	max-width: 560px;
+	padding: 24px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.ob-wp-builder::backdrop {
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.ob-wp-builder h2 {
+	margin-top: 0;
+}
+
+.ob-wp-builder [hidden] {
+	display: none !important;
+}
+
+.ob-wp-builder fieldset {
+	margin: 0 0 16px;
+}
+
+.ob-wp-builder legend {
+	margin-bottom: 8px;
+	font-weight: 600;
+}
+
+.ob-wp-builder__card {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin-bottom: 8px;
+	padding: 12px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.ob-wp-builder__card:has(input:checked) {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.ob-wp-builder__row label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: 600;
+}
+
+.ob-wp-builder fieldset label {
+	display: block;
+	margin: 4px 0;
+	font-weight: 400;
+}
+
+.ob-wp-builder__existing {
+	margin: 16px 0;
+	padding: 4px 12px;
+	border-left: 4px solid #72aee6;
+	background: #f0f6fc;
+}
+
+.ob-wp-builder__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 0;
+}

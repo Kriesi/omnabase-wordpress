@@ -16,7 +16,8 @@ defined( 'ABSPATH' ) || exit;
  * its settings ask for them, and the privacy link (the project's, else the site's privacy page, else none). A signed-in user finds their
  * name and address filled in. The page holds no token and nothing secret: the form's script fetches its token when the page loads, so two
  * views are the same HTML and a page cache may keep it. When the form cannot tell its project, the administrator reads a notice and
- * everyone else nothing. Projects, settings and the script's assets each come from their own class.
+ * everyone else nothing. Projects, settings and the script's assets each come from their own class. A real render announces itself
+ * (`FirstShown::EVENT`), so the first one on the public site is noted.
  */
 final class Shortcode {
 
@@ -49,6 +50,7 @@ final class Shortcode {
 			return $this->notice( $project['problem'], trim( (string) $atts['project'] ) );
 		}
 		$this->enqueue();
+		do_action( 'omnabase_shown', 'form' ); // FirstShown::EVENT
 		return $this->view( $this->model( $project['slug'], (string) $atts['subject'] ) );
 	}
 

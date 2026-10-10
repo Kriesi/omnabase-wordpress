@@ -1,6 +1,7 @@
 <?php
 /**
- * Settings › OmnaBase: the connection box (Connect, Disconnect, Check connection) in its four states. Included by the Connection tab.
+ * Settings › OmnaBase: the connection box (Connect, Disconnect, Check connection, and "Forget this connection" once OmnaBase ended it) in
+ * its four states. Included by the Connection tab.
  *
  * @package OmnaBase
  *
@@ -55,9 +56,15 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 		<p class="description"><?php esc_html_e( 'Someone disconnected this site in OmnaBase. Click Connect to connect it again.', 'omnabase' ); ?></p>
 		<?php if ( null !== $omnabase_connection['problem'] ) : ?>
 			<p class="ob-wp-settings__error"><?php echo esc_html( $omnabase_connection['problem'] ); ?></p>
-		<?php else : ?>
-			<?php require __DIR__ . '/connect.php'; ?>
 		<?php endif; ?>
+		<div class="ob-wp-settings__buttons">
+			<?php
+			if ( null === $omnabase_connection['problem'] ) {
+				require __DIR__ . '/connect.php';
+			}
+			require __DIR__ . '/forget.php';
+			?>
+		</div>
 	<?php elseif ( 'reconnect' === $omnabase_connection['state'] ) : ?>
 		<p class="ob-wp-settings__error"><strong><?php esc_html_e( 'OmnaBase: reconnect needed', 'omnabase' ); ?></strong></p>
 		<p class="description"><?php esc_html_e( 'The stored connection can no longer be read because the site\'s secret keys changed. Connect again to receive replies.', 'omnabase' ); ?></p>

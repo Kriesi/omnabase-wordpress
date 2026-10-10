@@ -18,7 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * `[omnabase_messages]` (optional `guest="form"`, `project="<slug>"`) shows a signed-in customer their message centre, only on the page the
  * administrator picked (that page alone is kept out of caches); on any other page, or while the site is not connected, an administrator
  * reads a note and everyone else nothing. A visitor who is not signed in gets a login link that brings them back, or with `guest="form"`
- * round four's contact form.
+ * round four's contact form. Each render past the two notes announces itself (`Forms\FirstShown::EVENT`), so the first one on the public site is
+ * noted.
  */
 final class Shortcode {
 
@@ -54,6 +55,7 @@ final class Shortcode {
 		if ( ! $this->projects->connected() ) {
 			return Views::adminNote( __( 'OmnaBase message centre: this site is not connected yet. Connect it under Settings › OmnaBase.', 'omnabase' ) );
 		}
+		do_action( 'omnabase_shown', 'messages' ); // FirstShown::EVENT
 		$user = wp_get_current_user();
 		if ( ! $user->exists() ) {
 			return $this->guest( (string) $atts['guest'], (string) $atts['project'] );

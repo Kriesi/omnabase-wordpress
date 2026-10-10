@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-10T13:24:54+00:00\n"
+"POT-Creation-Date: 2026-10-10T14:30:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -48,6 +48,42 @@ msgstr ""
 
 #: omnabase.php:30
 msgid "OmnaBase is missing its vendor folder. Please reinstall the plugin from its zip."
+msgstr ""
+
+#: src/Admin/BuilderActions.php:40
+msgid "Sorry, you are not allowed to publish pages."
+msgstr ""
+
+#. translators: %s: WordPress's reason.
+#: src/Admin/BuilderActions.php:61
+#, php-format
+msgid "The page could not be made: %s"
+msgstr ""
+
+#. translators: %s: the new page's title.
+#: src/Admin/BuilderActions.php:67
+#, php-format
+msgid "\"%s\" is published and is now the message centre page."
+msgstr ""
+
+#. translators: %s: the new page's title.
+#: src/Admin/BuilderActions.php:69
+#, php-format
+msgid "\"%s\" is published with the contact form."
+msgstr ""
+
+#: src/Admin/BuilderActions.php:70
+msgid "Edit the page"
+msgstr ""
+
+#. translators: %s: the site's projects, such as "enfold, omnalingo".
+#: src/Admin/BuilderChoices.php:70
+#, php-format
+msgid "This site has several projects (%s): choose one in the builder."
+msgstr ""
+
+#: src/Admin/BuilderChoices.php:88
+msgid "The builder sent something this site does not know: try again."
 msgstr ""
 
 #: src/Admin/DataActions.php:56
@@ -133,7 +169,7 @@ msgid "Waiting for OmnaBase's test message…"
 msgstr ""
 
 #: src/Admin/Notices.php:39
-#: templates/admin/partials/connection.php:62
+#: templates/admin/partials/connection.php:69
 msgid "OmnaBase: reconnect needed"
 msgstr ""
 
@@ -143,6 +179,17 @@ msgstr ""
 
 #: src/Admin/Notices.php:42
 msgid "Connect again"
+msgstr ""
+
+#: src/Admin/PageMaker.php:57
+msgid "Contact support"
+msgstr ""
+
+#: src/Admin/PageMaker.php:57
+#: src/Forum/ReplySender.php:139
+#: src/Portal/MyAccountLink.php:51
+#: src/Portal/MyAccountLink.php:55
+msgid "Support"
 msgstr ""
 
 #: src/Admin/PagesActions.php:49
@@ -275,12 +322,12 @@ msgid "The stored connection can no longer be read: connect the site again."
 msgstr ""
 
 #: src/Api/Client.php:125
-#: templates/admin/partials/connection.php:69
+#: templates/admin/partials/connection.php:76
 msgid "This site is not connected to OmnaBase yet."
 msgstr ""
 
 #: src/Api/Client.php:139
-#: templates/admin/partials/connection.php:55
+#: templates/admin/partials/connection.php:56
 msgid "Someone disconnected this site in OmnaBase. Click Connect to connect it again."
 msgstr ""
 
@@ -316,11 +363,15 @@ msgstr ""
 msgid "The receiver answered %d instead of its own refusal: a security plugin or the server may block OmnaBase."
 msgstr ""
 
-#: src/Connect/Disconnect.php:48
+#: src/Connect/Disconnect.php:49
+msgid "This site forgot the connection OmnaBase had ended."
+msgstr ""
+
+#: src/Connect/Disconnect.php:53
 msgid "Disconnected: OmnaBase stopped this site's key."
 msgstr ""
 
-#: src/Connect/Disconnect.php:49
+#: src/Connect/Disconnect.php:54
 msgid "Disconnected here, but OmnaBase could not be told. In OmnaBase, revoke this site's key under Settings › Integrations › API keys."
 msgstr ""
 
@@ -471,22 +522,22 @@ msgid "Not sent: the message is no longer stored on the site."
 msgstr ""
 
 #. translators: 1: the project the shortcode named, 2: the site's projects.
-#: src/Forms/Shortcode.php:116
+#: src/Forms/Shortcode.php:118
 #, php-format
 msgid "OmnaBase form: the project \"%1$s\" is not one of this site's projects (%2$s)."
 msgstr ""
 
 #. translators: %s: the site's projects.
-#: src/Forms/Shortcode.php:118
+#: src/Forms/Shortcode.php:120
 #, php-format
 msgid "OmnaBase form: this site has several projects (%s); name one, as in [omnabase_form project=\"slug\"]."
 msgstr ""
 
-#: src/Forms/Shortcode.php:119
+#: src/Forms/Shortcode.php:121
 msgid "OmnaBase form: this site is not connected, so the form has no project yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
-#: src/Forms/Shortcode.php:121
+#: src/Forms/Shortcode.php:123
 #: src/Portal/Views.php:62
 msgid "Only administrators see this note."
 msgstr ""
@@ -544,12 +595,6 @@ msgstr ""
 #: src/Forum/ReplySender.php:102
 #: src/Forum/TopicSender.php:94
 msgid "Not sent: its forum is no longer marked."
-msgstr ""
-
-#: src/Forum/ReplySender.php:139
-#: src/Portal/MyAccountLink.php:51
-#: src/Portal/MyAccountLink.php:55
-msgid "Support"
 msgstr ""
 
 #: src/Forum/TopicSender.php:46
@@ -692,11 +737,11 @@ msgstr ""
 msgid "Your support history was deleted at your request. Write to us to start again."
 msgstr ""
 
-#: src/Portal/Shortcode.php:52
+#: src/Portal/Shortcode.php:53
 msgid "OmnaBase message centre: it works only on the page picked under Settings › OmnaBase, which is kept out of caches."
 msgstr ""
 
-#: src/Portal/Shortcode.php:55
+#: src/Portal/Shortcode.php:56
 msgid "OmnaBase message centre: this site is not connected yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
@@ -847,6 +892,102 @@ msgstr ""
 msgid "The stored connection is locked with the secret keys in wp-config.php."
 msgstr ""
 
+#. translators: %s: the picked message centre page's title.
+#: templates/admin/partials/builder.php:16
+#, php-format
+msgid "It works only on the page picked as the message centre page: %s."
+msgstr ""
+
+#. translators: %s: a page's title, linked to its editor.
+#: templates/admin/partials/builder.php:19
+#, php-format
+msgid "%s already shows the contact form."
+msgstr ""
+
+#. translators: %s: a page's title, linked to its editor.
+#: templates/admin/partials/builder.php:21
+#, php-format
+msgid "%s already shows the message centre."
+msgstr ""
+
+#: templates/admin/partials/builder.php:26
+#: templates/admin/partials/shortcodes.php:17
+msgid "Build a shortcode"
+msgstr ""
+
+#: templates/admin/partials/builder.php:31
+msgid "What to show"
+msgstr ""
+
+#: templates/admin/partials/builder.php:34
+msgid "Contact form: visitors' messages become tickets"
+msgstr ""
+
+#: templates/admin/partials/builder.php:38
+msgid "Message centre: signed-in customers read and answer their tickets"
+msgstr ""
+
+#: templates/admin/partials/builder.php:44
+msgid "Project"
+msgstr ""
+
+#: templates/admin/partials/builder.php:46
+msgid "Choose a project"
+msgstr ""
+
+#: templates/admin/partials/builder.php:55
+msgid "Subject starts with"
+msgstr ""
+
+#: templates/admin/partials/builder.php:60
+msgid "Visitors who are not signed in"
+msgstr ""
+
+#: templates/admin/partials/builder.php:61
+msgid "see a sign-in link"
+msgstr ""
+
+#: templates/admin/partials/builder.php:62
+msgid "see the contact form instead"
+msgstr ""
+
+#: templates/admin/partials/builder.php:66
+msgid "none yet"
+msgstr ""
+
+#: templates/admin/partials/builder.php:70
+msgid "Your shortcode"
+msgstr ""
+
+#: templates/admin/partials/builder.php:74
+msgid "Copy"
+msgstr ""
+
+#: templates/admin/partials/builder.php:75
+msgid "Copied."
+msgstr ""
+
+#: templates/admin/partials/builder.php:77
+msgid "Paste it into any page or post."
+msgstr ""
+
+#: templates/admin/partials/builder.php:85
+#: templates/admin/partials/builder.php:87
+msgid "Use this page"
+msgstr ""
+
+#: templates/admin/partials/builder.php:96
+msgid "Create a new page anyway"
+msgstr ""
+
+#: templates/admin/partials/builder.php:96
+msgid "Create the page for me"
+msgstr ""
+
+#: templates/admin/partials/builder.php:98
+msgid "Close"
+msgstr ""
+
 #: templates/admin/partials/connect.php:18
 msgid "Connect again: OmnaBase gives the site a new key and stops the old one."
 msgstr ""
@@ -862,45 +1003,45 @@ msgid "Key: %s (only its last four characters are shown)."
 msgstr ""
 
 #. translators: %s: the OmnaBase workspace's name.
-#: templates/admin/partials/connection.php:20
+#: templates/admin/partials/connection.php:21
 #, php-format
 msgid "Connected to %s"
 msgstr ""
 
 #. translators: %s: the site's name in OmnaBase.
-#: templates/admin/partials/connection.php:28
+#: templates/admin/partials/connection.php:29
 #, php-format
 msgid "This site is known to OmnaBase as %s."
 msgstr ""
 
 #. translators: %s: the OmnaBase project (or projects) this site's messages go to.
-#: templates/admin/partials/connection.php:35
+#: templates/admin/partials/connection.php:36
 #, php-format
 msgid "Messages go to: %s"
 msgstr ""
 
 #. translators: %s: the OmnaBase project (or projects) this site's messages go to.
-#: templates/admin/partials/connection.php:35
+#: templates/admin/partials/connection.php:36
 msgid "every project"
 msgstr ""
 
-#: templates/admin/partials/connection.php:39
+#: templates/admin/partials/connection.php:40
 msgid "OmnaBase did not answer just now, so this shows the connection as it was last known."
 msgstr ""
 
-#: templates/admin/partials/connection.php:45
+#: templates/admin/partials/connection.php:46
 msgid "Check connection"
 msgstr ""
 
-#: templates/admin/partials/connection.php:54
+#: templates/admin/partials/connection.php:55
 msgid "Disconnected in OmnaBase"
 msgstr ""
 
-#: templates/admin/partials/connection.php:63
+#: templates/admin/partials/connection.php:70
 msgid "The stored connection can no longer be read because the site's secret keys changed. Connect again to receive replies."
 msgstr ""
 
-#: templates/admin/partials/connection.php:73
+#: templates/admin/partials/connection.php:80
 msgid "Connect sends you to OmnaBase to approve this site once; no key to copy."
 msgstr ""
 
@@ -1032,8 +1173,12 @@ msgstr ""
 
 #: templates/admin/partials/facts.php:63
 #: templates/admin/partials/forum.php:93
-#: templates/admin/tabs/pages.php:21
+#: templates/admin/tabs/pages.php:23
 msgid "Save"
+msgstr ""
+
+#: templates/admin/partials/forget.php:16
+msgid "Forget this connection"
 msgstr ""
 
 #: templates/admin/partials/forum.php:16
@@ -1304,35 +1449,35 @@ msgstr ""
 msgid "Put a shortcode on a page to show the contact form or the message centre there."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:17
+#: templates/admin/partials/shortcodes.php:21
 msgid "the contact form, on any page: visitors' messages become tickets."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:18
+#: templates/admin/partials/shortcodes.php:22
 msgid "which of this site's projects gets the messages; needed when the site has several."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:19
+#: templates/admin/partials/shortcodes.php:23
 msgid "the words the subject field starts with."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:20
+#: templates/admin/partials/shortcodes.php:24
 msgid "the message centre for signed-in customers; it works only on the message centre page picked above."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:21
+#: templates/admin/partials/shortcodes.php:25
 msgid "visitors who are not signed in get the contact form instead of a login link."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:22
+#: templates/admin/partials/shortcodes.php:26
 msgid "in the message centre: the project new questions go to."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:27
+#: templates/admin/partials/shortcodes.php:32
 msgid "Use the theme's styles only: the form and the message centre load no OmnaBase stylesheet."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:34
+#: templates/admin/partials/shortcodes.php:39
 msgid "Add \"Support\" to WooCommerce's My Account menu, leading to the message centre page."
 msgstr ""
 
@@ -1348,12 +1493,12 @@ msgstr ""
 msgid "Development: Connect opens %s instead of app.omnabase.com."
 msgstr ""
 
-#: templates/admin/settings.php:43
+#: templates/admin/settings.php:48
 msgid "OmnaBase settings"
 msgstr ""
 
 #. translators: %s: the plugin's version.
-#: templates/admin/settings.php:54
+#: templates/admin/settings.php:59
 #, php-format
 msgid "OmnaBase for WordPress %s"
 msgstr ""

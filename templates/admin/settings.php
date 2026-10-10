@@ -5,7 +5,7 @@
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string},tab:string,tabs:array<int,array{slug:string,label:string,url:string,active:bool}>} $view
+ * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string,link:?array{url:string,label:string}},tab:string,tabs:array<int,array{slug:string,label:string,url:string,active:bool}>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -36,7 +36,12 @@ defined( 'ABSPATH' ) || exit;
 
 	<?php if ( null !== $view['notice'] ) : ?>
 		<div class="notice notice-<?php echo esc_attr( $view['notice']['type'] ); ?> inline ob-wp-settings__notice">
-			<p><?php echo esc_html( $view['notice']['message'] ); ?></p>
+			<p>
+				<?php echo esc_html( $view['notice']['message'] ); ?>
+				<?php if ( null !== $view['notice']['link'] ) : ?>
+					<a href="<?php echo esc_url( $view['notice']['link']['url'] ); ?>"><?php echo esc_html( $view['notice']['link']['label'] ); ?></a>
+				<?php endif; ?>
+			</p>
 		</div>
 	<?php endif; ?>
 

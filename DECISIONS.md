@@ -732,3 +732,72 @@ Tests adjusted by the builder (each with the reason in its comment):
 
 Left for round two (as ordered): the shortcode builder dialog with Copy and "Create the page for me", the `<noscript>` fallback, recording
 the first-display marks when a tag renders.
+
+## 2026-10-10 — M14 round two: the shortcode builder and the marks
+
+Built against the red team's failing tests (`docs/reviews/m14-round2-red-team-report.md`), copied in unchanged; none adjusted, none of the
+pinned names renamed. Brief: OmnaBase `docs/briefs/m14-settings-cleanup.md`, draft 2, choice 2 and "Order of work › Round two".
+
+What was built: "Build a shortcode" in the Shortcodes block opens the browser's own `<dialog class="ob-wp-builder">`, which sits after the
+Forms and messages tab's save form (never inside it) and holds "Create the page for me" as its own form (`omnabase_create_page`, its own
+nonce: a short-lived form token). `assets/admin.js` (plain JavaScript) keeps the read-only tag in step with the choices, strips `"`, `[` and
+`]` from the subject as it is typed, copies with the browser's clipboard (falling back to a selected field), and closes on Escape or Close
+with the keyboard back on the button. Without JavaScript the button stays hidden and the six lines of round six show inside `<noscript>`.
+New small classes: `Admin\ShortcodeTag` (the tag's pure rules, the same as the script's), `Admin\BuilderChoices` (the posted choices,
+checked), `Admin\PageMaker` (the page), `Admin\BuilderActions` (the thin handler), `Admin\TaggedPages` (the offer of an existing page),
+`Admin\BuilderView` (the dialog's facts), `Admin\AdminAssets` (the script and its small stylesheet), `Forms\FirstShown` (the marks); the
+templates `partials/builder.php` and `partials/forget.php`. No new option: the marks live in `omnabase_display` (already in `Options::ALL`
+and `uninstall.php`), the flash in the existing notice transient.
+
+The coordinator's rulings on the open points (recorded here):
+
+- **(a) An existing page is offered first.** When a published page the person may edit already carries the tag, the dialog shows
+  "“<title>” already shows the contact form / the message centre" with the title linked to its editor, and its primary action becomes
+  "Use this page"; "Create the page for me" turns into a grey "Create a new page anyway". For the contact form, "Use this page" opens that
+  page's editor; for the message centre it picks the page, by setting the tab's own page picker and sending the tab's save form (the same as
+  choosing it and clicking Save, so no extra handler). The page is rendered with "Create the page for me" primary (the tests pin that
+  shape); the script swaps the words and the colour for the chosen kind. The server still makes a new page when Create is posted with an
+  existing one: that is "Create a new page anyway".
+- **(b) Unknown values are refused, never dropped.** A `kind` other than `form` / `messages`, a `guest` other than empty / `form`, a field
+  that is not plain text, or a project not among the key's slugs makes no page, and the next view says "The builder sent something this site
+  does not know: try again." A guest choice posted with the contact form, or a subject posted with the message centre, is a known value of
+  the other kind and is ignored.
+- **(c) Several projects and none chosen is refused**, with a notice naming the projects ("This site has several projects (enfold,
+  omnalingo): choose one in the builder."). Decided here: **for both kinds**, not only the message centre, since a contact form without a
+  project on such a site shows visitors nothing (only the administrators' note). The project select offers "Choose a project" first, so the
+  owner chooses on purpose.
+
+Decided where the brief left it open:
+
+- **The script is queued at `admin_enqueue_scripts`**, comparing the page's hook name with the screen's own
+  (`get_plugin_page_hookname()`), not inside the screen's load hook as the round's order put it: the red team's tests fire WordPress's
+  moment for admin scripts with `settings_page_omnabase` and expect it there (and the structure guard looks for `admin_enqueue_scripts`), and
+  the effect is the same, the files load on Settings › OmnaBase alone. A small `assets/admin.css` styles the dialog's frame, the two cards and
+  the offer; everything else is WordPress's admin look.
+- **The page's content** is the tag alone inside the block editor's shortcode block (`<!-- wp:shortcode -->`); the classic editor shows the
+  bare tag. Titles "Support" (message centre) and "Contact support" (form), published at once (the founder's answer to question 1), written by
+  the person who clicked. The subject is cleaned on the server as in the browser (`"`, `[`, `]` removed, one line, at most 150 characters).
+- **Who may use Create**: `manage_options` and `publish_pages`. A person with the settings permission alone sees the dialog, the tag and
+  Copy, but no "Create the page for me" button; a post by them is refused (WordPress's own "not allowed" page).
+- **The offer** shows one page per kind: for the message centre the picked page first when it qualifies, else the newest published page
+  carrying the tag; only published pages, only pages the person may edit (`edit_post`), looked up among the 20 newest pages whose content
+  mentions the tag (WordPress's search limited to the content).
+- **The notice after Create** names the page ("“Support” is published and is now the message centre page.") with an "Edit the page" link;
+  `Flash` now carries at most one link beside its words.
+- **The dialog's message centre line** shows the page picked when the dialog opens (read from the tab's picker, so an unsaved change shows
+  too), or "none yet".
+- **The first-display marks**: the form and the message centre announce each real render through the internal action `omnabase_shown`
+  (`form` / `messages`), and `Forms\FirstShown` notes the first one, once, keeping the two switches. An action instead of a new constructor
+  argument: the message centre's shortcode already takes six. Not counted: a note only administrators see (site not connected, unknown
+  project, message centre on another page), a render inside wp-admin, inside a request for WordPress's own API (the block editor loads a
+  page's content that way) or a preview of a draft. Once set, later views read the mark and write nothing. The message centre with
+  `guest="form"` shows a visitor the real contact form, so it sets the form's mark too.
+- **"Forget this connection"** (the coordinator's ruling after round one): in "Disconnected in OmnaBase" a grey button beside Connect
+  (also when the site cannot connect right now, where Connect is replaced by the reason) posts Disconnect's own action. Disconnect now makes
+  no call at all when OmnaBase had ended the connection, clears what the site kept, and says "This site forgot the connection OmnaBase had
+  ended." (no advice to revoke a key OmnaBase already stopped). No confirmation prompt: nothing live is lost.
+- **Readme**: the Shortcodes part opens with "Build a shortcode" and "Create the page for me", a new FAQ answers "How do I put the contact
+  form or the message centre on a page?", and the "disconnected in OmnaBase" answer names "Forget this connection". Three changelog lines
+  under `= 0.1.0 — unreleased =`. `.pot` regenerated (363 entries).
+- **Later option (the brief's alternative, rejected for now)**: a block for each tag in the block editor. It needs a build step and the
+  block editor; the builder serves classic and block editors alike.

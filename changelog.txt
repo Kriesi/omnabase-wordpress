@@ -37,3 +37,6 @@ section is never changed again. At release the top section is copied into readme
 * Added: A setup line on the Connection tab shows the steps (Connect, Customer data, Forums, Add the form to a page) and ticks each one off as you do it.
 * Added: The Activity tab and the Settings menu show how many calls to OmnaBase need your attention.
 * Added: A Settings link on the Plugins list leads straight to Settings › OmnaBase.
+* Added: "Build a shortcode" on the Forms and messages tab writes the shortcode as you choose, ready to copy, and "Create the page for me" publishes the page at once; a new message centre page becomes the picked one.
+* Added: When someone disconnected the site in OmnaBase, "Forget this connection" clears the connection from the site if you do not want to connect again.
+* Added: The setup line ticks off "Add the form to a page" once the contact form or the message centre first shows to visitors.

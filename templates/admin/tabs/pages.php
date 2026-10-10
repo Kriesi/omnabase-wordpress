@@ -1,16 +1,18 @@
 <?php
 /**
- * The Forms and messages tab: one save form holding the message centre's page and the Shortcodes block. Included by settings.php.
+ * The Forms and messages tab: one save form holding the message centre's page and the Shortcodes block, then the shortcode builder's dialog
+ * (outside the save form: it has its own form). Included by settings.php.
  *
  * @package OmnaBase
  *
- * @var array{portal:array<string,mixed>,shortcodes:array<string,mixed>} $view
+ * @var array{portal:array<string,mixed>,shortcodes:array<string,mixed>,builder:array<string,mixed>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
 
 $omnabase_portal     = $view['portal'];
 $omnabase_shortcodes = $view['shortcodes'];
+$omnabase_builder    = $view['builder'];
 ?>
 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ob-wp-settings__pages">
 	<input type="hidden" name="action" value="omnabase_save_pages">
@@ -21,3 +23,5 @@ $omnabase_shortcodes = $view['shortcodes'];
 	submit_button( __( 'Save', 'omnabase' ), 'primary', 'submit', true );
 	?>
 </form>
+<?php
+require dirname( __DIR__ ) . '/partials/builder.php';

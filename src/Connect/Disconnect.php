@@ -17,7 +17,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * `DELETE /me` with the stored key (OmnaBase stops the key and the site's own addresses), then the vault, the kept connection, the last
  * check and the last ping are forgotten, also when OmnaBase could not be told: then the administrator is told to revoke the key under
- * Settings › Integrations › API keys in OmnaBase. A 401 means the key was stopped already.
+ * Settings › Integrations › API keys in OmnaBase. A 401 means the key was stopped already. "Forget this connection" (the state
+ * "Disconnected in OmnaBase") posts this same action: the client makes no call with a key OmnaBase refused, and the message says so.
  */
 final class Disconnect {
 
@@ -38,11 +39,15 @@ final class Disconnect {
 	 * @return array{0:string,1:string}
 	 */
 	public function run(): array {
-		$revoked = Vault::OK === $this->vault->state() ? $this->client->revoke() : new \WP_Error( 'omnabase_unreadable', '' );
+		$ended   = $this->vault->isRevoked();
+		$revoked = ! $ended && Vault::OK === $this->vault->state() ? $this->client->revoke() : new \WP_Error( 'omnabase_unreadable', '' );
 		$this->vault->clear();
 		$this->info->clear();
 		$this->health->forget();
 		$this->ping->clear();
+		if ( $ended ) {
+			return array( 'success', __( 'This site forgot the connection OmnaBase had ended.', 'omnabase' ) );
+		}
 		$stopped = ! is_wp_error( $revoked ) || 401 === (int) ( $revoked->get_error_data()['status'] ?? 0 );
 		return $stopped
 			? array( 'success', __( 'Disconnected: OmnaBase stopped this site\'s key.', 'omnabase' ) )

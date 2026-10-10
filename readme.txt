@@ -26,6 +26,7 @@ The plugin needs an OmnaBase workspace and a site with a public https address.
 
 = Shortcodes =
 
+* The easy way: click "Build a shortcode" on the Forms and messages tab of Settings › OmnaBase, choose what to show, and copy the shortcode, or click "Create the page for me" and the page is published for you.
 * `[omnabase_form]` the contact form. `project="slug"` names one of your site's projects (needed when it has several); `subject="…"` fills in the subject.
 * `[omnabase_messages]` the message centre, on the page picked on the Forms and messages tab of Settings › OmnaBase. `guest="form"` shows the contact form to visitors who are not signed in; `project="slug"` names the project new questions go to.
 
@@ -60,6 +61,10 @@ Topics, replies, licence changes and form messages wait on your site and are sen
 
 Yes, as long as your host runs the timer from the server every minute instead. The Connection tab of Settings › OmnaBase warns while the timer is off.
 
+= How do I put the contact form or the message centre on a page? =
+
+Click "Build a shortcode" on the Forms and messages tab of Settings › OmnaBase and choose what to show. Copy the shortcode into any page or post, or click "Create the page for me": the plugin publishes the page, and a new message centre page becomes the picked one.
+
 = Can I use my theme's styles for the form? =
 
 Yes. Tick "Use the theme's styles only" on the Forms and messages tab of Settings › OmnaBase, and the plugin loads no stylesheet of its own.
@@ -70,7 +75,7 @@ It stops the site's key at OmnaBase and removes everything it stored on your sit
 
 = Someone disconnected my site in OmnaBase. What now? =
 
-The Connection tab says "Disconnected in OmnaBase", and the site stops calling OmnaBase. Click Connect to connect it again; anything that was waiting goes out then.
+The Connection tab says "Disconnected in OmnaBase", and the site stops calling OmnaBase. Click Connect to connect it again; anything that was waiting goes out then. If you do not want to connect again, click "Forget this connection" to clear it from the site.
 
 == External services ==
 
