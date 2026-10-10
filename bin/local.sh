@@ -12,6 +12,11 @@
 #   bin/local.sh stack           starts the stack without a browser
 #   bin/local.sh check           proves the loop without a window: the settings page through the route, a screenshot under build/
 #   bin/local.sh code [address]  the last sign-in code mailed to the address (default kriesi@example.test, the seeded founder)
+#   bin/local.sh mail [address]  the last mail to the address in full (a confirmation link, a reply)
+#
+# The LocalWP site (2026-10-11): the founder's LocalWP multisite has a sub-site https://localhost/omnabase with the plugin linked in
+# (wp-content/plugins/omnabase → this repository) and OMNABASE_API_URL / OMNABASE_APP_URL in its wp-config.php; `stack` sets the relay
+# for it too, so it connects to the local OmnaBase from the founder's own browser, no Playwright window needed (native PHP: fast).
 #   bin/local.sh status          what answers
 #   bin/local.sh down            stops the e2e stack (wp-env stays up; `npx wp-env stop` for that)
 #
@@ -56,9 +61,22 @@ ensure_stack() {
 		wait_for "$API/health" "the e2e API" 180
 		wait_for "$WEB" "the connect page (Vite)" 60
 	fi
-	# OmnaBase's calls to the site (webhooks, customer facts) go through the relay to wp-env; the flows reset it, so it is set every time
+	# OmnaBase's calls to the site (webhooks, customer facts) go through the relay: to wp-env for the test host, and to LocalWP's router
+	# (127.0.0.1, routed by the Host header) for the founder's LocalWP site https://localhost/omnabase; the flows reset it, so it is set every time
 	curl -s -X POST "$API/api/test/relay" -H 'content-type: application/json' -d '{"host":"wp.omnabase.test","to":"http://localhost:8888"}' >/dev/null
-	echo "Relay set: wp.omnabase.test → $WP"
+	curl -s -X POST "$API/api/test/relay" -H 'content-type: application/json' -d '{"host":"localhost","to":"http://127.0.0.1"}' >/dev/null
+	echo "Relay set: wp.omnabase.test → $WP · localhost → LocalWP's router (127.0.0.1)"
+	ensure_ticker
+}
+
+# the e2e server has no worker of its own: a ticker runs its webhooks (OmnaBase → the site) and mail sender jobs every 5 seconds while the
+# stack is up, so a reply reaches the forum or the message centre without a browser window of ours open
+ensure_ticker() {
+	if [[ -f build/local-tick.pid ]] && kill -0 "$(cat build/local-tick.pid)" 2>/dev/null; then return; fi
+	mkdir -p build
+	nohup bash -c 'while true; do for j in webhooks sender; do curl -s -m 20 -X POST "'"$API"'/api/test/tick" -H "content-type: application/json" -d "{\"job\":\"$j\"}" >/dev/null 2>&1; done; sleep 5; done' >/dev/null 2>&1 &
+	echo $! >build/local-tick.pid
+	echo "Ticker running (webhooks and mail every 5 s)."
 }
 
 case "${1:-up}" in
@@ -68,6 +86,7 @@ case "${1:-up}" in
 	connect) ensure_wp; ensure_stack; exec node bin/local-browser.ts --connect ;;
 	check) ensure_wp; ensure_stack; node bin/local-browser.ts --check build/local-check.png ;;
 	code) curl -s "$API/api/test/mail?to=$(printf %s "${2:-kriesi@example.test}" | sed 's/@/%40/')" | grep -oE '[0-9]{3} [0-9]{3}' | head -1 || echo "no code yet" ;;
+	mail) curl -s "$API/api/test/mail?to=$(printf %s "${2:-kriesi@example.test}" | sed 's/@/%40/')" | python3 -c 'import json,sys; m=json.load(sys.stdin); print(m["subject"]+"\n\n"+m["text"]) if m else print("no mail yet")' ;;
 	status)
 		answers "$WP" && echo "wp-env: up ($WP)" || echo "wp-env: down"
 		answers "$API/health" && echo "e2e API: up ($API)" || echo "e2e API: down"
@@ -75,6 +94,7 @@ case "${1:-up}" in
 		curl -s "$API/api/test/relay" -X POST -H 'content-type: application/json' -d '{}' 2>/dev/null | head -c 300; echo ;;
 	down)
 		for p in "${OMNABASE_E2E_PORT:-3011}" "${OMNABASE_WEB_PORT:-4391}"; do lsof -ti "tcp:$p" | xargs kill 2>/dev/null || true; done
+		[[ -f build/local-tick.pid ]] && { kill "$(cat build/local-tick.pid)" 2>/dev/null || true; rm -f build/local-tick.pid; }
 		rm -f build/local-e2e.pid
 		echo "e2e stack stopped (wp-env keeps running)." ;;
 	*) sed -n 3,20p "$0"; exit 1 ;;
