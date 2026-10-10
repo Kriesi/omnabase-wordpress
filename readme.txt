@@ -37,13 +37,17 @@ The plugin needs an OmnaBase workspace and a site with a public https address.
 3. Turn on what you need, each on its own tab: the sources on Customer data, the forums to send on Forums, the message centre's page on Forms and messages.
 4. Put `[omnabase_form]` or `[omnabase_messages]` on a page.
 
-Connect needs pretty permalinks (Settings › Permalinks, anything but "Plain"), https, and WordPress installed at the root of its domain.
+Connect needs pretty permalinks (Settings › Permalinks, anything but "Plain") and https on the standard port. WordPress may live in a subfolder, and each site of a multisite network connects on its own.
 
 == Frequently Asked Questions ==
 
 = Does my site need https? =
 
 Yes. OmnaBase delivers replies and asks for customer data over https on the standard port, so the site needs a public https address.
+
+= Does it work in a subfolder or on a multisite? =
+
+Yes. A WordPress in a subfolder (such as example.com/blog) connects with that address. On a multisite network each site has its own connection: activate the plugin for the network or per site, then click Connect on each site that should use OmnaBase.
 
 = Is anything sent before I connect? =
 
@@ -71,7 +75,7 @@ Yes. Tick "Use the theme's styles only" on the Forms and messages tab of Setting
 
 = What happens when I delete the plugin? =
 
-It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs. Your tickets stay in OmnaBase.
+It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs. On a multisite network it does this on every site. Your tickets stay in OmnaBase.
 
 = Someone disconnected my site in OmnaBase. What now? =
 

@@ -16,7 +16,7 @@ use OmnaBase\WordPress\Security\Vault;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The start builds the link to `<app>/connect#…` with exactly the fields OmnaBase's page reads (the site's origin, its title, the clicking
+ * The start builds the link to `<app>/connect#…` with exactly the fields OmnaBase's page reads (the site's address with its folder, its title, the clicking
  * administrator's address, the six permissions, the three events (round three adds `ticket.resolved`, for closing topics), the way back,
  * the state, the challenge); everything is after `#`, so it never reaches a server or a log. The way back (the settings page with `code` and `state`, or `error` and `state`) checks the state for
  * this administrator, trades the code once with the verifier, stores the key and secrets in the vault and what the connection is beside it.
@@ -52,7 +52,7 @@ final class Flow {
 		}
 		$pending = $this->state->begin( (int) $user->ID );
 		$fields  = array(
-			'site'      => $this->site->origin(),
+			'site'      => $this->site->base(),
 			'name'      => $this->siteName(),
 			'email'     => (string) $user->user_email,
 			'scopes'    => implode( ',', self::SCOPES ),
@@ -95,7 +95,7 @@ final class Flow {
 	 * @return array{0:string,1:string}
 	 */
 	private function exchange( string $code, string $verifier ): array {
-		$answer = $this->client->exchange( $code, $verifier, $this->site->origin() );
+		$answer = $this->client->exchange( $code, $verifier, $this->site->base() );
 		if ( is_wp_error( $answer ) ) {
 			/* translators: %s: why OmnaBase refused or could not be reached. */
 			return array( 'error', sprintf( __( 'The connection could not be completed. %s Click Connect to try again.', 'omnabase' ), $answer->get_error_message() ) );
@@ -113,7 +113,7 @@ final class Flow {
 			)
 		);
 		$me = $this->client->me();
-		$this->info->save( $answer, is_array( $me ) && is_array( $me['projects'] ?? null ) && array() !== $me['projects'] ? $me['projects'] : null );
+		$this->info->save( $answer, is_array( $me ) && is_array( $me['projects'] ?? null ) && array() !== $me['projects'] ? $me['projects'] : null, $this->site->base() );
 		$this->health->forget();
 		/** A new connection: OmnaBase on the other side may be another workspace, so what the site knew about the old one starts afresh. */
 		do_action( 'omnabase_connected' );

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-10T18:05:49+00:00\n"
+"POT-Creation-Date: 2026-10-10T22:14:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -397,16 +397,20 @@ msgstr ""
 msgid "Done: this site is now connected to OmnaBase."
 msgstr ""
 
-#: src/Connect/SiteCheck.php:22
+#: src/Connect/SiteCheck.php:25
 msgid "Connect needs the site on https: OmnaBase calls the site back only over https on the standard port."
 msgstr ""
 
-#: src/Connect/SiteCheck.php:25
+#: src/Connect/SiteCheck.php:28
 msgid "Connect needs page addresses other than \"Plain\": pick any other choice under Settings › Permalinks, so OmnaBase can reach this site."
 msgstr ""
 
-#: src/Connect/SiteCheck.php:28
-msgid "Connect needs WordPress at the root of its domain: OmnaBase cannot call a site installed in a subfolder."
+#: src/Connect/SiteCheck.php:32
+msgid "OmnaBase cannot reach this site at its address: another plugin or a setting moved the addresses where WordPress answers other programs."
+msgstr ""
+
+#: src/Connect/SiteCheck.php:35
+msgid "Connect needs the WordPress admin under this site's address: after you approve, OmnaBase sends you back only to pages under that address."
 msgstr ""
 
 #: src/Facts/Sources/Edd.php:27
@@ -860,7 +864,7 @@ msgstr ""
 msgid "This call does not carry a valid OmnaBase signature."
 msgstr ""
 
-#: src/Sync/KnownUsers.php:58
+#: src/Sync/KnownUsers.php:60
 msgid "This call can no longer be made: the user it is about was deleted."
 msgstr ""
 

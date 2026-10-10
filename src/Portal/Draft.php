@@ -8,11 +8,12 @@
 namespace OmnaBase\WordPress\Portal;
 
 use OmnaBase\WordPress\Options;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * When OmnaBase refuses a customer's new question (or it cannot be sent), the subject and message are kept in that user's own meta, never in
+ * When OmnaBase refuses a customer's new question (or it cannot be sent), the subject and message are kept in that user's own note for this site, never in
  * the address bar, and shown again in their New ticket form for an hour; a successful New ticket forgets them. Only the same signed-in user
  * ever reads them back, and the template prints them escaped (as text).
  */
@@ -31,7 +32,7 @@ final class Draft {
 		if ( $user_id <= 0 || ( '' === trim( $subject ) && '' === trim( $message ) ) ) {
 			return;
 		}
-		update_user_meta( $user_id, Options::PORTAL_DRAFT_META, array( 'subject' => $subject, 'message' => $message, 'at' => time() ) );
+		UserNotes::set( $user_id, Options::PORTAL_DRAFT_META, array( 'subject' => $subject, 'message' => $message, 'at' => time() ) );
 	}
 
 	/**
@@ -41,7 +42,7 @@ final class Draft {
 	 * @return array{subject:string,message:string}
 	 */
 	public function of( int $user_id ): array {
-		$kept = get_user_meta( $user_id, Options::PORTAL_DRAFT_META, true );
+		$kept = UserNotes::get( $user_id, Options::PORTAL_DRAFT_META );
 		if ( ! is_array( $kept ) || (int) ( $kept['at'] ?? 0 ) < time() - self::KEEP_SECONDS ) {
 			return array( 'subject' => '', 'message' => '' );
 		}
@@ -54,6 +55,6 @@ final class Draft {
 	 * @param int $user_id The user.
 	 */
 	public function forget( int $user_id ): void {
-		delete_user_meta( $user_id, Options::PORTAL_DRAFT_META );
+		UserNotes::delete( $user_id, Options::PORTAL_DRAFT_META );
 	}
 }

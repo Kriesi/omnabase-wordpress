@@ -10,6 +10,7 @@ namespace OmnaBase\WordPress\Portal;
 use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Sync\KnownUsers;
 use OmnaBase\WordPress\Sync\SiteId;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -48,7 +49,7 @@ final class Visitor {
 		if ( '' === $site_id ) {
 			return self::state( '', false, self::UNAVAILABLE );
 		}
-		if ( $this->known->isKnown( $user_id ) && hash_equals( (string) get_user_meta( $user_id, Options::PORTAL_FINGERPRINT_META, true ), $print ) ) {
+		if ( $this->known->isKnown( $user_id ) && hash_equals( (string) UserNotes::get( $user_id, Options::PORTAL_FINGERPRINT_META ), $print ) ) {
 			return self::state( $site_id, true, '' );
 		}
 		$answer = $this->api->sync( $site_id, trim( (string) $user->user_email ), trim( (string) $user->display_name ) );
@@ -61,7 +62,7 @@ final class Visitor {
 	 * @param int $user_id The user.
 	 */
 	public function forget( int $user_id ): void {
-		delete_user_meta( $user_id, Options::PORTAL_FINGERPRINT_META );
+		UserNotes::delete( $user_id, Options::PORTAL_FINGERPRINT_META );
 	}
 
 	/**
@@ -78,7 +79,7 @@ final class Visitor {
 		if ( 200 === $status || 201 === $status ) {
 			$this->known->mark( $user_id );
 			$confirmed = true === ( $answer['body']['confirmed'] ?? null );
-			$confirmed ? update_user_meta( $user_id, Options::PORTAL_FINGERPRINT_META, $print ) : $this->forget( $user_id );
+			$confirmed ? UserNotes::set( $user_id, Options::PORTAL_FINGERPRINT_META, $print ) : $this->forget( $user_id );
 			return self::state( $site_id, $confirmed, '' );
 		}
 		$reason = 409 === $status ? (string) ( $answer['body']['error']['details']['reason'] ?? '' ) : '';

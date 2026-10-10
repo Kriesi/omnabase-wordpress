@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Sync;
 
 use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Outbox\Queue;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -46,7 +47,7 @@ final class ProfileWatcher {
 		if ( ! $before instanceof \WP_User || ! $after instanceof \WP_User || self::same( (string) $before->user_email, (string) $after->user_email ) ) {
 			return;
 		}
-		delete_user_meta( $user_id, Options::PORTAL_FINGERPRINT_META );
+		UserNotes::delete( $user_id, Options::PORTAL_FINGERPRINT_META );
 		if ( $this->known->isKnown( $user_id ) ) {
 			$this->queue->add( UserLink::KIND, $user_id );
 		}

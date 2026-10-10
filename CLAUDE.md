@@ -25,7 +25,7 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
   meta key and scheduled job: add yours there in the same change).
 - `src/` by concern: `Api Connect Security Rest Outbox Facts Sync Forum Forms Portal Admin Privacy`. `Plugin` is the hand-wired
   container (with `CustomerData`, `Forums`, `Forms`, `Portal`, `Privacy`); each part registers its own hooks. `Options::ALL` lists every
-  option name; the user and post meta names and transient prefixes are on `Options` too.
+  option name; the user and post meta names and transient prefixes are on `Options` too; `UserNotes` keeps the per-site notes on users.
 - `templates/` the PHP templates (escape everything on output); `assets/` CSS and JS; `languages/omnabase.pot` the translation template
   (committed; regenerate it with `bin/make-pot.sh` after changing any translated sentence: the structure guard and the release check
   compare it with the code).
@@ -59,7 +59,8 @@ first public release on, a site's stored data is migrated and nothing a site hol
 ## PHP rules
 
 - **SRP and SLAP** as in the global rules; a class at most ~300 lines, a method ~30. **REST callbacks and hook callbacks stay thin**: they
-  check, call a service, answer. Logic lives in services; SQL only in the outbox's table class (always `$wpdb->prepare`).
+  check, call a service, answer. Logic lives in services; SQL only in the outbox's table class (always `$wpdb->prepare`; reading the site's
+  prefix with `$wpdb->get_blog_prefix()` elsewhere runs no query and is allowed).
 - **Security** (WPCS's sniffs check it): escape on output (`esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`), sanitise and unslash input,
   a nonce and `current_user_can( 'manage_options' )` on every admin action, a real `permission_callback` on every REST route (the named
   exceptions: the two signed receivers, the form and its time-token route, each with its own check). The key and the secrets are read only
@@ -69,6 +70,11 @@ first public release on, a site's stored data is migrated and nothing a site hol
 - Outgoing calls go to one pinned host (`https://app.omnabase.com`; `OMNABASE_API_URL` points a development site elsewhere, and the screen
   says so), certificates checked, no redirects.
 - Test-only code lives under `tests/` (the wp-env harness), never in `src/`: the structure guard refuses `OMNABASE_TEST_MODE` there.
+- **Subfolders and networks (2026-10-11)**: the site's address is `SiteCheck::base()` (the home address with its folder, written one way),
+  never the host alone. On a multisite every site has its own connection: per-site state lives in options or, for a note on a user, in a
+  user option through `UserNotes` (plain user meta is shared by every site; only the customer's site id stays plain user meta); the table
+  name is read from `$wpdb->prefix` at call time; anything done "for the network" (activation, deactivation, uninstall) loops
+  `get_sites( array( 'fields' => 'ids', 'number' => 0 ) )` (WordPress lists only 100 otherwise) with `switch_to_blog()`/`restore_current_blog()`.
 
 ## Settings copy
 

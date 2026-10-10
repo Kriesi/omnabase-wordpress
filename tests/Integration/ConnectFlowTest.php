@@ -1,5 +1,14 @@
 <?php
 /**
+ * FIXING ROUND "SITES IN A SUBFOLDER", THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder (2026-10-10) ruled the subfolder
+ * refusal a bug ("A user installing his WordPress in a subfolder could not use it"), so a WordPress in a subfolder now connects (the positive
+ * tests are SubfolderTest's). `test_connect_is_refused_with_the_reason_on_http_plain_permalinks_and_a_subfolder` lost its subfolder case and
+ * became `…_and_a_rest_address_elsewhere`: the third case is now a site whose REST address (the `/wp-json/` address OmnaBase calls) another
+ * plugin renamed, which is what the old "rest_url() is not <origin>/wp-json/" half of the subfolder refusal guarded; it is still refused before
+ * the link, with a reason that no longer speaks of a subfolder. The refusals for http and plain permalinks are unchanged. The link test's
+ * comment now says the site field is the site's address with its folder (here the root, so the expected value `https://shop.example.org` is
+ * unchanged). Every other test here is unchanged.
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the permissions are shown in words, not as codes (brief
  * `docs/briefs/m14-settings-cleanup.md`, choice 1: "the Permissions (as words: 'Read and write tickets, read and write customers, forms, the
  * message centre') and the Key's last four behind a 'Details' disclosure"; review S2). `test_the_screen_shows_the_connection_its_permissions_
@@ -39,7 +48,8 @@ final class ConnectFlowTest extends RoundOneTestCase {
 	/**
 	 * What it checks: Connect sends the admin's browser to OmnaBase's connect page with exactly what OmnaBase reads, and asks OmnaBase
 	 *   nothing yet.
-	 * Passes when: the address is OmnaBase's `/connect#` page; after the `#` come exactly site (the https origin, no path), name (the site
+	 * Passes when: the address is OmnaBase's `/connect#` page; after the `#` come exactly site (the site's https address with its folder, if
+	 *   any; this site is at the root, so no path), name (the site
 	 *   title), email (the clicking admin's), the six permissions, the three events (round three added "ticket resolved"), return (this
 	 *   settings page), a random state and a 43-character challenge; no call to OmnaBase was made.
 	 * Fails when: a field is missing, misnamed or different, so OmnaBase's page shows "This link cannot connect a site", grants other
@@ -278,22 +288,23 @@ final class ConnectFlowTest extends RoundOneTestCase {
 
 	/**
 	 * What it checks: A site that OmnaBase could never call back is refused before the link is built, with the reason in plain words: an
-	 *   http site, plain permalinks (no /wp-json/ addresses), a WordPress in a subfolder.
+	 *   http site, plain permalinks (no /wp-json/ addresses), a site whose /wp-json/ address another plugin moved elsewhere.
 	 * Passes when: for each of the three, Connect does not send the browser to OmnaBase, and the screen names the reason (https; permalinks;
-	 *   the subfolder).
+	 *   an address OmnaBase cannot reach); none of the reasons speaks of a subfolder (a subfolder site connects since this round).
 	 * Fails when: the admin approves on OmnaBase only to end with a site that never receives replies or customer questions, and nobody says
 	 *   why.
 	 */
-	public function test_connect_is_refused_with_the_reason_on_http_plain_permalinks_and_a_subfolder(): void {
+	public function test_connect_is_refused_with_the_reason_on_http_plain_permalinks_and_a_rest_address_elsewhere(): void {
 		$cases = array(
 			'an http site'      => array( static function ( $t ) { update_option( 'home', 'http://shop.example.org' ); update_option( 'siteurl', 'http://shop.example.org' ); }, '/https/i' ),
 			'plain permalinks'  => array( static function ( $t ) { $t->set_permalink_structure( '' ); }, '/permalink/i' ),
-			'a subfolder'       => array( static function ( $t ) { update_option( 'home', self::SITE . '/blog' ); update_option( 'siteurl', self::SITE . '/blog' ); }, '/sub-?folder|folder/i' ),
+			'a REST address elsewhere' => array( static function ( $t ) { add_filter( 'rest_url_prefix', static fn () => 'api' ); }, '/address|reach/i' ),
 		);
 		foreach ( $cases as $name => [ $arrange, $reason ] ) {
 			update_option( 'home', self::SITE );
 			update_option( 'siteurl', self::SITE );
 			$this->set_permalink_structure( '/%postname%/' );
+			remove_all_filters( 'rest_url_prefix' );
 			$arrange( $this );
 			$this->asAdminOnTheScreen( $this->admin );
 
@@ -306,8 +317,11 @@ final class ConnectFlowTest extends RoundOneTestCase {
 			if ( null !== $location ) {
 				$this->followQuery( $location );
 			}
-			$this->assertMatchesRegularExpression( $reason, wp_strip_all_tags( $this->renderScreen() ), "{$name}: the reason in words" );
+			$screen = wp_strip_all_tags( $this->renderScreen() );
+			$this->assertMatchesRegularExpression( $reason, $screen, "{$name}: the reason in words" );
+			$this->assertDoesNotMatchRegularExpression( '/sub-?folder|root of (its|the) domain/i', $screen, "{$name}: no word about a folder" );
 		}
+		remove_all_filters( 'rest_url_prefix' );
 	}
 
 	/**

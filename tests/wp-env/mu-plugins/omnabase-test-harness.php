@@ -3,7 +3,7 @@
  * Plugin Name: OmnaBase test harness (wp-env only)
  * Description: The local WordPress's test plumbing. Mapped into wp-env's mu-plugins by .wp-env.json (and .wp-env.fresh.json, round six's clean WordPress); never part of the plugin's zip.
  *
- * Four things, all inert unless wp-config.php defines OMNABASE_TEST_MODE (wp-env's config does) on a `local` environment:
+ * Five things, all inert unless wp-config.php defines OMNABASE_TEST_MODE (wp-env's config does) on a `local` environment:
  *
  * 1. The harness's network (brief, round zero): the browser and OmnaBase's e2e server reach this WordPress as
  *    https://wp.omnabase.test, but the request arrives at http://localhost:8888 carrying `X-Forwarded-Host: wp.omnabase.test`
@@ -20,6 +20,15 @@
  *    (`wp option update omnabase_test_offline 1`), every call this WordPress makes to OmnaBase's API (the host of `OMNABASE_API_URL`) fails
  *    the way an unreachable server does, before it leaves the site; deleting the option brings OmnaBase back. The e2e server itself keeps
  *    running, so the flow can read its inbox meanwhile.
+ * 5. A WordPress in a subfolder (fixing round "sites in a subfolder", the red team, for a browser flow or the founder's loop): while the
+ *    option `omnabase_test_path` holds a path (`wp option update omnabase_test_path /sub`), a test-host request that is "in the folder" sees
+ *    the site at https://wp.omnabase.test/sub: its Site Address and WordPress Address carry the path, so every link, the REST address and the
+ *    Connect link's site name the folder. "In the folder" means: the request's address starts with the path (OmnaBase's relay forwards
+ *    `/sub/wp-json/…` as it is), or it carries `X-Forwarded-Prefix: /sub` (the browser's route strips the path before handing a request to
+ *    localhost:8888, because WordPress's files are not under /sub there, and names the stripped path in that header); the harness then puts
+ *    the path back in front of the request's address, so WordPress reads the request the way a real subfolder install does. A request
+ *    without either stays at the root, so a forgotten option never moves the founder's own loop. A subfolder session logs in afresh: the
+ *    root's login cookies are scoped to `/` and `/wp-admin`, not to `/sub/wp-admin`. Deleting the option puts the site back at the root.
  *
  * @package OmnaBase
  */
@@ -28,6 +37,27 @@ defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'OMNABASE_TEST_MODE' ) || true !== OMNABASE_TEST_MODE || 'local' !== wp_get_environment_type() ) {
 	return;
+}
+
+/**
+ * The subfolder this request sees the site in (item 5): the option's path when the request is in the folder, else '' (the root). When the
+ * browser's route stripped the path (`X-Forwarded-Prefix`), it is put back in front of the request's address.
+ */
+function omnabase_test_folder(): string {
+	$path = '/' . trim( (string) get_option( 'omnabase_test_path', '' ), '/' );
+	if ( '/' === $path || ! preg_match( '#^(/[A-Za-z0-9._~-]+)+$#', $path ) ) {
+		return '';
+	}
+	$uri    = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '/'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared with the option's path, then only prefixed.
+	$prefix = isset( $_SERVER['HTTP_X_FORWARDED_PREFIX'] ) ? '/' . trim( (string) $_SERVER['HTTP_X_FORWARDED_PREFIX'], '/' ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared with the option's path, never stored or printed.
+	$under  = $uri === $path || str_starts_with( $uri, $path . '/' ) || str_starts_with( $uri, $path . '?' );
+	if ( ! $under && $prefix !== $path ) {
+		return '';
+	}
+	if ( ! $under ) {
+		$_SERVER['REQUEST_URI'] = $path . ( str_starts_with( $uri, '/' ) ? $uri : '/' . $uri );
+	}
+	return $path;
 }
 
 ( static function () {
@@ -41,9 +71,10 @@ if ( ! defined( 'OMNABASE_TEST_MODE' ) || true !== OMNABASE_TEST_MODE || 'local'
 	$_SERVER['SERVER_NAME'] = $host;
 	$_SERVER['SERVER_PORT'] = '443';
 	$origin                 = 'https://' . $host;
+	$site                   = $origin . omnabase_test_folder();
 	// wp-env defines WP_HOME and WP_SITEURL as http://localhost:8888; core's own filters apply them at priority 10, ours wins after.
-	add_filter( 'option_home', static fn () => $origin, 99 );
-	add_filter( 'option_siteurl', static fn () => $origin, 99 );
+	add_filter( 'option_home', static fn () => $site, 99 );
+	add_filter( 'option_siteurl', static fn () => $site, 99 );
 	// M13 round four (the builder's, DECISIONS "M13 round four"): WordPress fixes the content folder's address (WP_CONTENT_URL) from
 	// localhost:8888 before this file loads, so plugins' scripts and styles (the shortcode form's own script) would point at
 	// https://localhost:8888, which the browser's route does not take; they are moved to the test host like every other link.

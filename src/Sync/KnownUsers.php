@@ -8,13 +8,15 @@
 namespace OmnaBase\WordPress\Sync;
 
 use OmnaBase\WordPress\Options;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * A user counts as known once OmnaBase accepted the plugin's link for them, or asked the site about them by their site id. Only known users
  * get licence refreshes (OmnaBase answers 404 for anyone else), and a known user needs no link. A new connection starts afresh: the workspace
- * on the other side may be another one, which knows none of them.
+ * on the other side may be another one, which knows none of them. The mark is this site's (a user option): on a network each site has its
+ * own connection, so its own knowledge.
  */
 final class KnownUsers {
 
@@ -25,7 +27,7 @@ final class KnownUsers {
 	 */
 	public function mark( int $user_id ): void {
 		if ( $user_id > 0 && ! $this->isKnown( $user_id ) ) {
-			update_user_meta( $user_id, Options::KNOWN_META, time() );
+			UserNotes::set( $user_id, Options::KNOWN_META, time() );
 		}
 	}
 
@@ -35,12 +37,12 @@ final class KnownUsers {
 	 * @param int $user_id The user.
 	 */
 	public function isKnown( int $user_id ): bool {
-		return $user_id > 0 && '' !== (string) get_user_meta( $user_id, Options::KNOWN_META, true );
+		return $user_id > 0 && '' !== (string) UserNotes::get( $user_id, Options::KNOWN_META );
 	}
 
-	/** Forgets every mark (a new connection). */
+	/** Forgets every mark on this site (a new connection; another site of a network keeps its own). */
 	public function forgetAll(): void {
-		delete_metadata( 'user', 0, Options::KNOWN_META, '', true );
+		UserNotes::deleteForEveryone( Options::KNOWN_META );
 	}
 
 	/**

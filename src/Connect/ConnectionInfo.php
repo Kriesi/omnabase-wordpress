@@ -18,17 +18,19 @@ defined( 'ABSPATH' ) || exit;
 final class ConnectionInfo {
 
 	/**
-	 * Keeps what the exchange answered, with the projects as `GET /me` names them when it could be asked.
+	 * Keeps what the exchange answered, with the projects as `GET /me` names them when it could be asked; the site's address is OmnaBase's,
+	 * or the one the plugin sent when the answer names none.
 	 *
 	 * @param array<string,mixed>      $exchange The exchange's answer.
 	 * @param array<int,mixed>|null    $projects The projects from `GET /me` (`{ id, slug, name }`), or null.
+	 * @param string                   $base     The site's address as the exchange sent it (`https://example.com/blog`).
 	 */
-	public function save( array $exchange, ?array $projects ): void {
+	public function save( array $exchange, ?array $projects, string $base = '' ): void {
 		update_option(
 			Options::SITE,
 			array(
 				'workspace'   => array( 'name' => (string) ( $exchange['workspace']['name'] ?? '' ), 'slug' => (string) ( $exchange['workspace']['slug'] ?? '' ) ),
-				'site'        => array( 'name' => (string) ( $exchange['site']['name'] ?? '' ), 'url' => (string) ( $exchange['site']['url'] ?? '' ) ),
+				'site'        => array( 'name' => (string) ( $exchange['site']['name'] ?? '' ), 'url' => (string) ( $exchange['site']['url'] ?? $base ) ),
 				'scopes'      => self::strings( $exchange['scopes'] ?? array() ),
 				'projects'    => self::projects( $projects ?? ( $exchange['projects'] ?? array() ) ),
 				'events'      => self::strings( $exchange['webhook']['events'] ?? array() ),

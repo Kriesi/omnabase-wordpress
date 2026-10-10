@@ -73,16 +73,32 @@ export function wp(...args: string[]): string {
   return execFileSync("npx", ["wp-env", "run", "cli", "--", "wp", ...args], { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
 
+/**
+ * fetch to OmnaBase's e2e server, tried a second time when the first try meets a closed connection (fixing round "sites in a subfolder",
+ * 2026-10-11). `php()` and `wp()` block Node while WP-CLI runs; when that takes longer than the server's keep-alive window (5 s, often on
+ * a loaded machine), the server closes the idle connection unseen and the next fetch reuses it and fails with ECONNRESET before the
+ * request reaches the server. The flows' checks are unchanged: only a connection that was already closed is retried, once.
+ */
+async function toOmnaBase(url: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    const code = (error as { cause?: { code?: string } }).cause?.code;
+    if (code !== "ECONNRESET" && code !== "UND_ERR_SOCKET") throw error;
+    return fetch(url, init);
+  }
+}
+
 /** a POST to one of OmnaBase's e2e test hooks (`/api/test/…`) */
 export async function omnabaseHook<T = Record<string, unknown>>(path: string, data: unknown): Promise<T> {
-  const res = await fetch(`${OMNABASE_E2E}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+  const res = await toOmnaBase(`${OMNABASE_E2E}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
   if (!res.ok) throw new Error(`${path} answered ${res.status}: ${await res.text()}`);
   return (await res.json()) as T;
 }
 
 /** a call to OmnaBase's public API with a site key, as the plugin makes it */
 export async function publicApi<T = Record<string, unknown>>(key: string, method: string, path: string, data?: unknown): Promise<{ status: number; body: T }> {
-  const res = await fetch(`${OMNABASE_E2E}/api/public/v1${path}`, { method, headers: { authorization: `Bearer ${key}`, ...(data === undefined ? {} : { "content-type": "application/json" }) }, body: data === undefined ? undefined : JSON.stringify(data) });
+  const res = await toOmnaBase(`${OMNABASE_E2E}/api/public/v1${path}`, { method, headers: { authorization: `Bearer ${key}`, ...(data === undefined ? {} : { "content-type": "application/json" }) }, body: data === undefined ? undefined : JSON.stringify(data) });
   const text = await res.text();
   return { status: res.status, body: (text ? JSON.parse(text) : null) as T };
 }

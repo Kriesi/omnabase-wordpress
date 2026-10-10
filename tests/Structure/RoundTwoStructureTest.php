@@ -17,6 +17,14 @@
  *
  * Why these fail today: none of the round's files exist; uninstall knows no table, job or site id; no changelog line about customer data.
  *
+ * FIXING ROUND "SITES IN A SUBFOLDER" (2026-10-11), THE BUILDER: TWO TESTS ADJUSTED, NOT WEAKENED (DECISIONS, "Sites in a subfolder; a
+ * multisite's sub-sites"). On a WordPress network every site shares the users' meta, so the five user notes that belong to one site's
+ * connection became WordPress user options, stored under the site's table prefix (`wp_2_omnabase_known`); the red team's new guard forbids
+ * deleting them by their plain names. (1) The SQL guard lets a file read the site's table prefix (`global $wpdb;` and
+ * `$wpdb->get_blog_prefix()`, which runs no query) and still refuses every other use of `$wpdb` outside the outbox's table class. (2) The
+ * uninstall guard asks for the shared site id under its plain name and the per-site notes (the pending connect among them) under the site's
+ * prefix, instead of two plain names.
+ *
  * @package OmnaBase
  */
 
@@ -61,8 +69,9 @@ final class RoundTwoStructureTest extends TestCase {
 	/**
 	 * What it checks: Database queries are written in one place, the outbox's table class, and orders are read through the shops' own
 	 *   functions.
-	 * Passes when: no file under src/ but src/Outbox/Table.php uses `$wpdb`; no file queries WooCommerce's orders as posts (`shop_order`), and
-	 *   the WooCommerce orders source calls `wc_get_orders`.
+	 * Passes when: no file under src/ but src/Outbox/Table.php uses `$wpdb` (reading the site's table prefix, which runs no query, is
+	 *   allowed: the per-site user notes need it on a network); no file queries WooCommerce's orders as posts (`shop_order`), and the
+	 *   WooCommerce orders source calls `wc_get_orders`.
 	 * Fails when: SQL spreads through the plugin (harder to keep safe from injection), or orders are read in a way that misses shops on
 	 *   WooCommerce's newer order storage.
 	 */
@@ -72,7 +81,8 @@ final class RoundTwoStructureTest extends TestCase {
 		$wc  = false;
 		foreach ( $this->srcFiles() as $file ) {
 			$code = $this->code( $file );
-			if ( 'src/Outbox/Table.php' !== $file && preg_match( '/\$wpdb\b/', $code ) ) {
+			$queries = preg_replace( '/global\s+\$wpdb\s*;|\$wpdb->get_blog_prefix\s*\(/', '', $code );
+			if ( 'src/Outbox/Table.php' !== $file && preg_match( '/\$wpdb\b/', (string) $queries ) ) {
 				$sql[] = $file;
 			}
 			if ( preg_match( '/[\'"]shop_order[\'"]/', $code ) ) {
@@ -100,7 +110,8 @@ final class RoundTwoStructureTest extends TestCase {
 	 *   and each user's site id.
 	 * Passes when: the option list holds omnabase_facts and omnabase_db_version (both removed by uninstall.php through the older guard),
 	 *   uninstall.php drops the table `omnabase_outbox`, clears the scheduled job omnabase_outbox and deletes the plugin's user meta for all
-	 *   users.
+	 *   users: the site id under its plain name (shared by a network's sites), the pending connect and the other per-site notes under the
+	 *   site's table prefix.
 	 * Fails when: a shop owner deletes the plugin and the customer-data choices, the queued calls with customers' ids, or the ids themselves stay
 	 *   in their database.
 	 */
@@ -110,8 +121,9 @@ final class RoundTwoStructureTest extends TestCase {
 		$uninstall = $this->code( 'uninstall.php' );
 		$this->assertMatchesRegularExpression( '/DROP\s+TABLE\s+IF\s+EXISTS[^;]*omnabase_outbox/i', $uninstall );
 		$this->assertMatchesRegularExpression( '/wp_clear_scheduled_hook\s*\(\s*[\'"]omnabase_outbox[\'"]|wp_unschedule_hook\s*\(\s*[\'"]omnabase_outbox[\'"]/', $uninstall );
-		preg_match_all( '/delete_metadata\s*\(\s*[\'"]user[\'"]\s*,\s*0\s*,\s*[\'"](omnabase_[a-z_]+)[\'"]/', $uninstall, $m );
-		$this->assertGreaterThanOrEqual( 2, count( array_unique( $m[1] ) ), 'the pending connect and the site id, at least: ' . implode( ', ', $m[1] ) );
+		$this->assertMatchesRegularExpression( '/delete_metadata\s*\(\s*[\'"]user[\'"]\s*,\s*0\s*,\s*[\'"]omnabase_site_id[\'"]/', $uninstall, 'the site id, for every user' );
+		$this->assertMatchesRegularExpression( '/delete_metadata\s*\(\s*[\'"]user[\'"]\s*,\s*0\s*,\s*\$wpdb->get_blog_prefix\s*\(\s*\)\s*\./', $uninstall, 'the per-site notes, for every user, under the site\'s prefix' );
+		$this->assertStringContainsString( "'omnabase_pending_connect'", $uninstall, 'the pending connect among them' );
 	}
 
 	/**

@@ -12,18 +12,23 @@ use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Outbox\Table;
 use OmnaBase\WordPress\Sync\LicenceRefresh;
 use OmnaBase\WordPress\Sync\UserLink;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Read for WordPress's "Export Personal Data" and "Erase Personal Data" tools: the user with that address and what the plugin keeps for them
- * (the site id OmnaBase knows them by, the "known to OmnaBase" mark, the message centre's fingerprint, link times and kept words), the
- * outbox's open rows about them (their account's calls, form messages sent from that address), and the ticket numbers of their forum
- * topics. Nothing here asks OmnaBase: what OmnaBase holds is the workspace's to export or delete.
+ * (the site id OmnaBase knows them by, shared by a network's sites, and this site's own notes: the "known to OmnaBase" mark, the message
+ * centre's fingerprint, link times and kept words), the outbox's open rows about them (their account's calls, form messages sent from that
+ * address), and the ticket numbers of their forum topics. Nothing here asks OmnaBase: what OmnaBase holds is the workspace's to export or
+ * delete.
  */
 final class Holdings {
 
-	/** The user meta the plugin keeps per user. */
+	/**
+	 * The user meta the plugin keeps about a customer: the shared site id and four of this site's notes (an administrator's pending connect
+	 * is no customer data).
+	 */
 	public const USER_META = array(
 		Options::SITE_ID_META,
 		Options::KNOWN_META,
@@ -56,7 +61,7 @@ final class Holdings {
 	}
 
 	/**
-	 * The plugin's user meta for a user that holds a value, by meta key.
+	 * The plugin's user meta for a user that holds a value, by its plain name: the shared site id, and this site's own notes.
 	 *
 	 * @param int $user_id The user (0: none).
 	 * @return array<string,mixed>
@@ -64,12 +69,36 @@ final class Holdings {
 	public function userMeta( int $user_id ): array {
 		$out = array();
 		foreach ( self::USER_META as $key ) {
-			$value = $user_id > 0 ? get_user_meta( $user_id, $key, true ) : '';
+			$value = self::noteOf( $user_id, $key );
 			if ( '' !== $value && array() !== $value ) {
 				$out[ $key ] = $value;
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * Forgets one of the plugin's user meta for a user (this site's note, or the shared site id); whether it held one.
+	 *
+	 * @param int    $user_id The user.
+	 * @param string $key     The plain name.
+	 */
+	public static function forgetNote( int $user_id, string $key ): bool {
+		return UserNotes::isPerSite( $key ) ? UserNotes::delete( $user_id, $key ) : delete_user_meta( $user_id, $key );
+	}
+
+	/**
+	 * One of the plugin's user meta for a user (this site's note, or the shared site id), or ''.
+	 *
+	 * @param int    $user_id The user (0: none).
+	 * @param string $key     The plain name.
+	 * @return mixed
+	 */
+	private static function noteOf( int $user_id, string $key ) {
+		if ( $user_id <= 0 ) {
+			return '';
+		}
+		return UserNotes::isPerSite( $key ) ? UserNotes::get( $user_id, $key ) : get_user_meta( $user_id, $key, true );
 	}
 
 	/**

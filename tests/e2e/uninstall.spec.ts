@@ -1,4 +1,11 @@
 /**
+ * FIXING ROUND "SITES IN A SUBFOLDER", THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: on a WordPress network (multisite) user
+ * meta is shared by every site, so the "known to OmnaBase" mark becomes a per-site note (MultisiteTest); its stored name then carries the
+ * site (for a WordPress user option, `wp_omnabase_known` on this site). The arrangement planted the old shared name by hand
+ * (`update_user_meta( …, 'omnabase_known', '1' )`), which no longer is what the plugin stores; it now marks the user through the plugin's own
+ * class, so it plants whatever the plugin really keeps. The check is unchanged: after the uninstall no user meta whose name holds "omnabase"
+ * is left. Everything else in this file is unchanged.
+ *
  * M13 round six, the red team's failing check: uninstall on a connected, busy site removes everything of the plugin and tells OmnaBase once.
  * Not a browser flow: it drives the development WordPress (8888) through WP-CLI and asks OmnaBase's e2e server whether the site's key still
  * works; it lives here because it needs both running.
@@ -67,7 +74,7 @@ test("uninstall removes everything and stops the key once", async () => {
       $wpdb->insert( $t, array( 'kind' => $r[0], 'subject_id' => ${Number(user)}, 'dedupe_key' => $r[0] . ':${run}:' . $i, 'idempotency_key' => 'obwp-${run}-' . $i, 'state' => $r[1], 'attempts' => 1, 'next_at' => $now + 3600, 'claimed_until' => 0, 'last_error' => '', 'created_at' => $now ) );
     }
     update_user_meta( ${Number(user)}, 'omnabase_site_id', '${user}-abcdefgh' );
-    update_user_meta( ${Number(user)}, 'omnabase_known', '1' );
+    ( new \\OmnaBase\\WordPress\\Sync\\KnownUsers() )->mark( ${Number(user)} );
     update_post_meta( ${Number(post)}, '_omnabase_ticket', 4242 );
     update_post_meta( ${Number(post)}, '_omnabase_message_id', 'msg-${run}' );
     set_transient( 'omnabase_notice_1', array( 'type' => 'info', 'message' => 'probe' ), 600 );

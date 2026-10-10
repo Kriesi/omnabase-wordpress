@@ -55,7 +55,7 @@ final class Eraser {
 		$user_id = $this->holdings->userOf( $email );
 		$removed = false;
 		foreach ( array_keys( $this->holdings->userMeta( $user_id ) ) as $key ) {
-			$removed = delete_user_meta( $user_id, $key ) || $removed;
+			$removed = Holdings::forgetNote( $user_id, $key ) || $removed;
 		}
 		foreach ( $this->holdings->outboxRows( $user_id, $email ) as $row ) {
 			$removed = $this->table->anonymise( (int) $row['id'], __( 'Discarded: the person\'s data was erased on this site.', 'omnabase' ), time() ) || $removed;

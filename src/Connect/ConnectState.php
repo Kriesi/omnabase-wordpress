@@ -9,11 +9,12 @@ namespace OmnaBase\WordPress\Connect;
 
 use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Security\Vault;
+use OmnaBase\WordPress\UserNotes;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Between the click on Connect and the way back, each administrator keeps one pending connect in their own user meta: the state, the
+ * Between the click on Connect and the way back, each administrator keeps one pending connect per site (a user option): the state, the
  * verifier (sealed by the vault) and the time. Two administrators connecting at once keep their own; a second click by the same
  * administrator replaces the first. The way back must bring the same state (`hash_equals`) to the same administrator within 10 minutes; it
  * is used once.
@@ -41,7 +42,7 @@ final class ConnectState {
 	public function begin( int $user ): array {
 		$state    = Pkce::state();
 		$verifier = Pkce::verifier();
-		update_user_meta(
+		UserNotes::set(
 			$user,
 			Options::PENDING_CONNECT_META,
 			array(
@@ -65,7 +66,7 @@ final class ConnectState {
 	 * @return array{verifier:?string,problem:?string}
 	 */
 	public function take( int $user, string $state ): array {
-		$pending = get_user_meta( $user, Options::PENDING_CONNECT_META, true );
+		$pending = UserNotes::get( $user, Options::PENDING_CONNECT_META );
 		if ( ! is_array( $pending ) || '' === $state || ! hash_equals( (string) ( $pending['state'] ?? '' ), $state ) ) {
 			return array( 'verifier' => null, 'problem' => self::MISSING );
 		}
@@ -80,6 +81,6 @@ final class ConnectState {
 	 * @param int $user The administrator.
 	 */
 	public function forget( int $user ): void {
-		delete_user_meta( $user, Options::PENDING_CONNECT_META );
+		UserNotes::delete( $user, Options::PENDING_CONNECT_META );
 	}
 }

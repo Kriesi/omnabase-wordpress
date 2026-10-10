@@ -869,3 +869,75 @@ Decided here:
 - **The dialog**: the kit's dialog (head, body, a gray foot holding Create and Close), the overlay the kit's dim (`--ob-scrim` at 28 %).
 - **The More's chevron**: the summary hides the browser's triangle and draws a chevron that turns down when open (the kit's More keeps the
   browser's triangle; the red team's flow asks for a drawn one).
+
+## 2026-10-11 — Sites in a subfolder; a multisite's sub-sites
+
+The founder (2026-10-10): "isn't that a bug? A user installing his WordPress in a subfolder could not use it." The coordinator's design: a
+site's address becomes its home address with its folder (`https://example.com/blog`); OmnaBase (fixed in parallel) calls
+`<address>/wp-json/omnabase/v1/events` and `/customer` and sends the administrator back only under the address. On a *multisite* (a
+WordPress network: several sites sharing one installation) each site connects on its own. The red team's failing tests
+(`docs/reviews/subfolder-sites-red-team-report.md`) came first; all of them pass unchanged.
+
+What changed:
+
+- **The site's address.** `Connect\SiteCheck::base()` replaces the host-only `origin()` (gone): the home address with the scheme and host in
+  lower case, port 443 dropped, doubled slashes collapsed, no trailing slash, the folder's letters and encoding as written. The connect
+  link's `site`, the exchange's `site` and the kept connection's `site.url` carry it (the kept address is OmnaBase's answer, the sent base
+  when the answer names none); the link's name still falls back to the host alone.
+- **The refusals.** `problem()` refuses only: no https or another port than 443; "Plain" permalinks; a REST address (the `/wp-json/`
+  address WordPress answers programs at) that is not `<address>/wp-json/` after the same normalising, so a doubled slash from a home address
+  stored with a trailing slash is accepted and index permalinks, a renamed prefix, another host or REST at the root of a folder site are
+  refused ("OmnaBase cannot reach this site at its address: …"); and a way back outside the address ("Connect needs the WordPress admin under
+  this site's address: …"). No refusal speaks of a subfolder; the old sentence is gone from the code and the `.pot` (371 entries).
+- **The way-back check reads the settings page's own address** (`SettingsScreen::url()`, the `return` the link sends), not `admin_url()`:
+  outside an https request (WP-CLI, the test layer) `admin_url()` answers http even on an https site, which refused every site in the
+  integration run; the settings page's address follows the home address's https exactly as the link does. Home at `/blog` with WordPress at
+  `/wordpress` is refused as pinned (contingent on OmnaBase's way-back rule, as the red team noted).
+- **The five notes that were shared across a network are per site now**: the "known to OmnaBase" mark, an administrator's pending Connect,
+  the message centre's fingerprint, its confirmation-link times and a refused question's kept words. User meta (notes on a user) is shared
+  by every site of a network, so site B read site A's marks, a new connection on A wiped B's, and a network administrator connecting A then
+  B lost A's pending Connect.
+- **Decided: WordPress user options, through one small class `UserNotes`** (beside `Options`), not site options. A user option is user meta
+  stored under the current site's table prefix (`wp_omnabase_known` on a single site and the main site, `wp_2_omnabase_known` on site 2);
+  `get_user_option`, `update_user_option` and `delete_user_option` follow `switch_to_blog()`. Site options were the other choice: a list of
+  known user ids or a per-site map would grow with every customer in one autoloaded row, and the privacy tools would need their own
+  pruning. "Forget every mark" on a new connection deletes `get_blog_prefix() . 'omnabase_known'` for every user, so only that site starts
+  afresh. The customer's site id (`omnabase_site_id`) stays shared user meta: it names the person; one erasure removes it for every site
+  (accepted, the red team's note).
+- **The privacy exporter and eraser** read and erase this site's notes (`Holdings::userMeta()` keeps its plain names; the eraser forgets a
+  per-site note as a user option and the site id as user meta). An administrator's pending Connect is still not in the export.
+- **The outbox table per site.** `Outbox\Table::name()` already read `$wpdb->prefix` at call time (no static). Activation now takes
+  WordPress's network-wide flag: `Bootstrap::activate( true )` installs the table on every site; a site added later, or a sub-site activated
+  on its own, gets it at its own activation or on its first load (the plugin already makes a missing table on load).
+- **The timers per site.** `Bootstrap::deactivate( bool $network_wide )` clears the outbox's two timers and the forum's mail jobs on every
+  site after a network deactivation, only the current site's otherwise (before, a network deactivation left every sub-site's timers firing).
+- **The uninstall loops every site.** `uninstall.php` wraps one site's removal in a closure (the key's stop at OmnaBase with that site's own
+  key, the options, the per-site notes under the site's prefix, post meta, jobs, transients, the table) and runs it on each site when
+  `is_multisite()`, then deletes the shared site id once. **The 100-site paging**: WordPress's `get_sites()` lists 100 sites unless told
+  otherwise; the loops (uninstall, activation, deactivation) ask `array( 'fields' => 'ids', 'number' => 0 )`, every site's id in one light
+  query (the red team's 150-site test). A single site never asks for a network's sites.
+- **Network activation is allowed; each site keeps its own connection** (its own Connect, key, settings, table and timers).
+- **Not changed (the red team's finding 6, accepted):** a customer changing their email address on a network tells only the site where it
+  changed at once; the other sites resend at the customer's next message-centre visit, because their fingerprint no longer matches.
+- **Readme**: the FAQ "Does it work in a subfolder or on a multisite?" (yes; one connection per site); the requirements line drops the root
+  of the domain; the uninstall answer says it cleans every site of a network. One changelog line under `= 0.1.0 — unreleased =`.
+
+Tests adjusted (the reason is also at the head of each file):
+
+- **`tests/Structure/RoundTwoStructureTest.php`, two guards, adjusted, not weakened.** (1) "SQL only in the outbox's table class" refused
+  any `$wpdb` outside `Outbox\Table`; `UserNotes` needs the site's table prefix (`$wpdb->get_blog_prefix()`, which runs no query) to forget a
+  note for every user of one site. The guard now ignores `global $wpdb;` and `$wpdb->get_blog_prefix()` and still refuses every other use.
+  (2) The uninstall guard wanted two plain user meta names deleted for every user; the red team's new guard forbids the per-site notes'
+  plain names, so it now asks for the site id under its plain name and the per-site notes (the pending connect among them) under the
+  site's prefix.
+- The red team's own adjustments (`ConnectFlowTest`, `uninstall.spec.ts`) were copied in as parked. `PrivacyTest`'s bare `omnabase_known`
+  plant was left alone: a user option read falls back to the bare name, and that test checks only the site id.
+
+Also: the parked test harness (`omnabase_test_path`, a WordPress in a subfolder for a browser flow) is copied in; no flow uses it yet (the
+browser's route would have to strip the folder and send `X-Forwarded-Prefix`), a follow-up when a subfolder flow is wanted.
+
+The flows' harness (`tests/e2e/harness.ts`): its two calls to OmnaBase's e2e server (`omnabaseHook`, `publicApi`) are tried a second time
+when the first meets an already-closed connection (`ECONNRESET`). Why: on a loaded machine (load average 23–43 during this round) two whole
+runs failed at the same spots, each a fetch right after a long WP-CLI step: `php()`/`wp()` block Node while WP-CLI runs, the server closes
+the idle kept-alive connection after its 5 seconds unseen, and the next fetch reuses it. The assertions just before passed (the uninstall
+left nothing and made exactly one `DELETE /me`). No check changed; only a connection that was already closed is retried, once.
