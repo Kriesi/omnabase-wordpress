@@ -10,8 +10,8 @@ namespace OmnaBase\WordPress\Admin;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The tabs in WordPress's own style (a row of `nav-tab` links under the title), the open one named in the address (`&tab=…`). Only these
- * five slugs exist; no tab, or any other value, opens Connection. Activity's label carries the number of outbox rows needing attention.
+ * The tabs as OmnaBase's line tabs (a strip of links under the page head), the open one named in the address (`&tab=…`). Only these five
+ * slugs exist; no tab, or any other value, opens Connection. Activity carries the number of outbox rows needing attention as the tab's count.
  */
 final class Tabs {
 
@@ -40,11 +40,11 @@ final class Tabs {
 	}
 
 	/**
-	 * The tab row: each tab's label, address and whether it is open.
+	 * The tab row: each tab's label, address, whether it is open, and its count (Activity's rows needing attention; 0 shows none).
 	 *
 	 * @param string $open      The open tab.
 	 * @param int    $attention Outbox rows needing attention (Activity's count).
-	 * @return array<int,array{slug:string,label:string,url:string,active:bool}>
+	 * @return array<int,array{slug:string,label:string,url:string,active:bool,count:int}>
 	 */
 	public static function row( string $open, int $attention ): array {
 		$labels = array(
@@ -52,12 +52,17 @@ final class Tabs {
 			self::DATA       => __( 'Customer data', 'omnabase' ),
 			self::FORUMS     => __( 'Forums', 'omnabase' ),
 			self::PAGES      => __( 'Forms and messages', 'omnabase' ),
-			/* translators: %d: how many calls to OmnaBase need the administrator. */
-			self::ACTIVITY   => $attention > 0 ? sprintf( __( 'Activity · %d', 'omnabase' ), $attention ) : __( 'Activity', 'omnabase' ),
+			self::ACTIVITY   => __( 'Activity', 'omnabase' ),
 		);
 		$row = array();
 		foreach ( self::ALL as $slug ) {
-			$row[] = array( 'slug' => $slug, 'label' => $labels[ $slug ], 'url' => SettingsScreen::url( $slug ), 'active' => $slug === $open );
+			$row[] = array(
+				'slug'   => $slug,
+				'label'  => $labels[ $slug ],
+				'url'    => SettingsScreen::url( $slug ),
+				'active' => $slug === $open,
+				'count'  => self::ACTIVITY === $slug ? max( 0, $attention ) : 0,
+			);
 		}
 		return $row;
 	}

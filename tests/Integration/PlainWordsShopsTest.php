@@ -49,6 +49,10 @@ final class PlainWordsShopsTest extends RoundTwoTestCase {
 	 * Passes when: all seven sources switched on and WooCommerce Subscriptions at 2.0.0, the tab's visible words hold no banned word, still
 	 *   name WooCommerce Subscriptions as an unsupported version, and every paragraph, description and list item has at most 30 words.
 	 * Fails when: the richest shop setup, the one most owners with shops have, brings back developer words or long paragraphs.
+	 *
+	 * M14 round four, the red team: adjusted, not weakened. Round four's markup may write a card's intro and a row's help as `div`s (the
+	 * kit's `ob-form__intro` and `ob-form-row__help`) and the page head's subtitle as `ob-page__subtitle`; those are counted too, so the rule
+	 * reaches every description it reached before and the new ones. Nothing was taken out of the count.
 	 */
 	public function test_the_customer_data_tab_with_every_source_speaks_plainly(): void {
 		$this->switchOn( self::ALL_SOURCES );
@@ -58,7 +62,7 @@ final class PlainWordsShopsTest extends RoundTwoTestCase {
 
 		$this->assertSame( array(), self::bannedIn( $seen ) );
 		$this->assertMatchesRegularExpression( '/WooCommerce Subscriptions[^|]{0,120}unsupported version/i', $seen, 'the outdated add-on is still named' );
-		foreach ( self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ']' ) as $node ) {
+		foreach ( self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ' or ' . self::hasClass( 'ob-form__intro' ) . ' or ' . self::hasClass( 'ob-form-row__help' ) . ' or ' . self::hasClass( 'ob-page__subtitle' ) . ']' ) as $node ) {
 			$this->assertLessThanOrEqual( 30, str_word_count( self::wordsOf( $node ) ), self::wordsOf( $node ) );
 		}
 	}

@@ -260,7 +260,7 @@ final class RoundSixStructureTest extends TestCase {
 	public function test_the_release_build_refuses_an_undated_section(): void {
 		$tmp = sys_get_temp_dir() . '/omnabase-release-' . bin2hex( random_bytes( 4 ) );
 		mkdir( $tmp . '/bin', 0777, true );
-		foreach ( array( 'bin/build-dist.sh', 'bin/check-version.sh', 'bin/build-form-css.php', 'omnabase.php', 'readme.txt', 'composer.json', 'package.json' ) as $file ) {
+		foreach ( array( 'bin/build-dist.sh', 'bin/check-version.sh', 'bin/build-css.php', 'omnabase.php', 'readme.txt', 'composer.json', 'package.json' ) as $file ) {
 			if ( is_file( OMNABASE_REPO . '/' . $file ) ) {
 				copy( OMNABASE_REPO . '/' . $file, $tmp . '/' . $file );
 			}

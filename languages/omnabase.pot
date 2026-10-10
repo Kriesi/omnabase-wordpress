@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-10T14:30:09+00:00\n"
+"POT-Creation-Date: 2026-10-10T18:05:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -22,7 +22,7 @@ msgstr ""
 #: src/Privacy/Exporter.php:38
 #: src/Privacy/Exporter.php:133
 #: src/Privacy/PolicyText.php:29
-#: templates/admin/settings.php:14
+#: templates/admin/settings.php:17
 msgid "OmnaBase"
 msgstr ""
 
@@ -169,7 +169,7 @@ msgid "Waiting for OmnaBase's test message…"
 msgstr ""
 
 #: src/Admin/Notices.php:39
-#: templates/admin/partials/connection.php:69
+#: templates/admin/partials/connection.php:70
 msgid "OmnaBase: reconnect needed"
 msgstr ""
 
@@ -245,20 +245,22 @@ msgid "The setup line is hidden. Every step stays on its tab."
 msgstr ""
 
 #: src/Admin/SetupLine.php:66
-#: templates/admin/partials/connect.php:18
+#: templates/admin/partials/connect.php:19
+#: templates/admin/partials/connect.php:21
 msgid "Connect"
 msgstr ""
 
 #: src/Admin/SetupLine.php:67
 #: src/Admin/Tabs.php:52
-#: templates/admin/partials/facts.php:14
+#: templates/admin/partials/facts.php:17
 msgid "Customer data"
 msgstr ""
 
 #: src/Admin/SetupLine.php:70
 #: src/Admin/Tabs.php:53
-#: templates/admin/partials/forum.php:14
-#: templates/admin/partials/forum.php:31
+#: templates/admin/partials/forum-rows.php:20
+#: templates/admin/partials/forum.php:15
+#: templates/admin/partials/forum.php:23
 msgid "Forums"
 msgstr ""
 
@@ -299,6 +301,7 @@ msgid "%1$s · %2$s"
 msgstr ""
 
 #: src/Admin/Tabs.php:51
+#: templates/admin/partials/connection.php:16
 msgid "Connection"
 msgstr ""
 
@@ -306,14 +309,7 @@ msgstr ""
 msgid "Forms and messages"
 msgstr ""
 
-#. translators: %d: how many calls to OmnaBase need the administrator.
-#: src/Admin/Tabs.php:56
-#, php-format
-msgid "Activity · %d"
-msgstr ""
-
-#. translators: %d: how many calls to OmnaBase need the administrator.
-#: src/Admin/Tabs.php:56
+#: src/Admin/Tabs.php:55
 msgid "Activity"
 msgstr ""
 
@@ -322,12 +318,12 @@ msgid "The stored connection can no longer be read: connect the site again."
 msgstr ""
 
 #: src/Api/Client.php:125
-#: templates/admin/partials/connection.php:76
+#: templates/admin/partials/connection.php:77
 msgid "This site is not connected to OmnaBase yet."
 msgstr ""
 
 #: src/Api/Client.php:139
-#: templates/admin/partials/connection.php:56
+#: templates/admin/partials/connection.php:57
 msgid "Someone disconnected this site in OmnaBase. Click Connect to connect it again."
 msgstr ""
 
@@ -877,18 +873,26 @@ msgid "Tell OmnaBase the site's id for a user"
 msgstr ""
 
 #: templates/admin/partials/advanced.php:14
-msgid "Advanced"
+msgid "Stored connection"
+msgstr ""
+
+#: templates/admin/partials/advanced.php:15
+msgid "How this site locks the connection it keeps for OmnaBase."
 msgstr ""
 
 #: templates/admin/partials/advanced.php:17
+msgid "Advanced"
+msgstr ""
+
+#: templates/admin/partials/advanced.php:21
 msgid "The stored connection is locked with a key kept in your database, which protects it little. Add this line to wp-config.php, then click Connect again:"
 msgstr ""
 
-#: templates/admin/partials/advanced.php:22
+#: templates/admin/partials/advanced.php:26
 msgid "The stored connection is locked with OMNABASE_ENCRYPTION_KEY from wp-config.php."
 msgstr ""
 
-#: templates/admin/partials/advanced.php:22
+#: templates/admin/partials/advanced.php:26
 msgid "The stored connection is locked with the secret keys in wp-config.php."
 msgstr ""
 
@@ -988,7 +992,7 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: templates/admin/partials/connect.php:18
+#: templates/admin/partials/connect.php:19
 msgid "Connect again: OmnaBase gives the site a new key and stops the old one."
 msgstr ""
 
@@ -1003,45 +1007,45 @@ msgid "Key: %s (only its last four characters are shown)."
 msgstr ""
 
 #. translators: %s: the OmnaBase workspace's name.
-#: templates/admin/partials/connection.php:21
+#: templates/admin/partials/connection.php:22
 #, php-format
 msgid "Connected to %s"
 msgstr ""
 
 #. translators: %s: the site's name in OmnaBase.
-#: templates/admin/partials/connection.php:29
+#: templates/admin/partials/connection.php:30
 #, php-format
 msgid "This site is known to OmnaBase as %s."
 msgstr ""
 
 #. translators: %s: the OmnaBase project (or projects) this site's messages go to.
-#: templates/admin/partials/connection.php:36
+#: templates/admin/partials/connection.php:37
 #, php-format
 msgid "Messages go to: %s"
 msgstr ""
 
 #. translators: %s: the OmnaBase project (or projects) this site's messages go to.
-#: templates/admin/partials/connection.php:36
+#: templates/admin/partials/connection.php:37
 msgid "every project"
 msgstr ""
 
-#: templates/admin/partials/connection.php:40
+#: templates/admin/partials/connection.php:41
 msgid "OmnaBase did not answer just now, so this shows the connection as it was last known."
 msgstr ""
 
-#: templates/admin/partials/connection.php:46
+#: templates/admin/partials/connection.php:47
 msgid "Check connection"
 msgstr ""
 
-#: templates/admin/partials/connection.php:55
+#: templates/admin/partials/connection.php:56
 msgid "Disconnected in OmnaBase"
 msgstr ""
 
-#: templates/admin/partials/connection.php:70
+#: templates/admin/partials/connection.php:71
 msgid "The stored connection can no longer be read because the site's secret keys changed. Connect again to receive replies."
 msgstr ""
 
-#: templates/admin/partials/connection.php:80
+#: templates/admin/partials/connection.php:81
 msgid "Connect sends you to OmnaBase to approve this site once; no key to copy."
 msgstr ""
 
@@ -1093,23 +1097,23 @@ msgstr ""
 msgid "Nothing yet."
 msgstr ""
 
-#: templates/admin/partials/deliveries.php:36
+#: templates/admin/partials/deliveries.php:37
 msgid "Time"
 msgstr ""
 
-#: templates/admin/partials/deliveries.php:37
+#: templates/admin/partials/deliveries.php:38
 msgid "What happened"
 msgstr ""
 
-#: templates/admin/partials/deliveries.php:38
+#: templates/admin/partials/deliveries.php:39
 msgid "Ticket"
 msgstr ""
 
-#: templates/admin/partials/deliveries.php:39
+#: templates/admin/partials/deliveries.php:40
 msgid "What the plugin did"
 msgstr ""
 
-#: templates/admin/partials/deliveries.php:46
+#: templates/admin/partials/deliveries.php:47
 msgid "Something else"
 msgstr ""
 
@@ -1121,59 +1125,60 @@ msgstr ""
 msgid "Disconnect"
 msgstr ""
 
-#: templates/admin/partials/facts.php:15
+#: templates/admin/partials/facts.php:18
 msgid "What this site tells your team about a customer when a ticket opens; every source stays off until you turn it on."
 msgstr ""
 
-#: templates/admin/partials/facts.php:20
-msgid "Sources"
-msgstr ""
-
 #. translators: 1: date and time, 2: the sections left out, comma-separated.
-#: templates/admin/partials/facts.php:35
+#: templates/admin/partials/facts.php:39
 #, php-format
 msgid "The answer at %1$s left out: %2$s (too large or not readable by OmnaBase)."
 msgstr ""
 
-#: templates/admin/partials/facts.php:40
-msgid "Choose user fields"
-msgstr ""
-
-#: templates/admin/partials/facts.php:41
-msgid "Extra fields other plugins keep for each user, such as a phone number; the ticked ones go with the customer's profile."
-msgstr ""
-
-#: templates/admin/partials/facts.php:42
-msgid "Never offered or sent:"
-msgstr ""
-
-#: templates/admin/partials/facts.php:44
-msgid "Passwords"
-msgstr ""
-
 #: templates/admin/partials/facts.php:45
-msgid "Tokens"
-msgstr ""
-
-#: templates/admin/partials/facts.php:46
-msgid "Keys and other secrets"
-msgstr ""
-
-#: templates/admin/partials/facts.php:47
-msgid "Private fields (their names start with an underscore)"
-msgstr ""
-
-#: templates/admin/partials/facts.php:50
-msgid "No user fields found yet."
-msgstr ""
-
-#: templates/admin/partials/facts.php:53
+#: templates/admin/partials/facts.php:64
 msgid "User fields"
 msgstr ""
 
-#: templates/admin/partials/facts.php:63
-#: templates/admin/partials/forum.php:93
-#: templates/admin/tabs/pages.php:23
+#: templates/admin/partials/facts.php:46
+msgid "Extra fields other plugins keep for each user, such as a phone number; the ticked ones go with the customer's profile."
+msgstr ""
+
+#: templates/admin/partials/facts.php:48
+msgid "Choose user fields"
+msgstr ""
+
+#: templates/admin/partials/facts.php:50
+msgid "Never offered or sent:"
+msgstr ""
+
+#: templates/admin/partials/facts.php:52
+msgid "Passwords"
+msgstr ""
+
+#: templates/admin/partials/facts.php:53
+msgid "Tokens"
+msgstr ""
+
+#: templates/admin/partials/facts.php:54
+msgid "Keys and other secrets"
+msgstr ""
+
+#: templates/admin/partials/facts.php:55
+msgid "Private fields (their names start with an underscore)"
+msgstr ""
+
+#: templates/admin/partials/facts.php:58
+msgid "No user fields found yet."
+msgstr ""
+
+#: templates/admin/partials/facts.php:61
+msgid "Fields to send"
+msgstr ""
+
+#: templates/admin/partials/facts.php:78
+#: templates/admin/partials/forum.php:35
+#: templates/admin/tabs/pages.php:24
 msgid "Save"
 msgstr ""
 
@@ -1181,84 +1186,87 @@ msgstr ""
 msgid "Forget this connection"
 msgstr ""
 
+#: templates/admin/partials/forum-rows.php:14
+msgid "Forums to send"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:17
+msgid "No forums yet."
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:26
+msgid "(public)"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:26
+msgid "(hidden: not public)"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:36
+msgid "Who answers on the forum"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:37
+msgid "The forum moderator whose name your team's answers appear under."
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:41
+msgid "— Choose a moderator —"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:50
+msgid "Line under each answer"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:51
+msgid "{agent} becomes the team member's name and {workspace} your workspace's."
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:59
+msgid "Who may send topics"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:60
+msgid "Guests' email addresses are unchecked: anyone can type any address."
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:66
+msgid "Members only"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:70
+msgid "Guests too"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:77
+msgid "Resolved tickets"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:78
+msgid "Close the topic when its ticket is resolved"
+msgstr ""
+
 #: templates/admin/partials/forum.php:16
 msgid "Install and activate bbPress to send forum topics to OmnaBase."
 msgstr ""
 
-#: templates/admin/partials/forum.php:18
+#: templates/admin/partials/forum.php:24
 msgid "Topics in the ticked forums become tickets, and your team's answers appear on the forum under the name you choose below."
 msgstr ""
 
-#: templates/admin/partials/forum.php:20
+#: templates/admin/partials/forum.php:26
 msgid "Topics in hidden forums are not public; every other forum is public to OmnaBase."
 msgstr ""
 
-#: templates/admin/partials/forum.php:21
+#: templates/admin/partials/forum.php:27
 msgid "Replies by the topic's author and by moderators are sent."
 msgstr ""
 
-#: templates/admin/partials/forum.php:22
+#: templates/admin/partials/forum.php:28
 msgid "Edits and deletions on the forum are not sent."
 msgstr ""
 
-#: templates/admin/partials/forum.php:28
-msgid "No forums yet."
-msgstr ""
-
-#: templates/admin/partials/forum.php:37
-msgid "(public)"
-msgstr ""
-
-#: templates/admin/partials/forum.php:37
-msgid "(hidden: not public)"
-msgstr ""
-
-#: templates/admin/partials/forum.php:45
-msgid "Who answers on the forum"
-msgstr ""
-
-#: templates/admin/partials/forum.php:48
-msgid "— Choose a moderator —"
-msgstr ""
-
-#: templates/admin/partials/forum.php:53
-msgid "The forum moderator whose name your team's answers appear under."
-msgstr ""
-
-#: templates/admin/partials/forum.php:57
-msgid "Line under each answer"
-msgstr ""
-
-#: templates/admin/partials/forum.php:60
-msgid "{agent} becomes the team member's name and {workspace} your workspace's."
-msgstr ""
-
-#: templates/admin/partials/forum.php:64
-#: templates/admin/partials/forum.php:67
-msgid "Who may send topics"
-msgstr ""
-
-#: templates/admin/partials/forum.php:70
-msgid "Members only"
-msgstr ""
-
-#: templates/admin/partials/forum.php:74
-msgid "Guests too"
-msgstr ""
-
-#: templates/admin/partials/forum.php:77
-msgid "Guests' email addresses are unchecked: anyone can type any address."
-msgstr ""
-
-#: templates/admin/partials/forum.php:81
-msgid "Resolved tickets"
-msgstr ""
-
-#: templates/admin/partials/forum.php:85
-msgid "Close the topic when its ticket is resolved"
-msgstr ""
-
-#: templates/admin/partials/forum.php:91
+#: templates/admin/partials/forum.php:32
 msgid "Choose who answers on the forum: until then your team's answers wait at OmnaBase."
 msgstr ""
 
@@ -1290,29 +1298,45 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: templates/admin/partials/health.php:32
+#: templates/admin/partials/health.php:28
+msgid "Status"
+msgstr ""
+
+#: templates/admin/partials/health.php:33
 msgid "Your host turned WordPress's timer off: ask them to run it every minute, or messages to OmnaBase wait for visitors."
 msgstr ""
 
-#: templates/admin/partials/health.php:37
-#: templates/admin/partials/outbox.php:81
+#: templates/admin/partials/health.php:38
+#: templates/admin/partials/outbox.php:82
 msgid "Details"
 msgstr ""
 
 #. translators: %s: when the last check ran.
-#: templates/admin/partials/health.php:47
+#: templates/admin/partials/health.php:49
 #, php-format
 msgid "Last checked %s."
 msgstr ""
 
 #. translators: %s: date and time of OmnaBase's last customer-data call.
-#: templates/admin/partials/health.php:67
+#: templates/admin/partials/health.php:71
 #, php-format
 msgid "Last customer-data call from OmnaBase: %s."
 msgstr ""
 
-#: templates/admin/partials/health.php:68
+#: templates/admin/partials/health.php:72
 msgid "No customer-data call from OmnaBase yet."
+msgstr ""
+
+#. translators: %s: the development address of OmnaBase.
+#: templates/admin/partials/notices.php:18
+#, php-format
+msgid "Development: this site talks to %s instead of app.omnabase.com."
+msgstr ""
+
+#. translators: %s: the development address of OmnaBase's connect page.
+#: templates/admin/partials/notices.php:28
+#, php-format
+msgid "Development: Connect opens %s instead of app.omnabase.com."
 msgstr ""
 
 #: templates/admin/partials/outbox.php:17
@@ -1361,45 +1385,45 @@ msgstr[1] ""
 msgid "%1$s: OmnaBase's daily limit for new tickets, next try %2$s"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:56
+#: templates/admin/partials/outbox.php:57
 msgid "Call"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:57
+#: templates/admin/partials/outbox.php:58
 msgid "About"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:58
+#: templates/admin/partials/outbox.php:59
 msgid "State"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:59
+#: templates/admin/partials/outbox.php:60
 msgid "Last answer"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:60
+#: templates/admin/partials/outbox.php:61
 msgid "Actions"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:72
+#: templates/admin/partials/outbox.php:73
 msgid "Needs attention"
 msgstr ""
 
 #. translators: %s: date and time of the next try.
-#: templates/admin/partials/outbox.php:74
+#: templates/admin/partials/outbox.php:75
 #, php-format
 msgid "Waiting, next try %s"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:91
+#: templates/admin/partials/outbox.php:92
 msgid "Retry"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:91
+#: templates/admin/partials/outbox.php:92
 msgid "Discard"
 msgstr ""
 
-#: templates/admin/partials/outbox.php:92
+#: templates/admin/partials/outbox.php:93
 msgid "Send now"
 msgstr ""
 
@@ -1415,30 +1439,34 @@ msgstr ""
 msgid "Message centre page"
 msgstr ""
 
-#: templates/admin/partials/portal.php:20
-msgid "— No page —"
-msgstr ""
-
-#: templates/admin/partials/portal.php:25
+#: templates/admin/partials/portal.php:18
 msgid "Put the shortcode [omnabase_messages] on this page."
 msgstr ""
 
-#: templates/admin/partials/setup.php:14
-msgid "Set up:"
+#: templates/admin/partials/portal.php:22
+msgid "— No page —"
+msgstr ""
+
+#: templates/admin/partials/setup.php:15
+msgid "Set up"
+msgstr ""
+
+#: templates/admin/partials/setup.php:19
+msgid "Dismiss"
+msgstr ""
+
+#: templates/admin/partials/setup.php:22
+msgid "The steps that put OmnaBase to work on this site; each one is ticked once it is done."
 msgstr ""
 
 #. translators: %s: a setup step, such as "Customer data".
-#: templates/admin/partials/setup.php:20
+#: templates/admin/partials/setup.php:27
 #, php-format
 msgid "Setup step: %s"
 msgstr ""
 
-#: templates/admin/partials/setup.php:24
+#: templates/admin/partials/setup.php:33
 msgid "(done)"
-msgstr ""
-
-#: templates/admin/partials/setup.php:32
-msgid "Dismiss"
 msgstr ""
 
 #: templates/admin/partials/shortcodes.php:14
@@ -1473,32 +1501,32 @@ msgstr ""
 msgid "in the message centre: the project new questions go to."
 msgstr ""
 
+#: templates/admin/partials/shortcodes.php:31
+msgid "Theme styles only"
+msgstr ""
+
 #: templates/admin/partials/shortcodes.php:32
 msgid "Use the theme's styles only: the form and the message centre load no OmnaBase stylesheet."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:39
+#: templates/admin/partials/shortcodes.php:41
+msgid "My Account menu"
+msgstr ""
+
+#: templates/admin/partials/shortcodes.php:42
 msgid "Add \"Support\" to WooCommerce's My Account menu, leading to the message centre page."
 msgstr ""
 
-#. translators: %s: the development address of OmnaBase.
-#: templates/admin/settings.php:21
-#, php-format
-msgid "Development: this site talks to %s instead of app.omnabase.com."
+#: templates/admin/settings.php:18
+msgid "Connects this site to your OmnaBase workspace: customer data for tickets, forum topics, the contact form and the message centre."
 msgstr ""
 
-#. translators: %s: the development address of OmnaBase's connect page.
-#: templates/admin/settings.php:31
-#, php-format
-msgid "Development: Connect opens %s instead of app.omnabase.com."
-msgstr ""
-
-#: templates/admin/settings.php:48
+#: templates/admin/settings.php:23
 msgid "OmnaBase settings"
 msgstr ""
 
 #. translators: %s: the plugin's version.
-#: templates/admin/settings.php:59
+#: templates/admin/settings.php:38
 #, php-format
 msgid "OmnaBase for WordPress %s"
 msgstr ""

@@ -40,3 +40,4 @@ section is never changed again. At release the top section is copied into readme
 * Added: "Build a shortcode" on the Forms and messages tab writes the shortcode as you choose, ready to copy, and "Create the page for me" publishes the page at once; a new message centre page becomes the picked one.
 * Added: When someone disconnected the site in OmnaBase, "Forget this connection" clears the connection from the site if you do not want to connect again.
 * Added: The setup line ticks off "Add the form to a page" once the contact form or the message centre first shows to visitors.
+* Changed: Settings › OmnaBase wears OmnaBase's own look: each section in a white card, every setting in a clear row, OmnaBase's tabs and buttons.

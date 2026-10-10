@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings › OmnaBase: the connection box (Connect, Disconnect, Check connection, and "Forget this connection" once OmnaBase ended it) in
+ * Settings › OmnaBase: the connection card (Connect, Disconnect, Check connection, and "Forget this connection" once OmnaBase ended it) in
  * its four states. Included by the Connection tab.
  *
  * @package OmnaBase
@@ -12,7 +12,8 @@ defined( 'ABSPATH' ) || exit;
 
 $omnabase_action_url = admin_url( 'admin-post.php' );
 ?>
-<div class="ob-wp-settings__connection" data-state="<?php echo esc_attr( $omnabase_connection['state'] ); ?>">
+<section class="ob-form__section ob-wp-settings__connection" data-state="<?php echo esc_attr( $omnabase_connection['state'] ); ?>">
+	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'Connection', 'omnabase' ); ?></h2></div>
 	<?php if ( 'connected' === $omnabase_connection['state'] ) : ?>
 		<p class="ob-wp-settings__connected">
 			<strong>
@@ -43,7 +44,7 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 			<form method="post" action="<?php echo esc_url( $omnabase_action_url ); ?>" class="ob-wp-settings__form">
 				<input type="hidden" name="action" value="omnabase_check">
 				<?php wp_nonce_field( 'omnabase_check' ); ?>
-				<?php submit_button( __( 'Check connection', 'omnabase' ), 'primary', 'submit', false ); ?>
+				<button type="submit" class="ob-btn ob-btn--primary"><?php esc_html_e( 'Check connection', 'omnabase' ); ?></button>
 			</form>
 			<?php
 			$omnabase_connect_style = 'secondary';
@@ -78,7 +79,9 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 			<p class="ob-wp-settings__error"><?php echo esc_html( $omnabase_connection['problem'] ); ?></p>
 		<?php else : ?>
 			<p class="description"><?php esc_html_e( 'Connect sends you to OmnaBase to approve this site once; no key to copy.', 'omnabase' ); ?></p>
-			<?php require __DIR__ . '/connect.php'; ?>
+			<div class="ob-wp-settings__buttons">
+				<?php require __DIR__ . '/connect.php'; ?>
+			</div>
 		<?php endif; ?>
 	<?php endif; ?>
-</div>
+</section>

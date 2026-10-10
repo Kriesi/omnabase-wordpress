@@ -30,7 +30,13 @@ namespace OmnaBase\WordPress\Tests\Integration;
  */
 final class ForumsTabTest extends RoundThreeTestCase {
 
-	/** The label words for a form control (its `<label for>`, a wrapping `<label>`, or its table row's heading). */
+	/**
+	 * The label words for a form control (its `<label for>`, a wrapping `<label>`, its table row's heading, or its settings row's label).
+	 *
+	 * M14 round four, the red team: adjusted, not weakened. WordPress's settings table (a row heading `th` beside the field) becomes the kit's
+	 * row (`ob-form-row`, its label `ob-form-row__label` beside the control), so the row's label is read where the table row's heading was;
+	 * the old paths stay, and every assertion on the label words is unchanged.
+	 */
 	private static function labelOf( \DOMElement $el ): string {
 		$xpath = new \DOMXPath( $el->ownerDocument );
 		$words = array();
@@ -40,7 +46,7 @@ final class ForumsTabTest extends RoundThreeTestCase {
 				$words[] = self::wordsOf( $l );
 			}
 		}
-		foreach ( $xpath->query( 'ancestor::label | ancestor::tr/th | ancestor::fieldset/legend', $el ) as $l ) {
+		foreach ( $xpath->query( 'ancestor::label | ancestor::tr/th | ancestor::fieldset/legend | ancestor::*[' . self::hasClass( 'ob-form-row' ) . '][1]//*[' . self::hasClass( 'ob-form-row__label' ) . ']', $el ) as $l ) {
 			$words[] = self::wordsOf( $l );
 		}
 		return implode( ' | ', $words );
@@ -110,11 +116,15 @@ final class ForumsTabTest extends RoundThreeTestCase {
 	 * What it checks: The Forums tab with bbPress speaks plainly and keeps its descriptions short.
 	 * Passes when: the tab's visible words hold no banned word, and every paragraph, description and list item has at most 30 words.
 	 * Fails when: the forum settings bring back developer words or long paragraphs.
+	 *
+	 * M14 round four, the red team: adjusted, not weakened. Round four's markup may write a card's intro and a row's help as `div`s (the
+	 * kit's `ob-form__intro` and `ob-form-row__help`) and the page head's subtitle as `ob-page__subtitle`; those are counted too, so the rule
+	 * reaches every description it reached before and the new ones. Nothing was taken out of the count.
 	 */
 	public function test_the_forums_tab_speaks_plainly(): void {
 		$html = $this->openTab( 'forums' );
 		$this->assertSame( array(), self::bannedIn( self::visibleText( $html ) ) );
-		foreach ( self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings__forum' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ']' ) as $node ) {
+		foreach ( self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings__forum' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ' or ' . self::hasClass( 'ob-form__intro' ) . ' or ' . self::hasClass( 'ob-form-row__help' ) . ']' ) as $node ) {
 			$this->assertLessThanOrEqual( 30, str_word_count( self::wordsOf( $node ) ), self::wordsOf( $node ) );
 		}
 	}

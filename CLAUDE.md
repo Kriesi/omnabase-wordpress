@@ -14,8 +14,10 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
   OmnaBase's TypeScript apps or with Omnalingo; Omnalingo is a pattern to look at, never a source to copy from.
 - PHP 8.1+, WordPress 6.8+, tested on the newest WordPress. Namespace `OmnaBase\WordPress\` under `src/` (PSR-4, Composer's autoloader).
   Slug and text domain `omnabase`.
-- One admin screen, PHP-rendered (Settings › OmnaBase, `manage_options`), WordPress's own admin styles and a little vanilla JS. No Vue,
-  no build step for the admin.
+- One admin screen, PHP-rendered (Settings › OmnaBase, `manage_options`), in OmnaBase's own settings look (M14 round four: white cards,
+  the kit's line tabs, rows and buttons) and a little vanilla JS. No Vue. Its stylesheet `assets/admin.css` is built from OmnaBase's kit
+  tokens and `styles/admin.css` (the source: the kit's rules for the reused class names, every rule under `.ob-wp-settings`, no raw colour,
+  no typeface, no dark block); edit the source and run `php bin/build-css.php`, never the built file. WordPress's notices keep their look.
 
 ## Layout
 
@@ -32,8 +34,9 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
   loads them in the development WordPress when the real add-on is absent).
 - `bin/` the scripts: `seed.sh`, `build-dist.sh` (`--release` for the customer zip), `check-version.sh` (the header, `OMNABASE_VERSION`,
   readme.txt's Stable tag, the changelog's top section, `package.json`'s version), `make-pot.sh` (the `.pot` through `wp i18n make-pot` in
-  wp-env; also `composer i18n:pot`, `npm run pot`), `test-integration.sh`, `omnabase-e2e.sh`, `build-form-css.php` (the form's
-  `assets/form.css` from OmnaBase's kit tokens and `styles/form.css`, the source of its rules; the result is committed).
+  wp-env; also `composer i18n:pot`, `npm run pot`), `test-integration.sh`, `omnabase-e2e.sh`, `build-css.php` (both stylesheets from OmnaBase's
+  kit tokens: the form's `assets/form.css` from `styles/form.css`, the settings screen's `assets/admin.css` from `styles/admin.css`; the
+  results are committed, `build-dist.sh` rebuilds them).
 - `paid/` (git-ignored): the founder's paid add-on zips when he has them (WooCommerce Subscriptions, EDD Software Licensing, EDD Recurring).
 
 ## The rounds and the red team

@@ -11,9 +11,9 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 	<p><?php esc_html_e( 'What this site may do in OmnaBase:', 'omnabase' ); ?></p>
-	<ul class="ob-wp-settings__scopes">
+	<ul class="ob-help-list ob-wp-settings__scopes">
 		<?php foreach ( $omnabase_connection['scopes'] as $omnabase_scope ) : ?>
-			<li><?php echo esc_html( $omnabase_scope ); ?></li>
+			<li class="ob-help-list__item"><?php echo esc_html( $omnabase_scope ); ?></li>
 		<?php endforeach; ?>
 	</ul>
 	<p class="ob-wp-settings__key">

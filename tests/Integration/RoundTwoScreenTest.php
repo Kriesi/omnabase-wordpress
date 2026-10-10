@@ -188,12 +188,16 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 	 * What it checks: The new sections' help texts follow the screen's rule of at most 30 words each.
 	 * Passes when: every description inside the customer-data and outbox sections has 30 words or fewer.
 	 * Fails when: the screen grows paragraphs an administrator will not read.
+	 *
+	 * M14 round four, the red team: adjusted, not weakened. Round four splits the customer-data section into the kit's cards (the sources, the
+	 * user fields) and writes their descriptions as the kit's intro and help (`ob-form__intro`, `ob-form-row__help`); those cards and classes
+	 * are read too, beside the old ones, so every description counted before is still counted and the new ones join it. The limit is unchanged.
 	 */
 	public function test_the_new_descriptions_have_at_most_30_words(): void {
 		$this->rowNeedingAttention();
 		// Builder's adjustment (DECISIONS "Round two"): each description's text, through its text nodes (`values()` read the elements'
 		// blank `value` attributes, so every count was zero and the check could not fail).
-		$texts = self::values( $this->openTab( 'data' ) . $this->openTab( 'activity' ), '//*[contains(@class,"ob-wp-settings__facts") or contains(@class,"ob-wp-settings__outbox")]//*[contains(concat(" ",@class," ")," description ")]/text()' );
+		$texts = self::values( $this->openTab( 'data' ) . $this->openTab( 'activity' ), '//*[contains(@class,"ob-wp-settings__facts") or contains(@class,"ob-wp-settings__outbox") or contains(@class,"ob-wp-settings__sources") or contains(@class,"ob-wp-settings__user-fields")]//*[contains(concat(" ",@class," ")," description ") or contains(concat(" ",@class," ")," ob-form__intro ") or contains(concat(" ",@class," ")," ob-form-row__help ")]/text()' );
 
 		$this->assertNotEmpty( $texts, 'each section has its one-line description' );
 		foreach ( $texts as $text ) {

@@ -1,76 +1,301 @@
-/*
- * Settings › OmnaBase: the shortcode builder's dialog (M14 round two). WordPress's own admin look; only the dialog's frame, the two cards
- * and the offer of an existing page are styled here.
- */
-.ob-wp-builder {
-	box-sizing: border-box;
-	width: calc(100% - 32px);
-	max-width: 560px;
-	padding: 24px;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+/* Built by bin/build-css.php from OmnaBase's packages/ui/src/styles/tokens.css (the light block, the variables the settings screen uses) and
+   styles/admin.css. Do not edit: change styles/admin.css and build again. */
+
+.ob-wp-settings {
+  --ob-gray-50: #f8f8f8;
+  --ob-gray-200: #e6e6e6;
+  --ob-gray-300: #d4d4d4;
+  --ob-gray-500: #878787;
+  --ob-gray-600: #636363;
+  --ob-gray-900: #1a1a1a;
+  --ob-amber-500: #f2b705;
+  --ob-green-500: #2f9e5f;
+  --ob-blue-50: #f0f6fc;
+  --ob-blue-500: #2271b1;
+  --ob-blue-600: #135e96;
+  --ob-red-500: #d84a3f;
+  --ob-space-2: 8px;
+  --ob-space-3: 12px;
+  --ob-space-4: 16px;
+  --ob-space-5: 20px;
+  --ob-space-6: 24px;
+  --ob-space-8: 32px;
+  --ob-space-10: 40px;
+  --ob-text-xs: 13px;
+  --ob-text-sm: 14px;
+  --ob-text-base: 15px;
+  --ob-text-md: 17px;
+  --ob-text-lg: 18px;
+  --ob-text-xl: 22px;
+  --ob-radius-sm: 6px;
+  --ob-radius-md: 6px;
+  --ob-radius-full: 999px;
+  --ob-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --ob-shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --ob-bg-page: #ffffff;
+  --ob-bg-surface: #ffffff;
+  --ob-bg-muted: var(--ob-gray-50);
+  --ob-bg-hover: var(--ob-gray-50);
+  --ob-bg-selected: var(--ob-blue-50);
+  --ob-border: var(--ob-gray-200);
+  --ob-border-strong: var(--ob-gray-300);
+  --ob-text: var(--ob-gray-900);
+  --ob-text-secondary: var(--ob-gray-600);
+  --ob-text-muted: var(--ob-gray-500);
+  --ob-accent: var(--ob-blue-500);
+  --ob-accent-hover: var(--ob-blue-600);
+  --ob-accent-soft: var(--ob-blue-50);
+  --ob-on-accent: #ffffff;
+  --ob-focus: var(--ob-blue-500);
+  --ob-btn-primary-bg: var(--ob-accent);
+  --ob-btn-primary-hover: var(--ob-accent-hover);
+  --ob-btn-primary-text: var(--ob-on-accent);
+  --ob-scrim: #000000;
 }
 
-.ob-wp-builder::backdrop {
-	background: rgba(0, 0, 0, 0.4);
-}
+/* Settings › OmnaBase in OmnaBase's own settings look (M14 round four; the source: bin/build-css.php puts the kit's tokens above these rules
+   into assets/admin.css). The kit's rules for the classes the screen reuses (page head, line tabs, buttons, cards, rows, More, help list,
+   switch, tables, dialog) are copied from OmnaBase's packages/ui/src/styles (primitives, info, dashboard, settings, forms, listpage), each
+   scoped under the screen's wrapper .ob-wp-settings, then adapted where WordPress's admin styles would otherwise win. Colours come only from
+   the kit's variables; WordPress's system font stays (the kit's typeface is undecided), and there is no dark mode. */
 
-.ob-wp-builder h2 {
-	margin-top: 0;
+/* ---------- the page: white like the kit's, filling WordPress's content area ---------- */
+.ob-wp-settings.wrap {
+  box-sizing: border-box;
+  margin: 0 0 0 -20px;
+  padding: var(--ob-space-6) var(--ob-space-8) var(--ob-space-10);
+  min-height: calc(100vh - 97px);
+  background: var(--ob-bg-page);
+  color: var(--ob-text);
+  font-size: var(--ob-text-base);
+  line-height: 1.5;
 }
+.ob-wp-settings *, .ob-wp-settings *::before, .ob-wp-settings *::after { box-sizing: border-box; }
+.ob-wp-settings p { margin: 0; font-size: inherit; line-height: inherit; }
+.ob-wp-settings p + p { margin-top: var(--ob-space-2); }
+.ob-wp-settings li { margin: 0; }
+.ob-wp-settings a { color: var(--ob-accent); }
+.ob-wp-settings a:hover { color: var(--ob-accent-hover); }
+.ob-wp-settings code { padding: 1px 5px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-sm); background: var(--ob-bg-surface); color: var(--ob-text); font-size: var(--ob-text-xs); word-break: break-all; }
+.ob-wp-settings .description { color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
 
-.ob-wp-builder [hidden] {
-	display: none !important;
+/* ---------- the page head (dashboard.css) ---------- */
+.ob-wp-settings .ob-page__head { display: flex; align-items: flex-start; gap: var(--ob-space-4); margin-bottom: var(--ob-space-6); }
+.ob-wp-settings .ob-page__title { margin: 0; font-size: var(--ob-text-xl); font-weight: 600; letter-spacing: -0.015em; }
+.ob-wp-settings .ob-page__subtitle { margin: 2px 0 0; color: var(--ob-text-secondary); }
+.ob-wp-settings .ob-wp-settings__head { margin-bottom: var(--ob-space-4); }
+.ob-wp-settings .ob-wp-settings__head .ob-page__title { padding: 0; color: var(--ob-text); line-height: 1.3; }
+
+/* ---------- the tab strip: the kit's line tabs (info.css) ---------- */
+.ob-wp-settings .ob-tabs { display: flex; padding: 3px; background: var(--ob-bg-muted); border-radius: var(--ob-radius-sm); }
+.ob-wp-settings .ob-tabs__item { flex: 1; height: 32px; border-radius: var(--ob-radius-sm); font-size: var(--ob-text-sm); font-weight: 500; color: var(--ob-text-secondary); }
+.ob-wp-settings .ob-tabs__item--active { background: var(--ob-accent); color: var(--ob-on-accent); box-shadow: var(--ob-shadow-sm); }
+.ob-wp-settings .ob-tabs__count { margin-left: 6px; font-size: var(--ob-text-xs); color: var(--ob-text-muted); font-variant-numeric: tabular-nums; }
+.ob-wp-settings .ob-tabs__item--active .ob-tabs__count { color: var(--ob-accent); opacity: 0.6; }
+.ob-wp-settings .ob-tabs--line { display: inline-flex; padding: 0; background: none; border-radius: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ob-wp-settings .ob-tabs--line .ob-tabs__item { flex: 0 0 auto; height: 46px; padding: 0 12px; border-radius: var(--ob-radius-md) var(--ob-radius-md) 0 0; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ob-wp-settings .ob-tabs--line .ob-tabs__item--active { background: none; box-shadow: none; color: var(--ob-accent); background: var(--ob-accent-soft); border-bottom-color: var(--ob-accent); }
+/* the strip spans the page with its hairline under it; the tabs are links (each tab its own address), so they lose a link's look */
+.ob-wp-settings .ob-wp-settings__tabs { display: flex; margin-bottom: var(--ob-space-6); box-shadow: inset 0 -1px 0 var(--ob-border); }
+.ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item { display: inline-flex; align-items: center; margin-bottom: 0; white-space: nowrap; text-decoration: none; transition: background 150ms ease-out, color 150ms ease-out; }
+.ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item:hover { color: var(--ob-text); }
+.ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item--active, .ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item--active:hover { color: var(--ob-accent); }
+.ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item:focus { box-shadow: none; outline: none; }
+.ob-wp-settings .ob-wp-settings__tabs .ob-tabs__item:focus-visible { outline: 2px solid var(--ob-focus); outline-offset: -2px; }
+
+/* ---------- WordPress's notices: their own look, spaced like the cards ---------- */
+.ob-wp-settings .notice { max-width: 720px; margin: 0 0 var(--ob-space-4); }
+.ob-wp-settings .ob-form__section .notice { margin: var(--ob-space-3) 0; }
+
+/* ---------- buttons (primitives.css) ---------- */
+.ob-wp-settings .ob-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--ob-space-2);
+  height: 38px; padding: 0 var(--ob-space-4);
+  border-radius: var(--ob-radius-md);
+  font-size: var(--ob-text-sm); font-weight: 600; white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
 }
+.ob-wp-settings .ob-btn--primary { background: var(--ob-btn-primary-bg); color: var(--ob-btn-primary-text); }
+.ob-wp-settings .ob-btn--primary:hover { background: var(--ob-btn-primary-hover); }
+.ob-wp-settings .ob-btn--outline { border-color: var(--ob-border-strong); color: var(--ob-text); background: var(--ob-bg-surface); }
+.ob-wp-settings .ob-btn--outline:hover { background: var(--ob-bg-hover); }
+.ob-wp-settings .ob-btn--sm { height: 32px; padding: 0 var(--ob-space-3); font-size: var(--ob-text-xs); }
+/* a <button> or a link outside the kit's reset */
+.ob-wp-settings .ob-btn { margin: 0; font-family: inherit; line-height: 1; text-decoration: none; vertical-align: middle; cursor: pointer; }
+.ob-wp-settings .ob-btn--primary:hover, .ob-wp-settings .ob-btn--primary:focus { color: var(--ob-btn-primary-text); }
+.ob-wp-settings .ob-btn--outline:hover, .ob-wp-settings .ob-btn--outline:focus { color: var(--ob-text); }
+.ob-wp-settings .ob-btn:focus { box-shadow: none; outline: none; }
+.ob-wp-settings .ob-btn:focus-visible { outline: 2px solid var(--ob-focus); outline-offset: 2px; }
 
-.ob-wp-builder fieldset {
-	margin: 0 0 16px;
+/* ---------- the cards and their column (forms.css, settings.css) ---------- */
+.ob-wp-settings .ob-settings__cards { display: flex; flex-direction: column; gap: var(--ob-space-4); max-width: 720px; }
+.ob-wp-settings .ob-settings__cards > * { flex: 0 0 auto; }
+.ob-wp-settings .ob-wp-settings__cards--activity { max-width: 1040px; }
+.ob-wp-settings .ob-wp-settings__stack { display: flex; flex-direction: column; gap: var(--ob-space-4); margin: 0; }
+.ob-wp-settings .ob-form__section { padding: var(--ob-space-4) var(--ob-space-5) var(--ob-space-5); border: 1px solid var(--ob-border); border-radius: var(--ob-radius-md); background: var(--ob-bg-surface); }
+.ob-wp-settings .ob-form__section { min-width: 0; }
+.ob-wp-settings .ob-form__title { margin: 0 0 4px; font-size: var(--ob-text-md); font-weight: 600; }
+.ob-wp-settings .ob-form__title { padding: 0; color: var(--ob-text); line-height: 1.4; }
+.ob-wp-settings .ob-form__head { display: flex; align-items: center; gap: var(--ob-space-4); }
+.ob-wp-settings .ob-form__head > form { margin-left: auto; }
+.ob-wp-settings .ob-form__intro { margin: 0 0 var(--ob-space-4); color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-form__head + :not(.ob-form__intro) { margin-top: var(--ob-space-2); }
+
+/* ---------- the setting rows (forms.css) ---------- */
+.ob-wp-settings .ob-form-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ob-space-6); padding: var(--ob-space-3) 0; }
+.ob-wp-settings .ob-form-row__text { flex: 1 1 auto; min-width: 0; }
+.ob-wp-settings .ob-form-row__label { font-weight: 500; }
+.ob-wp-settings .ob-form-row__help { color: var(--ob-text-muted); font-size: var(--ob-text-sm); margin-top: 2px; line-height: 1.5; }
+.ob-wp-settings .ob-form-row__control { flex: 0 0 auto; display: flex; align-items: center; gap: var(--ob-space-3); min-width: 220px; justify-content: flex-end; }
+.ob-wp-settings .ob-form-row--stack { flex-direction: column; align-items: stretch; gap: var(--ob-space-2); }
+.ob-wp-settings .ob-form-row--stack .ob-form-row__control { min-width: 0; justify-content: flex-start; flex-wrap: wrap; }
+.ob-wp-settings .ob-form-row__label { display: block; cursor: default; }
+.ob-wp-settings label.ob-form-row__label { cursor: pointer; }
+.ob-wp-settings .ob-form-row__control select,
+.ob-wp-settings .ob-form-row__control input[type="text"] {
+  width: 300px; max-width: 100%; height: 36px; min-height: 36px; margin: 0; padding: 0 10px;
+  border: 1px solid var(--ob-border-strong); border-radius: var(--ob-radius-sm); box-shadow: none;
+  background-color: var(--ob-bg-surface); color: var(--ob-text); font-size: var(--ob-text-sm); line-height: 1.4;
 }
+.ob-wp-settings .ob-form-row__control select { padding-right: 28px; }
+.ob-wp-settings .ob-form-row__control select:focus,
+.ob-wp-settings .ob-form-row__control input[type="text"]:focus { border-color: var(--ob-focus); box-shadow: 0 0 0 1px var(--ob-focus); outline: none; }
+.ob-wp-settings .ob-form-row__control fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ob-wp-settings .ob-wp-settings__choices { display: flex; flex-direction: column; gap: 6px; }
+.ob-wp-settings .ob-wp-settings__choices label { display: flex; align-items: center; gap: var(--ob-space-2); }
+/* a list of ticks (forums, user fields): two columns, one on a phone */
+.ob-wp-settings .ob-wp-settings__checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ob-space-2) var(--ob-space-6); width: 100%; }
+.ob-wp-settings .ob-wp-settings__checklist label { display: flex; align-items: center; gap: var(--ob-space-2); min-width: 0; }
+.ob-wp-settings .ob-wp-settings__checklist .description { font-size: var(--ob-text-xs); color: var(--ob-text-muted); }
+.ob-wp-settings .ob-wp-settings__checklist code { overflow: hidden; padding: 0; border: 0; background: none; color: var(--ob-text); font-size: var(--ob-text-sm); text-overflow: ellipsis; white-space: nowrap; word-break: normal; }
+.ob-wp-settings input[type="checkbox"]:not(.ob-switch), .ob-wp-settings input[type="radio"] { margin: 0; border-color: var(--ob-border-strong); box-shadow: none; }
 
-.ob-wp-builder legend {
-	margin-bottom: 8px;
-	font-weight: 600;
+/* ---------- the switch (forms.css), over WordPress's tick box ---------- */
+.ob-wp-settings .ob-switch { appearance: none; width: 38px; height: 22px; border-radius: var(--ob-radius-full); background: var(--ob-border-strong); position: relative; cursor: pointer; transition: background 150ms ease-out; flex: 0 0 auto; }
+.ob-wp-settings .ob-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--ob-bg-surface); box-shadow: var(--ob-shadow-sm); transition: transform 150ms ease-out; }
+.ob-wp-settings .ob-switch:checked { background: var(--ob-accent); }
+.ob-wp-settings .ob-switch:checked::after { transform: translateX(16px); background: var(--ob-on-accent); }
+.ob-wp-settings .ob-switch:focus-visible { outline: 2px solid var(--ob-focus); outline-offset: 2px; }
+.ob-wp-settings .ob-switch { min-width: 38px; margin: 0; border: 0; box-shadow: none; }
+.ob-wp-settings .ob-switch:checked::before { content: none; }
+.ob-wp-settings .ob-switch:focus { border: 0; box-shadow: none; }
+
+/* ---------- rules as a list, and More (forms.css) ---------- */
+.ob-wp-settings .ob-help-list { margin: var(--ob-space-2) 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 2px; }
+.ob-wp-settings .ob-help-list__item { padding-left: 2px; }
+.ob-wp-settings .ob-help-list { list-style: disc; color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-more { margin-top: var(--ob-space-2); }
+.ob-wp-settings .ob-more__toggle { width: fit-content; cursor: pointer; color: var(--ob-text-secondary); font-size: var(--ob-text-sm); font-weight: 500; transition: color 150ms ease-out; }
+.ob-wp-settings .ob-more__toggle:hover { color: var(--ob-text); }
+.ob-wp-settings .ob-more__toggle:focus-visible { outline: 2px solid var(--ob-focus); outline-offset: 2px; border-radius: 2px; }
+.ob-wp-settings .ob-more__body { margin-top: var(--ob-space-2); padding: var(--ob-space-3) var(--ob-space-4); border-radius: var(--ob-radius-sm); background: var(--ob-bg-muted); color: var(--ob-text-secondary); font-size: var(--ob-text-sm); line-height: 1.55; }
+.ob-wp-settings .ob-more__body > :first-child { margin-top: 0; }
+.ob-wp-settings .ob-more__body > :last-child { margin-bottom: 0; }
+/* the summary draws its own chevron instead of the browser's triangle */
+.ob-wp-settings .ob-more__toggle { display: flex; align-items: center; gap: var(--ob-space-2); list-style: none; }
+.ob-wp-settings .ob-more__toggle::-webkit-details-marker { display: none; }
+.ob-wp-settings .ob-more__toggle::before { content: ""; flex: none; width: 7px; height: 7px; margin: 0 3px 0 1px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform 150ms ease-out; }
+.ob-wp-settings .ob-more[open] > .ob-more__toggle::before { transform: translateY(-2px) rotate(45deg); }
+.ob-wp-settings .ob-more__body > * + * { margin-top: var(--ob-space-2); }
+.ob-wp-settings .ob-more__body .ob-form-row { padding-bottom: 0; }
+
+/* ---------- tables (listpage.css): the outbox, what OmnaBase sent, the checks ---------- */
+.ob-wp-settings .ob-dtable-card { border: 1px solid var(--ob-border); border-radius: var(--ob-radius-md); overflow-x: auto; overflow-y: hidden; }
+.ob-wp-settings .ob-dtable-card .ob-dtable tbody tr:last-child td { border-bottom: 0; }
+.ob-wp-settings .ob-dtable { width: 100%; border-collapse: collapse; font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-dtable th { text-align: left; white-space: nowrap; padding: 10px var(--ob-space-3); border-bottom: 1px solid var(--ob-border); font-size: var(--ob-text-xs); font-weight: 600; color: var(--ob-text-secondary); background: var(--ob-bg-surface); }
+.ob-wp-settings .ob-dtable td { padding: 12px var(--ob-space-3); border-bottom: 1px solid var(--ob-border); vertical-align: middle; color: var(--ob-text); }
+.ob-wp-settings .ob-dtable-card .ob-dtable tbody tr:last-child th { border-bottom: 0; }
+.ob-wp-settings .ob-dtable tbody th { color: var(--ob-text); font-size: var(--ob-text-sm); font-weight: 500; background: none; }
+.ob-wp-settings .ob-wp-settings__table { margin-top: var(--ob-space-3); background: var(--ob-bg-surface); }
+.ob-wp-settings .ob-wp-settings__row-actions { white-space: nowrap; text-align: right; }
+.ob-wp-settings .ob-wp-settings__row-actions .ob-wp-settings__form + .ob-wp-settings__form { margin-left: 6px; }
+.ob-wp-settings .ob-dtable .ob-more { margin-top: 0; }
+/* the outbox and the deliveries keep readable columns on a phone: their card scrolls sideways instead */
+.ob-wp-settings .ob-wp-settings__outbox .ob-dtable, .ob-wp-settings .ob-wp-settings__deliveries .ob-dtable { min-width: 640px; }
+.ob-wp-settings .ob-wp-settings__deliveries .ob-dtable td:first-child { white-space: nowrap; }
+
+/* ---------- the screen's own pieces ---------- */
+.ob-wp-settings .ob-wp-settings__form { display: inline-flex; margin: 0; }
+.ob-wp-settings .ob-wp-settings__buttons { display: flex; flex-wrap: wrap; gap: var(--ob-space-2); margin-top: var(--ob-space-4); }
+.ob-wp-settings .ob-wp-settings__actions { display: flex; flex-wrap: wrap; gap: var(--ob-space-2); margin: 0; }
+.ob-wp-settings .ob-wp-settings__version { margin-top: var(--ob-space-6); color: var(--ob-text-muted); font-size: var(--ob-text-xs); }
+.ob-wp-settings .ob-wp-settings__projects, .ob-wp-settings .ob-wp-settings__facts-call { color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-wp-settings__unsupported { margin-left: 4px; font-weight: 500; color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-wp-settings__forum-warning, .ob-wp-settings .ob-wp-settings__facts-dropped { margin-top: var(--ob-space-3); padding: var(--ob-space-3) var(--ob-space-4); border-radius: var(--ob-radius-sm); background: var(--ob-bg-muted); color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-wp-settings__forum-rules { margin-bottom: var(--ob-space-2); }
+.ob-wp-settings .ob-wp-settings__builder { margin: 0 0 var(--ob-space-2); }
+
+/* the state lines: a coloured dot before the words (the kit's green and red; amber while waiting, gray before the first check) */
+.ob-wp-settings .ob-wp-settings__status { display: flex; align-items: flex-start; gap: var(--ob-space-2); }
+.ob-wp-settings .ob-wp-settings__status .ob-wp-settings__dot { margin-top: 0.55em; }
+.ob-wp-settings .ob-wp-settings__dot,
+.ob-wp-settings .ob-wp-settings__connected > strong::before,
+.ob-wp-settings .ob-wp-settings__error > strong::before { content: ""; display: inline-block; flex: none; width: 8px; height: 8px; border-radius: var(--ob-radius-full); background: var(--ob-border-strong); }
+.ob-wp-settings .ob-wp-settings__connected > strong::before { margin-right: var(--ob-space-2); vertical-align: 1px; background: var(--ob-green-500); }
+.ob-wp-settings .ob-wp-settings__error > strong::before { margin-right: var(--ob-space-2); vertical-align: 1px; background: var(--ob-red-500); }
+.ob-wp-settings [data-status="ok"] .ob-wp-settings__dot { background: var(--ob-green-500); }
+.ob-wp-settings [data-status="failed"] .ob-wp-settings__dot { background: var(--ob-red-500); }
+.ob-wp-settings [data-status="waiting"] .ob-wp-settings__dot { background: var(--ob-amber-500); }
+.ob-wp-settings .ob-wp-settings__error { color: var(--ob-text); }
+.ob-wp-settings .ob-wp-settings__connection .description, .ob-wp-settings .ob-wp-settings__connection .ob-wp-settings__projects { margin-top: 2px; }
+
+/* the setup line's steps: a numbered circle, filled and ticked once done */
+.ob-wp-settings .ob-wp-settings__steps { display: flex; flex-wrap: wrap; gap: var(--ob-space-3) var(--ob-space-6); margin: 0; padding: 0; list-style: none; counter-reset: ob-wp-step; }
+.ob-wp-settings .ob-wp-settings__step { display: flex; align-items: center; gap: var(--ob-space-2); counter-increment: ob-wp-step; }
+.ob-wp-settings .ob-wp-settings__step-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid var(--ob-border-strong); border-radius: var(--ob-radius-full); color: var(--ob-on-accent); font-size: var(--ob-text-xs); font-weight: 600; line-height: 1; }
+.ob-wp-settings .ob-wp-settings__step[data-done="0"] .ob-wp-settings__step-mark::before { content: counter(ob-wp-step); color: var(--ob-text-secondary); }
+.ob-wp-settings .ob-wp-settings__step[data-done="1"] .ob-wp-settings__step-mark { border-color: var(--ob-accent); background: var(--ob-accent); }
+.ob-wp-settings .ob-wp-settings__step a { color: var(--ob-text); font-weight: 500; text-decoration: none; }
+.ob-wp-settings .ob-wp-settings__step a:hover { color: var(--ob-accent); }
+.ob-wp-settings .ob-wp-settings__step[data-done="1"] a { color: var(--ob-text-muted); }
+
+/* the outbox's counts: three small chips */
+.ob-wp-settings .ob-wp-settings__outbox-counts { display: flex; flex-wrap: wrap; gap: var(--ob-space-2); margin: 0; padding: 0; list-style: none; }
+.ob-wp-settings .ob-wp-settings__outbox-counts li { padding: 3px 10px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-sm); background: var(--ob-bg-muted); color: var(--ob-text-secondary); font-size: var(--ob-text-xs); font-variant-numeric: tabular-nums; }
+.ob-wp-settings .ob-wp-settings__outbox-topics { margin-top: var(--ob-space-3); color: var(--ob-text-secondary); font-size: var(--ob-text-sm); }
+
+/* ---------- the shortcode builder: a kit dialog (settings.css) over a dimmed page ---------- */
+.ob-wp-settings .ob-dialog { max-width: 100%; background: var(--ob-bg-surface); border: 1px solid var(--ob-border-strong); border-radius: var(--ob-radius-md); box-shadow: var(--ob-shadow-md); }
+.ob-wp-settings .ob-dialog__head { position: relative; padding: var(--ob-space-5) var(--ob-space-6) 0; padding-right: 56px; }
+.ob-wp-settings .ob-dialog__title { margin: 0; font-size: var(--ob-text-lg); font-weight: 600; letter-spacing: -0.01em; }
+.ob-wp-settings .ob-dialog__body { padding: var(--ob-space-4) var(--ob-space-6); display: flex; flex-direction: column; gap: var(--ob-space-3); }
+.ob-wp-settings .ob-dialog__foot { display: flex; align-items: center; gap: var(--ob-space-2); padding: var(--ob-space-3) var(--ob-space-6); border-top: 1px solid var(--ob-border); background: var(--ob-bg-muted); border-radius: 0 0 var(--ob-radius-md) var(--ob-radius-md); }
+.ob-wp-settings .ob-dialog__foot .ob-btn { flex: none; }
+.ob-wp-settings .ob-dialog__input { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-sm); font: inherit; color: var(--ob-text); background: var(--ob-bg-surface); }
+.ob-wp-settings .ob-dialog__input:focus { outline: none; border-color: var(--ob-accent); box-shadow: none; }
+.ob-wp-settings .ob-wp-builder { width: calc(100% - 32px); max-width: 560px; padding: 0; color: var(--ob-text); font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-wp-builder::backdrop { background: var(--ob-scrim); opacity: 0.28; }
+.ob-wp-settings .ob-wp-builder [hidden] { display: none !important; }
+.ob-wp-settings .ob-wp-builder .ob-dialog__title { padding: 0; color: var(--ob-text); line-height: 1.4; }
+.ob-wp-settings .ob-wp-builder .ob-dialog__input { font-size: var(--ob-text-sm); }
+.ob-wp-settings .ob-wp-builder fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ob-wp-settings .ob-wp-builder legend { margin-bottom: 6px; padding: 0; font-weight: 600; }
+.ob-wp-settings .ob-wp-builder__row label { display: block; margin-bottom: 6px; font-weight: 600; }
+.ob-wp-settings .ob-wp-builder fieldset label { display: flex; align-items: center; gap: var(--ob-space-2); margin: 4px 0; font-weight: 400; }
+.ob-wp-settings .ob-wp-builder__card { align-items: flex-start; margin: 0 0 var(--ob-space-2); padding: 11px 12px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-sm); background: var(--ob-bg-surface); cursor: pointer; }
+.ob-wp-settings .ob-wp-builder__card input { margin-top: 2px; }
+.ob-wp-settings .ob-wp-builder__card:has(input:checked) { border-color: var(--ob-accent); background: var(--ob-bg-selected); }
+.ob-wp-settings .ob-wp-builder__copy { display: flex; align-items: center; gap: var(--ob-space-3); }
+.ob-wp-settings .ob-wp-builder__copied { color: var(--ob-text-secondary); }
+.ob-wp-settings .ob-wp-builder__existing { padding: var(--ob-space-3) var(--ob-space-4); border-radius: var(--ob-radius-sm); background: var(--ob-bg-selected); }
+.ob-wp-settings .ob-wp-builder__existing p + p { margin-top: var(--ob-space-2); }
+.ob-wp-settings .ob-wp-builder__actions { flex-wrap: wrap; }
+
+/* ---------- a phone (WordPress's admin narrows at 782px, the kit's rows stack under 768px) ---------- */
+@media (max-width: 782px) {
+  .ob-wp-settings.wrap { margin: 0 0 0 -10px; padding: var(--ob-space-4); min-height: calc(100vh - 111px); }
 }
-
-.ob-wp-builder__card {
-	display: flex;
-	gap: 8px;
-	align-items: flex-start;
-	margin-bottom: 8px;
-	padding: 12px;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	cursor: pointer;
-}
-
-.ob-wp-builder__card:has(input:checked) {
-	border-color: #2271b1;
-	box-shadow: 0 0 0 1px #2271b1;
-}
-
-.ob-wp-builder__row label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: 600;
-}
-
-.ob-wp-builder fieldset label {
-	display: block;
-	margin: 4px 0;
-	font-weight: 400;
-}
-
-.ob-wp-builder__existing {
-	margin: 16px 0;
-	padding: 4px 12px;
-	border-left: 4px solid #72aee6;
-	background: #f0f6fc;
-}
-
-.ob-wp-builder__actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	margin-bottom: 0;
+@media (max-width: 767px) {
+  .ob-wp-settings .ob-form-row { flex-direction: column; align-items: stretch; gap: var(--ob-space-2); }
+  .ob-wp-settings .ob-form-row__control > .ob-switch { align-self: flex-start; flex: none; }
+  .ob-wp-settings .ob-form-row__control { min-width: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .ob-wp-settings .ob-form-row__control input, .ob-wp-settings .ob-form-row__control textarea, .ob-wp-settings .ob-form-row__control > span { max-width: 100%; }
+  .ob-wp-settings .ob-tabs--line { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .ob-wp-settings .ob-dialog__foot { flex-wrap: wrap; }
+  .ob-wp-settings .ob-form-row__control select, .ob-wp-settings .ob-form-row__control input[type="text"] { width: 100%; }
+  .ob-wp-settings .ob-wp-settings__checklist { grid-template-columns: minmax(0, 1fr); }
+  .ob-wp-settings .ob-form__section { padding: var(--ob-space-4); }
+  .ob-wp-settings .ob-wp-settings__tabs { margin-bottom: var(--ob-space-4); }
 }

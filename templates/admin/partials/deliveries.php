@@ -24,31 +24,33 @@ $omnabase_outcomes = array(
 	'refused' => __( 'Not done yet (topic gone, nobody chosen to answer on the forum, or not saved), OmnaBase retries', 'omnabase' ),
 );
 ?>
-<div class="ob-wp-settings__deliveries">
-	<h2><?php esc_html_e( 'What OmnaBase sent here', 'omnabase' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'The last 20 calls OmnaBase made to this site, newest first.', 'omnabase' ); ?></p>
+<section class="ob-form__section ob-wp-settings__deliveries">
+	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'What OmnaBase sent here', 'omnabase' ); ?></h2></div>
+	<div class="ob-form__intro"><?php esc_html_e( 'The last 20 calls OmnaBase made to this site, newest first.', 'omnabase' ); ?></div>
 	<?php if ( array() === $omnabase_deliveries ) : ?>
 		<p><?php esc_html_e( 'Nothing yet.', 'omnabase' ); ?></p>
 	<?php else : ?>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th scope="col"><?php esc_html_e( 'Time', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'What happened', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Ticket', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'What the plugin did', 'omnabase' ); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-			<?php foreach ( $omnabase_deliveries as $omnabase_row ) : ?>
-				<tr>
-					<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $omnabase_row['at'] ) ); ?></td>
-					<td><?php echo esc_html( $omnabase_events[ $omnabase_row['event'] ] ?? __( 'Something else', 'omnabase' ) ); ?></td>
-					<td><?php echo esc_html( null !== $omnabase_row['ticket'] ? '#' . $omnabase_row['ticket'] : '—' ); ?></td>
-					<td><?php echo esc_html( $omnabase_outcomes[ $omnabase_row['outcome'] ] ?? $omnabase_row['outcome'] ); ?></td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
+		<div class="ob-dtable-card ob-wp-settings__table">
+			<table class="ob-dtable">
+				<thead>
+					<tr>
+						<th scope="col"><?php esc_html_e( 'Time', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'What happened', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Ticket', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'What the plugin did', 'omnabase' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ( $omnabase_deliveries as $omnabase_row ) : ?>
+					<tr>
+						<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $omnabase_row['at'] ) ); ?></td>
+						<td><?php echo esc_html( $omnabase_events[ $omnabase_row['event'] ] ?? __( 'Something else', 'omnabase' ) ); ?></td>
+						<td><?php echo esc_html( null !== $omnabase_row['ticket'] ? '#' . $omnabase_row['ticket'] : '—' ); ?></td>
+						<td><?php echo esc_html( $omnabase_outcomes[ $omnabase_row['outcome'] ] ?? $omnabase_row['outcome'] ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
 	<?php endif; ?>
-</div>
+</section>

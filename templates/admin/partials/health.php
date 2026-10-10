@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings › OmnaBase: the status block (one plain line from the last "Check connection", the timer warning, and behind the tab's one
+ * Settings › OmnaBase: the status card (one plain line with a coloured dot from the last "Check connection", the timer warning, and behind the tab's one
  * "Details" what the key may do, its last four, the three directions and the last customer-data call). Included by the Connection tab.
  *
  * @package OmnaBase
@@ -24,8 +24,9 @@ $omnabase_words  = array(
 	'unknown' => __( 'Unknown', 'omnabase' ),
 );
 ?>
-<div class="ob-wp-settings__health" data-status="<?php echo esc_attr( $omnabase_status['tone'] ); ?>">
-	<p class="ob-wp-settings__status"><strong><?php echo esc_html( $omnabase_status['words'] ); ?></strong></p>
+<section class="ob-form__section ob-wp-settings__health" data-status="<?php echo esc_attr( $omnabase_status['tone'] ); ?>">
+	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'Status', 'omnabase' ); ?></h2></div>
+	<p class="ob-wp-settings__status"><span class="ob-wp-settings__dot" aria-hidden="true"></span><strong><?php echo esc_html( $omnabase_status['words'] ); ?></strong></p>
 
 	<?php if ( $omnabase_health['cronOff'] ) : ?>
 		<div class="notice notice-warning inline ob-wp-settings__cron">
@@ -33,45 +34,49 @@ $omnabase_words  = array(
 		</div>
 	<?php endif; ?>
 
-	<details class="ob-wp-settings__details">
-		<summary><?php esc_html_e( 'Details', 'omnabase' ); ?></summary>
-		<?php
-		if ( 'connected' === $omnabase_connection['state'] ) {
-			require __DIR__ . '/connection-details.php';
-		}
-		?>
-		<?php if ( $omnabase_health['checked'] ) : ?>
-			<p class="description">
+	<details class="ob-more ob-wp-settings__details">
+		<summary class="ob-more__toggle"><?php esc_html_e( 'Details', 'omnabase' ); ?></summary>
+		<div class="ob-more__body">
+			<?php
+			if ( 'connected' === $omnabase_connection['state'] ) {
+				require __DIR__ . '/connection-details.php';
+			}
+			?>
+			<?php if ( $omnabase_health['checked'] ) : ?>
+				<p class="description">
+					<?php
+					/* translators: %s: when the last check ran. */
+					echo esc_html( sprintf( __( 'Last checked %s.', 'omnabase' ), wp_date( 'Y-m-d H:i', $omnabase_health['at'] ) ) );
+					?>
+				</p>
+				<div class="ob-dtable-card ob-wp-settings__table">
+					<table class="ob-dtable ob-wp-settings__checks">
+						<tbody>
+						<?php foreach ( $omnabase_health['results'] as $omnabase_check => $omnabase_result ) : ?>
+							<tr data-check="<?php echo esc_attr( $omnabase_check ); ?>" data-result="<?php echo esc_attr( $omnabase_result['result'] ); ?>">
+								<th scope="row"><?php echo esc_html( $omnabase_labels[ $omnabase_check ] ?? $omnabase_check ); ?></th>
+								<td><strong><?php echo esc_html( $omnabase_words[ $omnabase_result['result'] ] ?? $omnabase_result['result'] ); ?></strong></td>
+								<td><?php echo esc_html( $omnabase_result['message'] ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
+			<p class="ob-wp-settings__facts-call">
 				<?php
-				/* translators: %s: when the last check ran. */
-				echo esc_html( sprintf( __( 'Last checked %s.', 'omnabase' ), wp_date( 'Y-m-d H:i', $omnabase_health['at'] ) ) );
+				echo esc_html(
+					$omnabase_health['factsAt'] > 0
+						/* translators: %s: date and time of OmnaBase's last customer-data call. */
+						? sprintf( __( 'Last customer-data call from OmnaBase: %s.', 'omnabase' ), wp_date( 'Y-m-d H:i', $omnabase_health['factsAt'] ) )
+						: __( 'No customer-data call from OmnaBase yet.', 'omnabase' )
+				);
 				?>
 			</p>
-			<table class="widefat striped ob-wp-settings__checks">
-				<tbody>
-				<?php foreach ( $omnabase_health['results'] as $omnabase_check => $omnabase_result ) : ?>
-					<tr data-check="<?php echo esc_attr( $omnabase_check ); ?>" data-result="<?php echo esc_attr( $omnabase_result['result'] ); ?>">
-						<th scope="row"><?php echo esc_html( $omnabase_labels[ $omnabase_check ] ?? $omnabase_check ); ?></th>
-						<td><strong><?php echo esc_html( $omnabase_words[ $omnabase_result['result'] ] ?? $omnabase_result['result'] ); ?></strong></td>
-						<td><?php echo esc_html( $omnabase_result['message'] ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-		<?php endif; ?>
-		<p class="ob-wp-settings__facts-call">
-			<?php
-			echo esc_html(
-				$omnabase_health['factsAt'] > 0
-					/* translators: %s: date and time of OmnaBase's last customer-data call. */
-					? sprintf( __( 'Last customer-data call from OmnaBase: %s.', 'omnabase' ), wp_date( 'Y-m-d H:i', $omnabase_health['factsAt'] ) )
-					: __( 'No customer-data call from OmnaBase yet.', 'omnabase' )
-			);
-			?>
-		</p>
+		</div>
 	</details>
 
 	<?php if ( $omnabase_health['waiting'] ) : ?>
 		<?php wp_print_inline_script_tag( 'setTimeout(function(){window.location.reload();},3000);' ); ?>
 	<?php endif; ?>
-</div>
+</section>

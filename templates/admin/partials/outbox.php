@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings › OmnaBase: the outbox section, "On its way to OmnaBase" (what waits, what needs attention; Send now, Retry and Discard), its
+ * Settings › OmnaBase: the outbox card, "On its way to OmnaBase" (what waits, what needs attention; Send now, Retry and Discard), its
  * rows' last answer from OmnaBase behind "Details". Included by the Activity tab.
  *
  * @package OmnaBase
@@ -13,9 +13,9 @@ defined( 'ABSPATH' ) || exit;
 $omnabase_counts = $omnabase_outbox['counts'];
 $omnabase_topics = $omnabase_outbox['topics'];
 ?>
-<div class="ob-wp-settings__outbox">
-	<h2><?php esc_html_e( 'On its way to OmnaBase', 'omnabase' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'What this site still has to send to OmnaBase, tried every minute until it goes; nothing is dropped without you.', 'omnabase' ); ?></p>
+<section class="ob-form__section ob-wp-settings__outbox">
+	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'On its way to OmnaBase', 'omnabase' ); ?></h2></div>
+	<div class="ob-form__intro"><?php esc_html_e( 'What this site still has to send to OmnaBase, tried every minute until it goes; nothing is dropped without you.', 'omnabase' ); ?></div>
 	<ul class="ob-wp-settings__outbox-counts">
 		<li>
 			<?php
@@ -50,59 +50,61 @@ $omnabase_topics = $omnabase_outbox['topics'];
 		</p>
 	<?php endif; ?>
 	<?php if ( array() !== $omnabase_outbox['rows'] ) : ?>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th scope="col"><?php esc_html_e( 'Call', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'About', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'State', 'omnabase' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Last answer', 'omnabase' ); ?></th>
-					<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'omnabase' ); ?></span></th>
-				</tr>
-			</thead>
-			<tbody>
-			<?php foreach ( $omnabase_outbox['rows'] as $omnabase_row ) : ?>
-				<tr>
-					<td><?php echo esc_html( $omnabase_row['kind'] ); ?></td>
-					<td><?php echo esc_html( $omnabase_row['user'] ); ?></td>
-					<td>
-						<?php
-						echo esc_html(
-							'attention' === $omnabase_row['state']
-								? __( 'Needs attention', 'omnabase' )
-								/* translators: %s: date and time of the next try. */
-								: sprintf( __( 'Waiting, next try %s', 'omnabase' ), wp_date( 'Y-m-d H:i', (int) $omnabase_row['nextAt'] ) )
-						);
-						?>
-					</td>
-					<td>
-						<?php if ( '' !== $omnabase_row['reason'] ) : ?>
-							<details class="ob-wp-settings__details">
-								<summary><?php esc_html_e( 'Details', 'omnabase' ); ?></summary>
-								<?php echo esc_html( $omnabase_row['reason'] ); ?>
-							</details>
-						<?php else : ?>
-							—
-						<?php endif; ?>
-					</td>
-					<td>
-						<?php
-						$omnabase_actions = 'attention' === $omnabase_row['state']
-							? array( 'omnabase_outbox_retry' => __( 'Retry', 'omnabase' ), 'omnabase_outbox_discard' => __( 'Discard', 'omnabase' ) )
-							: array( 'omnabase_outbox_send_now' => __( 'Send now', 'omnabase' ) );
-						?>
-						<?php foreach ( $omnabase_actions as $omnabase_action => $omnabase_label ) : ?>
-							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
-								<input type="hidden" name="action" value="<?php echo esc_attr( $omnabase_action ); ?>">
-								<input type="hidden" name="row" value="<?php echo esc_attr( (string) $omnabase_row['id'] ); ?>">
-								<?php wp_nonce_field( $omnabase_action ); ?>
-								<button type="submit" class="button button-small"><?php echo esc_html( $omnabase_label ); ?></button>
-							</form>
-						<?php endforeach; ?>
-					</td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
+		<div class="ob-dtable-card ob-wp-settings__table">
+			<table class="ob-dtable">
+				<thead>
+					<tr>
+						<th scope="col"><?php esc_html_e( 'Call', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'About', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'State', 'omnabase' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Last answer', 'omnabase' ); ?></th>
+						<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'omnabase' ); ?></span></th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ( $omnabase_outbox['rows'] as $omnabase_row ) : ?>
+					<tr>
+						<td><?php echo esc_html( $omnabase_row['kind'] ); ?></td>
+						<td><?php echo esc_html( $omnabase_row['user'] ); ?></td>
+						<td>
+							<?php
+							echo esc_html(
+								'attention' === $omnabase_row['state']
+									? __( 'Needs attention', 'omnabase' )
+									/* translators: %s: date and time of the next try. */
+									: sprintf( __( 'Waiting, next try %s', 'omnabase' ), wp_date( 'Y-m-d H:i', (int) $omnabase_row['nextAt'] ) )
+							);
+							?>
+						</td>
+						<td>
+							<?php if ( '' !== $omnabase_row['reason'] ) : ?>
+								<details class="ob-more ob-wp-settings__details">
+									<summary class="ob-more__toggle"><?php esc_html_e( 'Details', 'omnabase' ); ?></summary>
+									<div class="ob-more__body"><?php echo esc_html( $omnabase_row['reason'] ); ?></div>
+								</details>
+							<?php else : ?>
+								—
+							<?php endif; ?>
+						</td>
+						<td>
+							<?php
+							$omnabase_actions = 'attention' === $omnabase_row['state']
+								? array( 'omnabase_outbox_retry' => __( 'Retry', 'omnabase' ), 'omnabase_outbox_discard' => __( 'Discard', 'omnabase' ) )
+								: array( 'omnabase_outbox_send_now' => __( 'Send now', 'omnabase' ) );
+							?>
+							<?php foreach ( $omnabase_actions as $omnabase_action => $omnabase_label ) : ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ob-wp-settings__form">
+									<input type="hidden" name="action" value="<?php echo esc_attr( $omnabase_action ); ?>">
+									<input type="hidden" name="row" value="<?php echo esc_attr( (string) $omnabase_row['id'] ); ?>">
+									<?php wp_nonce_field( $omnabase_action ); ?>
+									<button type="submit" class="ob-btn ob-btn--outline ob-btn--sm"><?php echo esc_html( $omnabase_label ); ?></button>
+								</form>
+							<?php endforeach; ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
 	<?php endif; ?>
-</div>
+</section>

@@ -13,5 +13,5 @@ defined( 'ABSPATH' ) || exit;
 <form method="post" action="<?php echo esc_url( $omnabase_action_url ); ?>" class="ob-wp-settings__form">
 	<input type="hidden" name="action" value="omnabase_disconnect">
 	<?php wp_nonce_field( 'omnabase_disconnect' ); ?>
-	<?php submit_button( __( 'Forget this connection', 'omnabase' ), 'secondary', 'submit', false ); ?>
+	<button type="submit" class="ob-btn ob-btn--outline"><?php esc_html_e( 'Forget this connection', 'omnabase' ); ?></button>
 </form>

@@ -1,4 +1,4 @@
-/* The front end's own rules, the shortcode form's and (round five) the message centre's (the source; bin/build-form-css.php puts the kit's tokens above them into assets/form.css).
+/* The front end's own rules, the shortcode form's and (round five) the message centre's (the source; bin/build-css.php puts the kit's tokens above them into assets/form.css).
    Every rule names the plugin's own classes inside .ob-wp (where the variables live), so the theme's own styles are never touched; the
    theme's font and text colour carry through. */
 

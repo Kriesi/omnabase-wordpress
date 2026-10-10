@@ -1,5 +1,13 @@
 <?php
 /**
+ * M14 ROUND FOUR, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order of 2026-10-10 replaces WordPress's tab and
+ * button look with OmnaBase's kit (the tab strip becomes the kit's line tabs, the buttons the kit's), so the three readers that named
+ * WordPress's classes now name the kit's: `navTabs()` reads the links with `ob-tabs__item` (was `nav-tab`), `openTabs()` the ones with
+ * `ob-tabs__item--active` (was `nav-tab-active`), `submitsOf()` calls a button primary when it carries `ob-btn--primary` (was
+ * `button-primary`). Each reader asks the same question as before of the new markup; no assertion anywhere changed, and a leftover WordPress
+ * class no longer counts (round four's own tests ban those classes outright). The class names come from the kit and may be renamed with
+ * `AdminLookShapes`.
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the settings screen becomes five tabs and renders only the open
  * one (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1, S3), so every test that reads a section must open its tab first.
  * Added below `renderScreen()` (which stays as it was: the address without a tab, so the Connection tab): `openTab( $tab )` renders the
@@ -502,7 +510,7 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 	 */
 	protected static function navTabs( string $html ): array {
 		$out = array();
-		foreach ( self::query( $html, '//a[' . self::hasClass( 'nav-tab' ) . ']' ) as $a ) {
+		foreach ( self::query( $html, '//a[' . self::hasClass( 'ob-tabs__item' ) . ']' ) as $a ) {
 			parse_str( (string) wp_parse_url( html_entity_decode( (string) $a->getAttribute( 'href' ) ), PHP_URL_QUERY ), $q );
 			$out[ (string) ( $q['tab'] ?? '' ) ] = self::wordsOf( $a );
 		}
@@ -512,7 +520,7 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 	/** The slugs of the tab links marked open. */
 	protected static function openTabs( string $html ): array {
 		$out = array();
-		foreach ( self::query( $html, '//a[' . self::hasClass( 'nav-tab' ) . ' and ' . self::hasClass( 'nav-tab-active' ) . ']' ) as $a ) {
+		foreach ( self::query( $html, '//a[' . self::hasClass( 'ob-tabs__item' ) . ' and ' . self::hasClass( 'ob-tabs__item--active' ) . ']' ) as $a ) {
 			parse_str( (string) wp_parse_url( html_entity_decode( (string) $a->getAttribute( 'href' ) ), PHP_URL_QUERY ), $q );
 			$out[] = (string) ( $q['tab'] ?? '' );
 		}
@@ -530,7 +538,7 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 		foreach ( ( new \DOMXPath( $form->ownerDocument ) )->query( ".//button[not(@type) or @type='submit'] | .//input[@type='submit']", $form ) as $b ) {
 			$out[] = array(
 				'words'   => 'input' === $b->nodeName ? trim( (string) $b->getAttribute( 'value' ) ) : self::wordsOf( $b ),
-				'primary' => (bool) preg_match( '/(^|\s)button-primary(\s|$)/', (string) $b->getAttribute( 'class' ) ),
+				'primary' => (bool) preg_match( '/(^|\s)ob-btn--primary(\s|$)/', (string) $b->getAttribute( 'class' ) ),
 			);
 		}
 		return $out;

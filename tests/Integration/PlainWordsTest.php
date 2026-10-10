@@ -115,12 +115,16 @@ final class PlainWordsTest extends TabsTestCase {
 	 *   fewer (shortcode tags not counted).
 	 * Fails when: a tab grows a paragraph an owner will not read.
 	 *
+	 * M14 round four, the red team: adjusted, not weakened. Round four's markup may write a card's intro and a row's help as `div`s (the
+	 * kit's `ob-form__intro` and `ob-form-row__help`) and the page head's subtitle as `ob-page__subtitle`; those are counted too, so the rule
+	 * reaches every description it reached before and the new ones. Nothing was taken out of the count.
+	 *
 	 * @dataProvider tabs
 	 */
 	public function test_every_description_on_every_tab_has_at_most_30_words( string $tab ): void {
 		$this->busySite();
 		$html  = $this->openTab( $tab );
-		$lines = self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ']' );
+		$lines = self::query( $html, '//*[' . self::hasClass( 'ob-wp-settings' ) . ']//*[self::p or self::li or ' . self::hasClass( 'description' ) . ' or ' . self::hasClass( 'ob-form__intro' ) . ' or ' . self::hasClass( 'ob-form-row__help' ) . ' or ' . self::hasClass( 'ob-page__subtitle' ) . ']' );
 		$this->assertGreaterThan( 0, $lines->length, "the {$tab} tab has lines to count" );
 		foreach ( $lines as $line ) {
 			$words = self::wordsOf( $line );

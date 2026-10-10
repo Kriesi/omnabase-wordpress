@@ -1,5 +1,9 @@
 <?php
 /**
+ * M14 ROUND FOUR, THE RED TEAM: ADJUSTED, NOT WEAKENED (comment only). The tab links are now the kit's line tabs (`ob-tabs__item`, the open
+ * one `ob-tabs__item--active`; see `RoundOneTestCase`'s readers), not WordPress's `nav-tab`; the words and shapes below describe round one's
+ * markup and stay as its record. No code in this file changed.
+ *
  * M14 round one, the red team's helpers for the tabbed settings screen (inside wp-env's tests WordPress, every run).
  *
  * Brief (OmnaBase `docs/briefs/m14-settings-cleanup.md`, draft 2) choice 1: "Five tabs on the one screen, WordPress's own tab style, the open

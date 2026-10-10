@@ -801,3 +801,71 @@ Decided where the brief left it open:
   under `= 0.1.0 — unreleased =`. `.pot` regenerated (363 entries).
 - **Later option (the brief's alternative, rejected for now)**: a block for each tag in the block editor. It needs a build step and the
   block editor; the builder serves classic and block editors alike.
+
+## 2026-10-10 — M14 round four: the screen's look
+
+The founder's order, after seeing the five tabs in WordPress's default admin look: "still horrible design. Use a styling similar to the
+OmnaBase settings where you render the settings nicely in white background cards, and use the canonical tab styling we have in OmnaBase,
+in the WP backend." The red team's failing tests (`docs/reviews/m14-round4-red-team-report.md`) came first; all of them pass unchanged.
+
+The coordinator's rulings:
+
+- **The kit's spelling wins**: the card is `section.ob-form__section` with `div.ob-form__head` › `h2.ob-form__title` and `div.ob-form__intro`
+  (OmnaBase's `FormSection`), not the order's `ob-form-section`. Every other reused name is the kit's own: `ob-tabs ob-tabs--line`,
+  `ob-tabs__item` (`--active`), `ob-tabs__count`, `ob-btn` (`--primary`, `--outline`, `--sm`), `ob-form-row` and its parts, `ob-help-list`,
+  `ob-more`, `ob-page__title`/`__subtitle`, `ob-dialog`, `ob-switch`, `ob-dtable`/`ob-dtable-card`, `ob-settings__cards`. New names carry
+  the plugin's prefix (`ob-wp-settings__…`).
+- **Every `<details>` is a kit More** (Details, Advanced, "Choose user fields", an outbox row's details).
+- **"Use this page" and Dismiss are outline buttons**; the primaries are Save, Check connection, Build a shortcode, Create the page for me,
+  and Connect while the site is not connected.
+- **WordPress's button classes and `submit_button()` leave the admin templates** with the tab and table classes; every button is a plain
+  `<button>` (or a link) with the kit's classes. The forum's Save keeps its field name.
+- **A changelog line** for the new look (under `= 0.1.0 — unreleased =`).
+- **No typeface shipped**: the kit's typeface is a placeholder the founder has not decided; the screen keeps WordPress's system font and no
+  `--ob-font` variable is copied.
+- **No dark mode this round**: only the kit's light tokens are built in.
+- **`CLAUDE.md`** now describes the built admin stylesheet instead of "WordPress's own admin styles … no build step for the admin".
+
+Decided here:
+
+- **One build script for both stylesheets**: `bin/build-form-css.php` became `bin/build-css.php` and builds pairs (`styles/form.css` →
+  `assets/form.css` under `.ob-wp`, `styles/admin.css` → `assets/admin.css` under `.ob-wp-settings`), both by default or one by name
+  (`php bin/build-css.php admin`). Same rules as before: the light block only, only the variables the rules use (with the ones they refer
+  to), a header naming the script, the tokens and the source. `bin/build-dist.sh` runs it before staging. `styles/` is not shipped (the zip
+  carries the built files). The release test's fixture list in `RoundSixStructureTest` names the new script (a path in a copy list, no
+  assertion changed).
+- **The page is white, like the kit's** (`--ob-bg-page` is `#ffffff`): the wrapper takes the page token and fills WordPress's content area
+  (it cancels WordPress's left padding and the `.wrap` margins), so the white cards with their gray border sit on a white page as in
+  OmnaBase's settings picture, beside WordPress's dark menu. Below a short page on a tall admin menu, WordPress's gray shows under the white
+  area, where WordPress's footer sits; the stylesheet does not reach outside the wrapper to paint it.
+- **The kit's rules are copied, then adapted** in the same file under a second rule where WordPress's admin styles would win: the tabs are
+  links (each tab is its own address), so they lose a link's colour and underline; the strip's hairline is an inset shadow on the strip (the
+  kit draws it on a parent, and the strip scrolls sideways, which would clip the kit's `margin-bottom: -1px`); buttons reset a `<button>`'s
+  font and margin; `p` takes the wrapper's size (WordPress sets 13px on every paragraph); WordPress's tick box gives way to the kit's switch.
+  Not copied: the kit's `.ob-form__section + .ob-form__section` margin (the column's gap spaces the cards, as in the kit's
+  `ob-settings__cards`) and the kit's `.ob-dtable` variable overrides (only the root block may set variables).
+- **The switch for on/off settings**: the sources, "Theme styles only", "My Account menu" and "Resolved tickets" are the kit's `ob-switch`
+  (a tick box drawn as a switch, `role="switch"`), each its own row. Lists of ticks (the forums to send, the user fields) keep WordPress's tick
+  box in a two-column list (one column on a phone): the kit's own tick box draws its mark from an image, and the stylesheet loads none.
+- **Rows**: each source a row (its name as the label, "(unsupported version)" inside the label so the warning stays on the source's line);
+  the forum's four settings rows with their old help lines; "Who may send topics" names its two choices by `aria-labelledby`; the message
+  centre's page a row with the shortcode in its help; the two front-end switches got short labels ("Theme styles only", "My Account menu")
+  with their old sentences as help.
+- **Cards per tab**: Connection: Set up (when steps are open), Connection, Status (when connected), "Stored connection" with Advanced;
+  Customer data: Customer data (the sources), User fields; Forums: Forums; Forms and messages: Message centre, Shortcodes; Activity: On its way
+  to OmnaBase, What OmnaBase sent here. Save sits under the cards, left, as a primary button.
+- **The page head**: "OmnaBase" and one line, "Connects this site to your OmnaBase workspace: customer data for tickets, forum topics, the
+  contact form and the message centre." A hidden `wp-header-end` line after it, so notices other plugins print land under the head and not
+  inside it.
+- **WordPress's notices** (the development addresses, the message after an action) stay WordPress's, under the tab strip and above the
+  cards, as wide as the cards. The timer warning stays a WordPress notice inside the Status card.
+- **The setup line**: a card with a numbered list; an open step shows its number in a circle (drawn by the stylesheet), a done step a filled
+  circle with the tick, its words muted; Dismiss is a small outline button beside the heading.
+- **State dots**: the status line, "Connected to …" and the red lines ("Disconnected in OmnaBase", "OmnaBase: reconnect needed") carry a dot.
+  The kit has no success or danger token (its interface is monochrome), so the dots use the kit's own `--ob-green-500` and `--ob-red-500`
+  (amber while a check waits, the strong border before the first check).
+- **Tables**: the kit's `ob-dtable` inside `ob-dtable-card`; the outbox and deliveries tables keep a 640px minimum, so on a phone their card
+  scrolls sideways instead of crushing the columns. The tab count is the kit's `span.ob-tabs__count` (no "·" any more).
+- **The dialog**: the kit's dialog (head, body, a gray foot holding Create and Close), the overlay the kit's dim (`--ob-scrim` at 28 %).
+- **The More's chevron**: the summary hides the browser's triangle and draws a chevron that turns down when open (the kit's More keeps the
+  browser's triangle; the red team's flow asks for a drawn one).

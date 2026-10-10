@@ -1,6 +1,6 @@
 <?php
 /**
- * The settings screen's own script and stylesheet (the shortcode builder).
+ * The settings screen's own script (the shortcode builder) and stylesheet (the screen's look).
  *
  * @package OmnaBase
  */
@@ -12,7 +12,8 @@ use OmnaBase\WordPress\PluginInfo;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * `assets/admin.js` (plain JavaScript: the builder's dialog, the live tag, Copy) and `assets/admin.css` are queued at
+ * `assets/admin.js` (plain JavaScript: the builder's dialog, the live tag, Copy) and `assets/admin.css` (OmnaBase's settings look, built by
+ * `bin/build-css.php` from the kit's tokens and `styles/admin.css`, every rule under the screen's wrapper class) are queued at
  * `admin_enqueue_scripts`, WordPress's moment for admin scripts, and only when the page is Settings › OmnaBase: no other admin page and no
  * visitor's page carries them.
  */

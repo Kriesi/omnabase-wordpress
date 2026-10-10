@@ -1,7 +1,7 @@
 <?php
 /**
- * Settings › OmnaBase: the Shortcodes block ("Build a shortcode", which opens the builder's dialog; both shortcodes and their attributes for
- * a browser without JavaScript; the front-end switches), inside the Forms and messages tab's one form.
+ * Settings › OmnaBase: the Shortcodes card ("Build a shortcode", which opens the builder's dialog; both shortcodes and their attributes for
+ * a browser without JavaScript; the front-end switches as rows of the kit's), inside the Forms and messages tab's one form.
  *
  * @package OmnaBase
  *
@@ -10,34 +10,40 @@
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<div class="ob-wp-settings__shortcodes">
-	<h2><?php esc_html_e( 'Shortcodes', 'omnabase' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'Put a shortcode on a page to show the contact form or the message centre there.', 'omnabase' ); ?></p>
+<section class="ob-form__section ob-wp-settings__shortcodes">
+	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'Shortcodes', 'omnabase' ); ?></h2></div>
+	<div class="ob-form__intro"><?php esc_html_e( 'Put a shortcode on a page to show the contact form or the message centre there.', 'omnabase' ); ?></div>
 	<p class="ob-wp-settings__builder" hidden>
-		<button type="button" class="button" aria-controls="ob-wp-builder" aria-haspopup="dialog"><?php esc_html_e( 'Build a shortcode', 'omnabase' ); ?></button>
+		<button type="button" class="ob-btn ob-btn--primary" aria-controls="ob-wp-builder" aria-haspopup="dialog"><?php esc_html_e( 'Build a shortcode', 'omnabase' ); ?></button>
 	</p>
 	<noscript>
-		<ul class="ob-wp-settings__shortcode-list">
-			<li><code>[omnabase_form]</code> <?php esc_html_e( 'the contact form, on any page: visitors\' messages become tickets.', 'omnabase' ); ?></li>
-			<li><code>project="slug"</code> <?php esc_html_e( 'which of this site\'s projects gets the messages; needed when the site has several.', 'omnabase' ); ?></li>
-			<li><code>subject="…"</code> <?php esc_html_e( 'the words the subject field starts with.', 'omnabase' ); ?></li>
-			<li><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre for signed-in customers; it works only on the message centre page picked above.', 'omnabase' ); ?></li>
-			<li><code>guest="form"</code> <?php esc_html_e( 'visitors who are not signed in get the contact form instead of a login link.', 'omnabase' ); ?></li>
-			<li><code>project="slug"</code> <?php esc_html_e( 'in the message centre: the project new questions go to.', 'omnabase' ); ?></li>
+		<ul class="ob-help-list ob-wp-settings__shortcode-list">
+			<li class="ob-help-list__item"><code>[omnabase_form]</code> <?php esc_html_e( 'the contact form, on any page: visitors\' messages become tickets.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>project="slug"</code> <?php esc_html_e( 'which of this site\'s projects gets the messages; needed when the site has several.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>subject="…"</code> <?php esc_html_e( 'the words the subject field starts with.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre for signed-in customers; it works only on the message centre page picked above.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>guest="form"</code> <?php esc_html_e( 'visitors who are not signed in get the contact form instead of a login link.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>project="slug"</code> <?php esc_html_e( 'in the message centre: the project new questions go to.', 'omnabase' ); ?></li>
 		</ul>
 	</noscript>
-	<p>
-		<label for="omnabase-theme-only">
-			<input type="checkbox" id="omnabase-theme-only" name="omnabase_theme_only" value="1" <?php checked( $omnabase_shortcodes['themeOnly'] ); ?>>
-			<?php esc_html_e( 'Use the theme\'s styles only: the form and the message centre load no OmnaBase stylesheet.', 'omnabase' ); ?>
-		</label>
-	</p>
+	<div class="ob-form-row">
+		<div class="ob-form-row__text">
+			<label class="ob-form-row__label" for="omnabase-theme-only"><?php esc_html_e( 'Theme styles only', 'omnabase' ); ?></label>
+			<div class="ob-form-row__help"><?php esc_html_e( 'Use the theme\'s styles only: the form and the message centre load no OmnaBase stylesheet.', 'omnabase' ); ?></div>
+		</div>
+		<div class="ob-form-row__control">
+			<input type="checkbox" role="switch" class="ob-switch" id="omnabase-theme-only" name="omnabase_theme_only" value="1" <?php checked( $omnabase_shortcodes['themeOnly'] ); ?>>
+		</div>
+	</div>
 	<?php if ( $omnabase_shortcodes['shop'] ) : ?>
-		<p>
-			<label for="omnabase-my-account">
-				<input type="checkbox" id="omnabase-my-account" name="omnabase_my_account" value="1" <?php checked( $omnabase_shortcodes['myAccount'] ); ?>>
-				<?php esc_html_e( 'Add "Support" to WooCommerce\'s My Account menu, leading to the message centre page.', 'omnabase' ); ?>
-			</label>
-		</p>
+		<div class="ob-form-row">
+			<div class="ob-form-row__text">
+				<label class="ob-form-row__label" for="omnabase-my-account"><?php esc_html_e( 'My Account menu', 'omnabase' ); ?></label>
+				<div class="ob-form-row__help"><?php esc_html_e( 'Add "Support" to WooCommerce\'s My Account menu, leading to the message centre page.', 'omnabase' ); ?></div>
+			</div>
+			<div class="ob-form-row__control">
+				<input type="checkbox" role="switch" class="ob-switch" id="omnabase-my-account" name="omnabase_my_account" value="1" <?php checked( $omnabase_shortcodes['myAccount'] ); ?>>
+			</div>
+		</div>
 	<?php endif; ?>
-</div>
+</section>
