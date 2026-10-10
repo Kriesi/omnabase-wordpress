@@ -64,9 +64,17 @@ function watchMail(): () => void {
     } catch { /* the e2e server is away: tried again next time */ }
     first = false;
   };
+  // the e2e server has no worker of its own: the flows tick it by hand, so this window ticks the two jobs a click-through needs every
+  // 5 seconds: webhooks (OmnaBase's calls to the site: a reply reaching the forum or the message centre) and the mail sender
+  const work = async () => {
+    for (const job of ["webhooks", "sender"]) {
+      try { await fetch(`${OMNABASE_E2E}/api/test/tick`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ job }) }); } catch { /* next time */ }
+    }
+  };
   void tick();
   const timer = setInterval(() => void tick(), 1500);
-  return () => clearInterval(timer);
+  const worker = setInterval(() => void work(), 5000);
+  return () => { clearInterval(timer); clearInterval(worker); };
 }
 
 /** the last sign-in code mailed to the address, once it differs from what was there before (the capture keeps older codes) */

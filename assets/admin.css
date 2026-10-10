@@ -62,9 +62,10 @@
 /* ---------- the page: white like the kit's, filling WordPress's content area ---------- */
 .ob-wp-settings.wrap {
   box-sizing: border-box;
-  margin: 0 0 0 -20px;
-  padding: var(--ob-space-6) var(--ob-space-8) var(--ob-space-10);
-  min-height: calc(100vh - 97px);
+  /* the white reaches the footer: WordPress keeps 65px under the content for its footer line, which this wrapper takes over (the founder, 2026-10-10) */
+  margin: 0 0 -65px -20px;
+  padding: var(--ob-space-6) var(--ob-space-8) calc(var(--ob-space-10) + 65px);
+  min-height: calc(100vh - 42px);
   background: var(--ob-bg-page);
   color: var(--ob-text);
   font-size: var(--ob-text-base);
@@ -285,7 +286,7 @@
 
 /* ---------- a phone (WordPress's admin narrows at 782px, the kit's rows stack under 768px) ---------- */
 @media (max-width: 782px) {
-  .ob-wp-settings.wrap { margin: 0 0 0 -10px; padding: var(--ob-space-4); min-height: calc(100vh - 111px); }
+  .ob-wp-settings.wrap { margin: 0 0 -65px -10px; padding: var(--ob-space-4) var(--ob-space-4) calc(var(--ob-space-4) + 65px); min-height: calc(100vh - 56px); }
 }
 @media (max-width: 767px) {
   .ob-wp-settings .ob-form-row { flex-direction: column; align-items: stretch; gap: var(--ob-space-2); }
