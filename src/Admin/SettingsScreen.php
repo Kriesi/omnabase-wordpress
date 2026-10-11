@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only, in five tabs (`Tabs`): Connection (the
- * setup line, the connection and its status, the encryption advice), Customer data, Forums, Forms and messages (the message centre's page and
+ * setup line, the connection and its status), Customer data, Forums, Forms and messages (the message centre's page and
  * the shortcodes with the builder's dialog), Activity (what goes to OmnaBase and what OmnaBase sent). Only the open tab's sections are built and printed. The menu
  * entry stays "OmnaBase", with WordPress's bubble after it while outbox rows need attention. The way back from OmnaBase's connect page
  * arrives here too, handled at the page's load hook before anything is printed.

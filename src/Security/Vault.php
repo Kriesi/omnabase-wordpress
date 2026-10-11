@@ -13,13 +13,15 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Keeps the key, the webhook secret and the facts secret encrypted at rest with libsodium's secretbox (WordPress bundles sodium_compat,
- * so it works on every host). The encryption key comes from `OMNABASE_ENCRYPTION_KEY` when wp-config.php defines it (32 random bytes,
- * base64), else from WordPress's salts through `wp_salt()`. A site whose salts live in the database gets no real protection from this
- * (`keySource()` says "database" and the screen says so).
+ * so it works on every host). The key that locks them is chosen once, on a save, by `VaultKey`: OMNABASE_ENCRYPTION_KEY when a site owner
+ * defined one, else the random key in the plugin's key file, else WordPress's salts. The choice is recorded beside the encrypted values
+ * (`source`, and `kid`, the key's fingerprint), and reading uses only that record: nothing is re-chosen, no file is made, no key is kept
+ * in memory between calls.
  *
- * A check value is encrypted beside the credentials: when the salts change (a security plugin's "log everyone out"), it no longer opens and
- * the vault reads "unreadable", never garbage. Nothing else reads or writes the vault's option (the structure guard checks). When OmnaBase
- * refuses the key (401), the vault keeps a "revoked" mark beside it until the next save or clear.
+ * A check value is encrypted beside the credentials: when the recorded key is lost (the key file gone, the salts changed by a security
+ * plugin's "log everyone out"), it no longer opens and the vault reads "unreadable", never garbage, with the reason (`unreadableReason()`).
+ * Nothing else reads or writes the vault's option (the structure guard checks). When OmnaBase refuses the key (401), the vault keeps a
+ * "revoked" mark beside it until the next save or clear.
  */
 final class Vault {
 
@@ -27,17 +29,33 @@ final class Vault {
 	public const OK         = 'ok';
 	public const UNREADABLE = 'unreadable';
 
-	private const CHECK       = 'omnabase-vault-check-v1';
-	private const PLACEHOLDER = 'put your unique phrase here';
-	private const CONTEXT     = 'omnabase-vault|';
+	/** Why a vault cannot be read: the key file it was locked with is gone. */
+	public const FILE_GONE = 'file_gone';
+
+	/** Why a vault cannot be read: the site's salts it was locked with changed. */
+	public const KEYS_CHANGED = 'keys_changed';
+
+	private const CHECK = 'omnabase-vault-check-v1';
+
+	/** The key chooser (a new one per vault, so nothing outlives the call that needs it). */
+	private VaultKey $keys;
 
 	/**
-	 * Stores the credentials, replacing what was there.
+	 * Builds the vault.
+	 *
+	 * @param VaultKey|null $keys The key chooser (the plugin's own by default).
+	 */
+	public function __construct( ?VaultKey $keys = null ) {
+		$this->keys = $keys ?? new VaultKey();
+	}
+
+	/**
+	 * Stores the credentials, replacing what was there, under a key chosen afresh (OMNABASE_ENCRYPTION_KEY, the key file, the salts).
 	 *
 	 * @param array{key:string,webhooks:?string,facts:?string} $credentials The key and both secrets (a secret may be null).
 	 */
 	public function save( array $credentials ): void {
-		$key     = $this->encryptionKey();
+		$chosen  = $this->keys->choose();
 		$payload = (string) wp_json_encode(
 			array(
 				'key'      => (string) ( $credentials['key'] ?? '' ),
@@ -46,9 +64,11 @@ final class Vault {
 			)
 		);
 		$stored  = array(
-			'v'     => 1,
-			'check' => $this->sealWith( self::CHECK, $key ),
-			'data'  => $this->sealWith( $payload, $key ),
+			'v'      => 2,
+			'source' => $chosen['source'],
+			'kid'    => $chosen['kid'],
+			'check'  => $this->sealWith( self::CHECK, $chosen['key'] ),
+			'data'   => $this->sealWith( $payload, $chosen['key'] ),
 		);
 		update_option( Options::VAULT, $stored, false );
 	}
@@ -60,10 +80,11 @@ final class Vault {
 	 */
 	public function read(): ?array {
 		$stored = $this->stored();
-		if ( ! is_array( $stored ) || self::OK !== $this->stateOf( $stored ) ) {
+		$key    = is_array( $stored ) ? $this->openingKey( $stored ) : null;
+		if ( null === $key ) {
 			return null;
 		}
-		$json = $this->openWith( (string) ( $stored['data'] ?? '' ), $this->encryptionKey() );
+		$json = $this->openWith( (string) ( $stored['data'] ?? '' ), $key );
 		$data = null === $json ? null : json_decode( $json, true );
 		if ( ! is_array( $data ) || ! is_string( $data['key'] ?? null ) || '' === $data['key'] ) {
 			return null;
@@ -75,16 +96,33 @@ final class Vault {
 		);
 	}
 
-	/** `empty` (never connected or disconnected), `ok`, or `unreadable` (other salts, or a damaged value). */
+	/** `empty` (never connected or disconnected), `ok`, or `unreadable` (the recorded key is lost, or a damaged value). */
 	public function state(): string {
 		$stored = $this->stored();
 		if ( null === $stored ) {
 			return self::EMPTY;
 		}
-		return is_array( $stored ) ? $this->stateOf( $stored ) : self::UNREADABLE;
+		return is_array( $stored ) && null !== $this->openingKey( $stored ) ? self::OK : self::UNREADABLE;
 	}
 
-	/** Forgets everything the vault holds. */
+	/**
+	 * Why the vault cannot be read: `file_gone` (locked with the key file, which is gone), `keys_changed` (locked with the salts, which
+	 * changed), else null (it reads, it is empty, or the stored value is damaged).
+	 */
+	public function unreadableReason(): ?string {
+		$stored = $this->stored();
+		if ( ! is_array( $stored ) || null !== $this->openingKey( $stored ) ) {
+			return null;
+		}
+		$source = (string) ( $stored['source'] ?? '' );
+		$key    = $this->keys->find( $source );
+		if ( VaultKey::FILE === $source && ( null === $key || ! self::sameKid( $stored, $key ) ) ) {
+			return self::FILE_GONE;
+		}
+		return VaultKey::SALTS === $source && null !== $key && ! self::sameKid( $stored, $key ) ? self::KEYS_CHANGED : null;
+	}
+
+	/** Forgets everything the vault holds (the key file stays: a reconnect reuses it). */
 	public function clear(): void {
 		delete_option( Options::VAULT );
 	}
@@ -106,36 +144,29 @@ final class Vault {
 		return is_array( $stored ) && ! empty( $stored['revoked'] );
 	}
 
-	/** Where the encryption key comes from: `constant` (OMNABASE_ENCRYPTION_KEY), `salts` (real salt constants) or `database`. */
-	public function keySource(): string {
-		if ( '' !== self::constantValue( 'OMNABASE_ENCRYPTION_KEY' ) ) {
-			return 'constant';
-		}
-		foreach ( array( 'AUTH_KEY', 'AUTH_SALT' ) as $name ) {
-			$value = self::constantValue( $name );
-			if ( '' === $value || self::PLACEHOLDER === $value ) {
-				return 'database';
-			}
-		}
-		return 'salts';
-	}
-
 	/**
-	 * Encrypts a small value under the vault's key (an administrator's pending connect keeps its verifier this way).
+	 * Encrypts a small value the way a save does (an administrator's pending connect keeps its verifier this way): under a key chosen afresh,
+	 * with its source and fingerprint in front (`<source>.<kid>.<sealed>`), so `open()` finds the same key.
 	 *
 	 * @param string $plain The value.
 	 */
 	public function seal( string $plain ): string {
-		return $this->sealWith( $plain, $this->encryptionKey() );
+		$chosen = $this->keys->choose();
+		return $chosen['source'] . '.' . $chosen['kid'] . '.' . $this->sealWith( $plain, $chosen['key'] );
 	}
 
 	/**
-	 * Opens a value sealed by `seal()`; null when it cannot be opened (other salts, damaged).
+	 * Opens a value sealed by `seal()`; null when it cannot be opened (its key lost, damaged).
 	 *
 	 * @param string $sealed The sealed value.
 	 */
 	public function open( string $sealed ): ?string {
-		return $this->openWith( $sealed, $this->encryptionKey() );
+		$parts = explode( '.', $sealed, 3 );
+		if ( 3 !== count( $parts ) ) {
+			return null;
+		}
+		$key = $this->keys->find( $parts[0] );
+		return null !== $key && hash_equals( VaultKey::kid( $key ), $parts[1] ) ? $this->openWith( $parts[2], $key ) : null;
 	}
 
 	/**
@@ -149,22 +180,23 @@ final class Vault {
 	}
 
 	/**
-	 * Whether a stored array opens with today's key.
+	 * The key that opens a stored array (found by its recorded source, its check value opening), or null.
 	 *
 	 * @param array<string,mixed> $stored The stored option.
 	 */
-	private function stateOf( array $stored ): string {
-		return self::CHECK === $this->openWith( (string) ( $stored['check'] ?? '' ), $this->encryptionKey() ) ? self::OK : self::UNREADABLE;
+	private function openingKey( array $stored ): ?string {
+		$key = $this->keys->find( (string) ( $stored['source'] ?? '' ) );
+		return null !== $key && self::CHECK === $this->openWith( (string) ( $stored['check'] ?? '' ), $key ) ? $key : null;
 	}
 
-	/** The 32-byte secretbox key: the dedicated constant when defined, else derived from WordPress's salts. */
-	private function encryptionKey(): string {
-		$constant = self::constantValue( 'OMNABASE_ENCRYPTION_KEY' );
-		if ( '' !== $constant ) {
-			$raw = base64_decode( $constant, true );
-			return ( false !== $raw && SODIUM_CRYPTO_SECRETBOX_KEYBYTES === strlen( $raw ) ) ? $raw : sodium_crypto_generichash( self::CONTEXT . $constant, '', SODIUM_CRYPTO_SECRETBOX_KEYBYTES );
-		}
-		return sodium_crypto_generichash( self::CONTEXT . wp_salt( 'auth' ), '', SODIUM_CRYPTO_SECRETBOX_KEYBYTES );
+	/**
+	 * Whether a key is the one the stored record names.
+	 *
+	 * @param array<string,mixed> $stored The stored option.
+	 * @param string              $key    A key.
+	 */
+	private static function sameKid( array $stored, string $key ): bool {
+		return hash_equals( (string) ( $stored['kid'] ?? '' ), VaultKey::kid( $key ) );
 	}
 
 	/**
@@ -195,14 +227,5 @@ final class Vault {
 			return null;
 		}
 		return false === $plain ? null : $plain;
-	}
-
-	/**
-	 * A wp-config.php constant as a string, empty when undefined.
-	 *
-	 * @param string $name The constant's name.
-	 */
-	private static function constantValue( string $name ): string {
-		return defined( $name ) ? (string) constant( $name ) : '';
 	}
 }

@@ -65,6 +65,13 @@ first public release on, a site's stored data is migrated and nothing a site hol
   a nonce and `current_user_can( 'manage_options' )` on every admin action, a real `permission_callback` on every REST route (the named
   exceptions: the two signed receivers, the form and its time-token route, each with its own check). The key and the secrets are read only
   by the vault (from round one) and never reach HTML, JS or a log.
+- **The vault's key (2026-10-11)**: chosen once per save and recorded beside the encrypted values (`source` `constant`|`file`|`salts`, a
+  16-character fingerprint `kid`): `OMNABASE_ENCRYPTION_KEY` when defined, else a random key the plugin makes once in a guarded key file
+  (`omnabase/key.php` under wp-content, or the main site's uploads folder; `exit` before the key, `index.php` and a `.htaccess` deny beside
+  it, mode 0600, made in one step, never rewritten, one per network), else the salts. Reading uses the recorded source, never makes a file
+  and caches no key. A lost key is "reconnect needed" with the reason (`Vault::unreadableReason()`: `file_gone`, `keys_changed`). Disconnect
+  keeps the file; uninstall removes it once. **No screen speaks of how the connection is locked** (no wp-config.php, no constant, no
+  "Advanced"): a customer is never asked to edit wp-config.php.
 - Every runtime file starts with `defined( 'ABSPATH' ) || exit;`. Every word a person reads goes through `__()`/`esc_html__()`/… with the
   `omnabase` text domain, also labels built in `src/` and shown later (the structure guard scans for bare strings and prose).
 - Outgoing calls go to one pinned host (`https://app.omnabase.com`; `OMNABASE_API_URL` points a development site elsewhere, and the screen

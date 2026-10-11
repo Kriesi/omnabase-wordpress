@@ -1,5 +1,15 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order
+ * ("go with the file-based key, remove the block") makes a key file under wp-content the vault's usual key, so a test that wants the salts
+ * (the secret phrases in wp-config.php) must first make sure no key file can be written. Each test now runs in its own PHP process with its
+ * own temporary wp-content, read-only (`WP_CONTENT_DIR` is a constant: once per process), and the few WordPress functions a key file needs
+ * are faked in `setUp()`; every salts test below asks exactly what it asked before. The three tests of the old `keySource()` answer
+ * ("constant", "salts", "database") become tests of the source the vault records when it saves (`source` in its stored option): the
+ * constant still wins ("constant"); real salt constants are "salts"; the placeholder salts, which the old screen called "database", are now
+ * "salts" too, silently: the coordinator's design point (d), because no screen speaks of it any more. The key-file behaviour itself lives in
+ * `VaultKeyTest`. The builder may keep or drop `keySource()`; nothing here calls it.
+ *
  * M13 round one, the red team's failing tests: the vault (the one place the site's OmnaBase key and its two secrets are kept, encrypted at
  * rest: stored scrambled, readable only with a key kept elsewhere).
  *
@@ -30,6 +40,12 @@ namespace OmnaBase\WordPress\Tests\Unit;
 use Brain\Monkey\Functions;
 use OmnaBase\WordPress\Security\Vault;
 
+/**
+ * Each test in its own PHP process (its own read-only `WP_CONTENT_DIR`).
+ *
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
+ */
 final class VaultTest extends TestCase {
 
 	private const CREDENTIALS = array(
@@ -46,6 +62,9 @@ final class VaultTest extends TestCase {
 
 	/** the fake wp_salt()'s current answer, per scheme */
 	private string $salt = 'salt-generation-one';
+
+	/** this test's temporary WordPress folder, its wp-content read-only (no key file can be written: the salts lock the vault) */
+	private string $root = '';
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -80,6 +99,56 @@ final class VaultTest extends TestCase {
 				return true;
 			}
 		);
+		$this->readOnlyContentFolder();
+	}
+
+	protected function tearDown(): void {
+		if ( '' !== $this->root && is_dir( $this->root ) ) {
+			$items = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $this->root, \FilesystemIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST );
+			foreach ( $items as $item ) {
+				@chmod( $item->getPath(), 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+				$item->isDir() ? @rmdir( $item->getPathname() ) : @unlink( $item->getPathname() ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			}
+			@rmdir( $this->root ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		}
+		parent::tearDown();
+	}
+
+	/** A temporary wp-content (with its uploads folder) nobody may write into, and the WordPress functions a key file would need. */
+	private function readOnlyContentFolder(): void {
+		$this->root = sys_get_temp_dir() . '/omnabase-vault-' . bin2hex( random_bytes( 6 ) );
+		mkdir( $this->root . '/wp-content/uploads', 0755, true );
+		define( 'WP_CONTENT_DIR', $this->root . '/wp-content' );
+		chmod( $this->root . '/wp-content/uploads', 0555 );
+		chmod( $this->root . '/wp-content', 0555 );
+		Functions\when( 'wp_upload_dir' )->alias( static fn () => array( 'path' => WP_CONTENT_DIR . '/uploads', 'url' => '', 'subdir' => '', 'basedir' => WP_CONTENT_DIR . '/uploads', 'baseurl' => '', 'error' => false ) );
+		Functions\when( 'wp_mkdir_p' )->alias( static fn ( $dir ) => is_dir( $dir ) || @mkdir( $dir, 0755, true ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		Functions\when( 'wp_is_writable' )->alias( static fn ( $path ) => is_writable( $path ) );
+		Functions\when( 'trailingslashit' )->alias( static fn ( $s ) => rtrim( (string) $s, '/\\' ) . '/' );
+		Functions\when( 'untrailingslashit' )->alias( static fn ( $s ) => rtrim( (string) $s, '/\\' ) );
+		Functions\when( 'wp_normalize_path' )->alias( static fn ( $p ) => str_replace( '\\', '/', (string) $p ) );
+		Functions\when( 'is_multisite' )->justReturn( false );
+		Functions\when( 'get_current_blog_id' )->justReturn( 1 );
+		Functions\when( 'get_main_site_id' )->justReturn( 1 );
+		Functions\when( 'is_main_site' )->justReturn( true );
+		Functions\when( 'switch_to_blog' )->justReturn( true );
+		Functions\when( 'restore_current_blog' )->justReturn( true );
+		Functions\when( 'get_site_option' )->alias( fn ( $name, $default = false ) => $this->options[ 'network:' . $name ] ?? $default );
+		Functions\when( 'update_site_option' )->alias(
+			function ( $name, $value ) {
+				$this->options[ 'network:' . $name ] = $value;
+				return true;
+			}
+		);
+		Functions\when( 'wp_trigger_error' )->justReturn( null );
+	}
+
+	/**
+	 * The source the vault recorded when it last saved.
+	 */
+	private function recordedSource(): ?string {
+		$stored = $this->options[ \OmnaBase\WordPress\Options::VAULT ] ?? null;
+		return is_array( $stored ) && is_string( $stored['source'] ?? null ) ? $stored['source'] : null;
 	}
 
 	/**
@@ -166,23 +235,23 @@ final class VaultTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: Without a dedicated encryption key and without real salt constants, the vault says honestly that its key lives in
-	 *   the database.
-	 * Passes when: with neither OMNABASE_ENCRYPTION_KEY nor AUTH_KEY/AUTH_SALT defined, the key source is "database".
-	 * Fails when: the screen would claim protection the site does not have.
+	 * What it checks: Without a dedicated encryption key, without real salt constants and without a folder it may write a key file into, the
+	 *   vault is still locked, with the salts WordPress keeps in the database.
+	 * Passes when: with neither OMNABASE_ENCRYPTION_KEY nor AUTH_KEY/AUTH_SALT defined and wp-content read-only, saving records the source
+	 *   "salts" and the credentials read back.
+	 * Fails when: such a site cannot connect at all, or its credentials are stored unscrambled.
 	 */
-	public function test_without_constants_the_key_source_is_the_database(): void {
-		$this->assertSame( 'database', ( new Vault() )->keySource() );
+	public function test_without_constants_and_without_a_writable_folder_the_salts_lock_the_vault(): void {
+		( new Vault() )->save( self::CREDENTIALS );
+		$this->assertSame( 'salts', $this->recordedSource() );
+		$this->assertSame( self::CREDENTIALS, $this->only3( ( new Vault() )->read() ) );
 	}
 
 	/**
 	 * What it checks: A dedicated encryption key in wp-config.php wins over the salts, so a salt rotation no longer locks the vault.
-	 * Passes when: with OMNABASE_ENCRYPTION_KEY defined (32 random bytes, base64), the key source is "constant", and after the salts
-	 *   change the credentials still read back.
+	 * Passes when: with OMNABASE_ENCRYPTION_KEY defined (32 random bytes, base64), the source the vault records is "constant", and after
+	 *   the salts change the credentials still read back.
 	 * Fails when: the vault ignores the dedicated key, so a "log everyone out" disconnects the site anyway.
-	 *
-	 * @runInSeparateProcess
-	 * @preserveGlobalState disabled
 	 */
 	public function test_the_encryption_key_constant_wins_over_the_salts(): void {
 		define( 'OMNABASE_ENCRYPTION_KEY', base64_encode( str_repeat( "\x07", 16 ) . str_repeat( "\x2a", 16 ) ) );
@@ -191,39 +260,40 @@ final class VaultTest extends TestCase {
 		$this->salt = 'salt-generation-two';
 
 		$vault = new Vault();
-		$this->assertSame( 'constant', $vault->keySource() );
+		$this->assertSame( 'constant', $this->recordedSource() );
 		$this->assertSame( 'ok', $vault->state() );
 		$this->assertSame( self::CREDENTIALS, $this->only3( $vault->read() ) );
 	}
 
 	/**
-	 * What it checks: Real salt constants in wp-config.php count as salts kept outside the database.
-	 * Passes when: with AUTH_KEY and AUTH_SALT defined as real values, the key source is "salts".
-	 * Fails when: a properly configured site is told its key lives in the database.
-	 *
-	 * @runInSeparateProcess
-	 * @preserveGlobalState disabled
+	 * What it checks: Real salt constants in wp-config.php lock the vault when no key file can be written.
+	 * Passes when: with AUTH_KEY and AUTH_SALT defined as real values and wp-content read-only, saving records the source "salts" and the
+	 *   credentials read back.
+	 * Fails when: a properly configured site on a locked-down host cannot connect.
 	 */
 	public function test_real_salt_constants_are_the_salts(): void {
 		define( 'AUTH_KEY', 'q9#Lk2@vP!x7zR4m^T1w&Y8n*B3c(E6s' );
 		define( 'AUTH_SALT', 'H5$jN0%dF2-uG9+oK4=aM7~iQ1<lS8>e' );
 
-		$this->assertSame( 'salts', ( new Vault() )->keySource() );
+		( new Vault() )->save( self::CREDENTIALS );
+		$this->assertSame( 'salts', $this->recordedSource() );
+		$this->assertSame( self::CREDENTIALS, $this->only3( ( new Vault() )->read() ) );
 	}
 
 	/**
-	 * What it checks: WordPress's placeholder salt is not a real salt.
-	 * Passes when: with AUTH_KEY and AUTH_SALT set to "put your unique phrase here", the key source is "database".
-	 * Fails when: a site that never replaced the sample wp-config.php is told it is protected.
-	 *
-	 * @runInSeparateProcess
-	 * @preserveGlobalState disabled
+	 * What it checks: WordPress's placeholder salt (a sample wp-config.php never filled in) still locks the vault, silently: the plugin no
+	 *   longer tells the owner where the lock's key lives.
+	 * Passes when: with AUTH_KEY and AUTH_SALT set to "put your unique phrase here" and wp-content read-only, saving records the source
+	 *   "salts" (never a separate "database" source) and the credentials read back.
+	 * Fails when: such a site cannot connect, or the vault records a source no reading path knows.
 	 */
-	public function test_the_placeholder_salt_counts_as_the_database(): void {
+	public function test_the_placeholder_salt_still_locks_the_vault_with_the_salts(): void {
 		define( 'AUTH_KEY', 'put your unique phrase here' );
 		define( 'AUTH_SALT', 'put your unique phrase here' );
 
-		$this->assertSame( 'database', ( new Vault() )->keySource() );
+		( new Vault() )->save( self::CREDENTIALS );
+		$this->assertSame( 'salts', $this->recordedSource() );
+		$this->assertSame( self::CREDENTIALS, $this->only3( ( new Vault() )->read() ) );
 	}
 
 	/**

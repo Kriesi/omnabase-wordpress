@@ -1,5 +1,11 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
+ * the "Stored connection" card and its Advanced block, so on the Connection tab of a site in full use one closed block is left (the status
+ * card's Details), not two: `test_every_disclosure_is_the_kits_more` now expects at least one there (every closed block on the tab is still
+ * checked to be the kit's More), and `test_every_section_is_a_card` reads the tab's sections from `AdminLookShapes` without the removed
+ * card. The PM lines name the sections as they are now. No assertion was loosened beyond the removed card.
+ *
  * M14 round four, the red team's failing tests: Settings › OmnaBase wears OmnaBase's settings look (the plain run, without bbPress or the
  * shops): a page head, the kit's line tabs, every section a white card, every setting a row, the kit's buttons, WordPress's notices kept,
  * and the screen's stylesheet loaded on that screen alone.
@@ -161,7 +167,7 @@ final class AdminLookTest extends TabsTestCase {
 
 	/**
 	 * What it checks: Every section of every tab is a white card of its own, with a heading, and nothing a person reads floats outside a card.
-	 * Passes when: on a site in full use, each tab's sections (Connection: the connection box, the status block with Details, Advanced; Customer
+	 * Passes when: on a site in full use, each tab's sections (Connection: the connection box, the status block with Details; Customer
 	 *   data: the sources, the user fields; Forums: the forum section; Forms and messages: the page picker, the Shortcodes block; Activity: the
 	 *   outbox, the list of what OmnaBase sent) each sit in a card, no two in the same card; every card is a section element with exactly one
 	 *   heading in the kit's title style, never inside another card, its intro (if any) at most 30 words; every heading outside the builder's
@@ -311,10 +317,11 @@ final class AdminLookTest extends TabsTestCase {
 	}
 
 	/**
-	 * What it checks: Every closed block on the screen (Details, Advanced, "Choose user fields", an outbox row's details) is the kit's More.
+	 * What it checks: Every closed block on the screen (Details, "Choose user fields", an outbox row's details) is the kit's More.
 	 * Passes when: on a site in full use, every `<details>` on the tabs that have them (Connection, Customer data, Activity) carries the kit's More class, its first child is a summary with the
 	 *   kit's toggle class, and everything else sits in one body element with the kit's body class.
-	 * Fails when: Details and Advanced stay as the browser's bare grey triangles, or their content spills out unindented under the summary.
+	 * Fails when: Details and the other closed blocks stay as the browser's bare grey triangles, or their content spills out unindented under
+	 *   the summary.
 	 *
 	 * @dataProvider disclosureTabs
 	 */
@@ -324,7 +331,7 @@ final class AdminLookTest extends TabsTestCase {
 		$doc      = self::htmlDocument( $html );
 		$xpath    = new \DOMXPath( $doc );
 		$details  = iterator_to_array( $xpath->query( '//details' ) );
-		$expected = array( 'connection' => 2, 'data' => 1, 'activity' => 1 );
+		$expected = array( 'connection' => 1, 'data' => 1, 'activity' => 1 );
 		$this->assertGreaterThanOrEqual( $expected[ $tab ], count( $details ), "{$tab}: the closed blocks are there" );
 		foreach ( $details as $block ) {
 			$this->assertTrue( self::classed( $block, 'ob-more' ), "{$tab}: a <details> is a kit More: " . self::wordsOf( $block ) );

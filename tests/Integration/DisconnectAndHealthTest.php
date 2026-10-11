@@ -1,5 +1,11 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the vault's usual key
+ * is now a file under wp-content, so `rotateSalts()` loses the key either way (the salts change and the key folder is moved aside; see
+ * `RoundOneTestCase`). `test_unreadable_credentials_warn_administrators_on_every_admin_page` brought the key back with
+ * `remove_all_filters( 'salt' )`, which no longer brings back a moved key folder; it now calls `restoreVaultKey()` (both back). Same three
+ * assertions, same order; its PM lines say "the key" where they said "the salts".
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: OmnaBase's 401 now has a state of its own, "Disconnected in
  * OmnaBase" (brief `docs/briefs/m14-settings-cleanup.md`, choice 1, the fourth state; review log B4). `test_a_refused_key_shows_as_a_failed_check`
  * asserted only that the "me" row was not "ok"; in the fourth state the check rows are no longer the place this is said, so the test now asserts
@@ -185,10 +191,10 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 	}
 
 	/**
-	 * What it checks: When the stored credentials can no longer be read (the salts changed), every admin page warns administrators, and
-	 *   only them.
-	 * Passes when: after a salt change, an administrator's dashboard shows "OmnaBase: reconnect needed"; a subscriber's admin pages do not;
-	 *   with the salts back, the warning is gone.
+	 * What it checks: When the stored credentials can no longer be read (the key that locked them is lost: the key file gone, or the salts
+	 *   changed), every admin page warns administrators, and only them.
+	 * Passes when: after the key is lost, an administrator's dashboard shows "OmnaBase: reconnect needed"; a subscriber's admin pages do
+	 *   not; with the key back, the warning is gone.
 	 * Fails when: the site silently stops receiving replies and customer questions for days while the warning sits on a settings page nobody
 	 *   opens (review S1), or customers with admin access see internal warnings.
 	 */
@@ -202,7 +208,7 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 		$subscriber = self::factory()->user->create( array( 'role' => 'subscriber' ) );
 		$this->assertStringNotContainsString( 'OmnaBase: reconnect needed', $this->noticesOnTheDashboardFor( $subscriber ) );
 
-		remove_all_filters( 'salt' );
-		$this->assertStringNotContainsString( 'OmnaBase: reconnect needed', $this->noticesOnTheDashboardFor( $this->admin ), 'the salts back: no warning' );
+		$this->restoreVaultKey();
+		$this->assertStringNotContainsString( 'OmnaBase: reconnect needed', $this->noticesOnTheDashboardFor( $this->admin ), 'the key back: no warning' );
 	}
 }

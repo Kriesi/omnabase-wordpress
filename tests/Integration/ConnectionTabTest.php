@@ -1,5 +1,12 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order
+ * ("go with the file-based key, remove the block") removes the "Stored connection" card and its "Advanced" block, so
+ * `test_the_encryption_advice_sits_in_a_closed_advanced_block_at_the_end` cannot stand as it was. It is replaced by two stricter tests: the
+ * Connection tab's last block is now the Status card (the Connection card while not connected) and holds no Advanced block, no key-source
+ * mark and no "Stored connection"; and no tab, in either state, says anything about how the connection is locked, inside Details too
+ * (the old test only kept the advice off the open page; now it may not be anywhere). The other four tests are unchanged.
+ *
  * M14 round one, the red team's failing tests: the Connection tab says how the connection is doing in one plain line, keeps the technical
  * detail behind "Details", and the encryption advice behind "Advanced" (the plain run).
  *
@@ -138,22 +145,82 @@ final class ConnectionTabTest extends TabsTestCase {
 		}
 	}
 
+	/** Each tab, for the data provider. */
+	public static function tabs(): array {
+		return array_combine( array_keys( self::TABS ), array_map( static fn ( $t ) => array( $t ), array_keys( self::TABS ) ) );
+	}
+
+	/** The cards of some HTML (the kit's card class), in page order. */
+	private static function cards( string $html ): \DOMNodeList {
+		return self::query( $html, '//*[' . self::hasClass( 'ob-form__section' ) . ']' );
+	}
+
 	/**
-	 * What it checks: The encryption advice sits in a closed "Advanced" block at the end of the Connection tab.
-	 * Passes when: the line marked with the key's source is inside a closed Details whose summary reads "Advanced", that block is the last
-	 *   disclosure on the tab, and neither "OMNABASE_ENCRYPTION_KEY" nor "wp-config.php" is on the open page.
-	 * Fails when: every owner meets a line of PHP to paste into a settings file on the first screen they open.
+	 * What it checks: The Connection tab ends with the Status card, and the "Stored connection" card with its Advanced block is gone.
+	 * Passes when: on a connected site after a check, the tab's last card is the Status card; while not connected, its last card is the
+	 *   Connection card; in both states the tab has no closed block whose summary reads "Advanced", nothing with the old card's class or the
+	 *   key-source mark, and no "Stored connection" heading.
+	 * Fails when: the card the founder removed is still there (or comes back empty), or something new hangs below the Status card.
 	 */
-	public function test_the_encryption_advice_sits_in_a_closed_advanced_block_at_the_end(): void {
-		$html     = $this->checked( self::answer( 202, array( 'ok' => true ) ), true );
-		$advanced = self::disclosures( $html, 'Advanced' );
-		$this->assertCount( 1, $advanced, 'one Advanced block' );
-		$this->assertFalse( $advanced[0]['open'], 'closed by default' );
-		$this->assertNotNull( self::attr( $advanced[0]['html'], '//*[@data-key-source]', 'data-key-source' ), 'the key source line inside it' );
-		$all = self::query( $html, '//details' );
-		$this->assertSame( $advanced[0]['html'], self::outer( $all->item( $all->length - 1 ) ), 'the last disclosure on the tab' );
-		$seen = self::visibleText( $html );
-		$this->assertStringNotContainsString( 'OMNABASE_ENCRYPTION_KEY', $seen );
-		$this->assertStringNotContainsString( 'wp-config.php', $seen );
+	public function test_the_status_card_is_the_tabs_last_block_and_no_advanced_block_is_left(): void {
+		$states = array( 'connected' => $this->checked( self::answer( 202, array( 'ok' => true ) ), true ) );
+		( new \OmnaBase\WordPress\Security\Vault() )->clear();
+		$states['not connected'] = $this->openTab( 'connection' );
+		$last = array( 'connected' => 'ob-wp-settings__health', 'not connected' => 'ob-wp-settings__connection' );
+
+		foreach ( $states as $state => $html ) {
+			$cards = self::cards( $html );
+			$this->assertGreaterThan( 0, $cards->length, "{$state}: the tab has cards" );
+			$final = $cards->item( $cards->length - 1 );
+			$this->assertStringContainsString( ' ' . $last[ $state ] . ' ', ' ' . $final->getAttribute( 'class' ) . ' ', "{$state}: the last card is {$last[ $state ]}" );
+			$this->assertSame( array(), self::disclosures( $html, 'Advanced' ), "{$state}: no Advanced block" );
+			foreach ( array( 'ob-wp-settings__advanced', 'ob-wp-settings__security', 'ob-wp-settings__keysource' ) as $class ) {
+				$this->assertSame( 0, self::query( $html, '//*[' . self::hasClass( $class ) . ']' )->length, "{$state}: nothing with {$class}" );
+			}
+			$this->assertSame( 0, self::query( $html, '//*[@data-key-source]' )->length, "{$state}: no key-source mark" );
+			$this->assertStringNotContainsString( 'Stored connection', $html, "{$state}: no Stored connection card" );
+		}
+	}
+
+	/**
+	 * What it checks: No tab says anything about how the stored connection is locked: not on the open page, not inside Details.
+	 * Passes when: on a site in full use and on a site not connected, the tab's every word (closed blocks included; scripts and styles left
+	 *   out; tooltips and labels included) holds neither "Advanced" nor "Stored connection", "lock", "locks", "locked", any word starting
+	 *   "encrypt", "wp-config", OMNABASE_ENCRYPTION_KEY, "secret keys" or "salts".
+	 * Fails when: the advice the founder removed survives somewhere on the screen (a Details line, a help text, a tooltip), and an owner is
+	 *   again told to edit a settings file.
+	 *
+	 * @dataProvider tabs
+	 */
+	public function test_no_tab_says_how_the_connection_is_locked( string $tab ): void {
+		$this->busySite();
+		$states = array( 'in full use' => $this->openTab( $tab ) );
+		( new \OmnaBase\WordPress\Security\Vault() )->clear();
+		$states['not connected'] = $this->openTab( $tab );
+
+		foreach ( $states as $state => $html ) {
+			$words = self::everyWord( $html );
+			$this->assertDoesNotMatchRegularExpression( '/\bAdvanced\b/', $words, "{$tab}, {$state}" );
+			$this->assertDoesNotMatchRegularExpression( '/Stored connection|\block(s|ed)?\b|\bencrypt\w*|wp-config|OMNABASE_ENCRYPTION_KEY|\bsecret keys\b|\bsalts?\b/i', $words, "{$tab}, {$state}" );
+		}
+	}
+
+	/**
+	 * Every word of some HTML a person could ever read: all text (closed blocks too), and the title, aria-label, placeholder and alt
+	 * attributes; scripts, styles and templates left out.
+	 *
+	 * @param string $html A rendered tab.
+	 */
+	private static function everyWord( string $html ): string {
+		$doc   = self::htmlDocument( $html );
+		$xpath = new \DOMXPath( $doc );
+		foreach ( iterator_to_array( $xpath->query( '//script | //style | //template' ) ) as $node ) {
+			$node->parentNode?->removeChild( $node );
+		}
+		$parts = array( self::wordsOf( $doc->documentElement ) );
+		foreach ( $xpath->query( '//@title | //@aria-label | //@placeholder | //@alt' ) as $attribute ) {
+			$parts[] = $attribute->nodeValue;
+		}
+		return implode( ' ', $parts );
 	}
 }

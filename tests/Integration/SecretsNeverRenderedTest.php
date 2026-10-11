@@ -1,5 +1,10 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: `rotateSalts()` now
+ * also moves the key folder aside (see `RoundOneTestCase`), so the leak test brings the key back with `restoreVaultKey()` instead of
+ * `remove_all_filters( 'salt' )`; without it, the front page and the two receivers would be read with an unreadable vault, which would test
+ * less. No assertion changed. (The key file's own content is searched for in every page by `VaultFileTest`.)
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the settings screen becomes five tabs and renders only the open
  * one (brief `docs/briefs/m14-settings-cleanup.md`, choice 1), so "the screen" alone would now search only the Connection tab. The leak test
  * now also renders every tab after "Check connection" and searches each for the stored values; the last-four check still reads the
@@ -59,7 +64,7 @@ final class SecretsNeverRenderedTest extends RoundOneTestCase {
 		$out['the notices']                       = $this->noticesOnTheDashboardFor( $this->admin );
 		$this->rotateSalts();
 		$out['the notices, salts changed']        = $this->noticesOnTheDashboardFor( $this->admin );
-		remove_all_filters( 'salt' );
+		$this->restoreVaultKey();
 
 		set_current_screen( 'front' );
 		wp_set_current_user( 0 );

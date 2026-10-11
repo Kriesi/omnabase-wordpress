@@ -15,7 +15,7 @@ use OmnaBase\WordPress\Security\Vault;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Four states: `connected` (the vault reads), `not_connected` (empty), `reconnect` (the vault can no longer be read), `revoked` (OmnaBase
+ * Four states: `connected` (the vault reads), `not_connected` (empty), `reconnect` (the vault can no longer be read; `reasonLine` says why in plain words), `revoked` (OmnaBase
  * answered 401: someone disconnected the site there; no call is made until Connect). Connected shows the workspace, the site, the projects,
  * the permissions in words and the key by its last four; OmnaBase's live `GET /me` wins, the connection kept from the exchange stands in
  * while OmnaBase cannot be reached. The full key never leaves this class.
@@ -35,23 +35,23 @@ final class ConnectionView {
 	/**
 	 * The section's data.
 	 *
-	 * @return array{state:string,workspace:string,site:string,projects:string[],scopes:string[],keyHint:string,liveError:string,problem:?string} `scopes` in words
+	 * @return array{state:string,workspace:string,site:string,projects:string[],scopes:string[],keyHint:string,liveError:string,problem:?string,reasonLine:string} `scopes` in words
 	 */
 	public function build(): array {
 		$view = array(
-			'state'     => 'not_connected',
-			'workspace' => '',
-			'site'      => '',
-			'projects'  => array(),
-			'scopes'    => array(),
-			'keyHint'   => '',
-			'liveError' => '',
-			'problem'   => $this->site->problem(),
+			'state'      => 'not_connected',
+			'workspace'  => '',
+			'site'       => '',
+			'projects'   => array(),
+			'scopes'     => array(),
+			'keyHint'    => '',
+			'liveError'  => '',
+			'problem'    => $this->site->problem(),
+			'reasonLine' => '',
 		);
 		$credentials = $this->vault->read();
 		if ( null === $credentials ) {
-			$view['state'] = Vault::UNREADABLE === $this->vault->state() ? 'reconnect' : 'not_connected';
-			return $view;
+			return Vault::UNREADABLE === $this->vault->state() ? array( 'state' => 'reconnect', 'reasonLine' => ReconnectWords::card( $this->vault->unreadableReason() ) ) + $view : $view;
 		}
 		$connected = $this->vault->isRevoked() ? array() : $this->connected( $credentials['key'] );
 		return $this->vault->isRevoked() ? array( 'state' => 'revoked' ) + $view : array_merge( $view, $connected );

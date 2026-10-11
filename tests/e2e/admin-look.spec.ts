@@ -1,7 +1,14 @@
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
+ * the "Stored connection" card and its Advanced block ("go with the file-based key, remove the block"), so "Advanced opens like the kit's
+ * More" has nothing left to open. It becomes "a closed block opens like the kit's More" on the Customer data tab's "Choose user fields",
+ * which every site shows whatever its connection state (the same look checks, the same chevron and indent), and a new flow checks in the
+ * browser that no tab shows an Advanced block or the card any more and that the Connection tab ends with the Status card (the Connection
+ * card while not connected). Every other flow is unchanged.
+ *
  * M14 round four, the red team's failing flow: Settings › OmnaBase in a real browser wears OmnaBase's settings look: white cards with the
  * kit's border and corners, the kit's line tabs with the open tab in the accent colour, the kit's primary button, rows side by side on a
- * wide window and stacked on a phone, a tab strip that scrolls on its own on a phone, Details and Advanced like the kit's More, the builder
+ * wide window and stacked on a phone, a tab strip that scrolls on its own on a phone, the closed blocks like the kit's More, the builder
  * as a kit dialog, the stylesheet on this screen alone; and a picture of each tab for the founder.
  *
  * The founder's order (2026-10-10): "still horrible design. Use a styling similar to the OmnaBase settings where you render the settings
@@ -200,15 +207,15 @@ test("on a phone no tab overflows and the tab strip scrolls itself", async ({ pa
 });
 
 /**
- * What it checks: Advanced (like Details) opens like the kit's More: a summary line with a drawn chevron, the body set in.
- * Passes when: on the Connection tab, the Advanced block is a kit More whose summary shows no browser triangle but a drawn chevron (a
- *   pseudo-element with content); after a click its body is visible and its text starts further right than the summary line.
- * Fails when: Advanced keeps the browser's bare grey triangle, or opens into text glued to the left edge under the summary.
+ * What it checks: A closed block (here "Choose user fields") opens like the kit's More: a summary line with a drawn chevron, the body set in.
+ * Passes when: on the Customer data tab, the "Choose user fields" block is a kit More whose summary shows no browser triangle but a drawn
+ *   chevron (a pseudo-element with content); after a click its body is visible and its text starts further right than the summary line.
+ * Fails when: the closed blocks keep the browser's bare grey triangle, or open into text glued to the left edge under the summary.
  */
-test("Advanced opens like the kit's More", async ({ page }) => {
+test("a closed block opens like the kit's More", async ({ page }) => {
   await page.setViewportSize(DESKTOP);
-  await openTab(page, "connection");
-  const more = page.locator("details.ob-more", { has: page.locator("summary.ob-more__toggle", { hasText: /^\s*Advanced/ }) });
+  await openTab(page, "data");
+  const more = page.locator("details.ob-more", { has: page.locator("summary.ob-more__toggle", { hasText: /^\s*Choose user fields/ }) });
   await expect(more).toHaveCount(1);
   const summary = more.locator("summary.ob-more__toggle");
   const look = await summary.evaluate((s) => {
@@ -223,7 +230,7 @@ test("Advanced opens like the kit's More", async ({ page }) => {
   const body = more.locator(".ob-more__body");
   await expect(body).toBeVisible();
   const indent = await page.evaluate(() => {
-    const d = Array.from(document.querySelectorAll("details.ob-more")).find((x) => /^\s*Advanced/.test(x.querySelector("summary")?.textContent ?? ""))!;
+    const d = Array.from(document.querySelectorAll("details.ob-more")).find((x) => /^\s*Choose user fields/.test(x.querySelector("summary")?.textContent ?? ""))!;
     const s = d.querySelector("summary")!.getBoundingClientRect();
     const b = d.querySelector(".ob-more__body") as HTMLElement;
     const st = getComputedStyle(b);
@@ -231,6 +238,39 @@ test("Advanced opens like the kit's More", async ({ page }) => {
   });
   expect(indent.bodyTextLeft, "the body is set in").toBeGreaterThan(indent.summaryLeft);
   await summary.click();
+});
+
+/**
+ * What it checks: No tab shows the removed "Stored connection" card or an Advanced block, and the Connection tab ends with the Status card.
+ * Passes when: on each tab no closed block's summary reads "Advanced", nothing carries the old card's class or the key-source mark, and the
+ *   words "Stored connection", "wp-config" and "OMNABASE_ENCRYPTION_KEY" are nowhere in the page's text (closed blocks included); on the
+ *   Connection tab the last card is the Status card when the site is connected or needs a reconnect, and the Connection card otherwise.
+ * Fails when: the card the founder removed still shows in a real browser (a cached build, a leftover include), or something hangs below the
+ *   Status card.
+ */
+test("no tab shows the Stored connection card and the Connection tab ends with Status", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  for (const tab of TABS) {
+    await openTab(page, tab);
+    const seen = await page.evaluate(() => {
+      const root = document.querySelector(".ob-wp-settings")!;
+      const cards = Array.from(root.querySelectorAll(".ob-form__section"));
+      return {
+        advanced: Array.from(root.querySelectorAll("details > summary")).filter((s) => /^\s*Advanced\b/.test(s.textContent ?? "")).length,
+        marks: root.querySelectorAll(".ob-wp-settings__advanced, .ob-wp-settings__security, [data-key-source]").length,
+        text: (root as HTMLElement).textContent ?? "",
+        last: cards.length ? cards[cards.length - 1].className : "",
+        state: root.querySelector(".ob-wp-settings__connection")?.getAttribute("data-state") ?? "",
+      };
+    });
+    expect(seen.advanced, `${tab}: no Advanced block`).toBe(0);
+    expect(seen.marks, `${tab}: nothing of the old card`).toBe(0);
+    expect(seen.text, `${tab}: no Stored connection card`).not.toMatch(/Stored connection|wp-config|OMNABASE_ENCRYPTION_KEY/);
+    if (tab === "connection") {
+      const status = seen.state === "connected" || seen.state === "reconnect";
+      expect(seen.last, `the Connection tab ends with the ${status ? "Status" : "Connection"} card (state ${seen.state})`).toContain(status ? "ob-wp-settings__health" : "ob-wp-settings__connection");
+    }
+  }
 });
 
 /**

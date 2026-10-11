@@ -15,7 +15,9 @@
  * (2026-10-11): on a WordPress network (multisite) everything above but the site id is each site's own, so the removal runs on every site
  * of the network (all of them: WordPress lists only 100 unless asked for all), each site stopping its own key; the five user notes that
  * belong to a site's connection are user options, stored under the site's table prefix (`wp_2_omnabase_known` …); the customer's site id is
- * shared by the network's sites and goes once at the end.
+ * shared by the network's sites and goes once at the end. The vault's key file (2026-10-11): the key file and its folder (`omnabase/` under
+ * wp-content or the main site's uploads folder, with its `index.php` and `.htaccess`) are one per network and go once, after every site has
+ * stopped its key at OmnaBase (that stop still needs the key).
  *
  * @package OmnaBase
  */
@@ -113,3 +115,8 @@ if ( is_multisite() ) {
 
 // Every user's site id, shared by a network's sites: once, for every user.
 delete_metadata( 'user', 0, 'omnabase_site_id', '', true );
+
+// The vault's key file and its folder, shared by a network's sites: once, last (every site's stop at OmnaBase above still needed it).
+if ( $omnabase_can_call ) {
+	( new \OmnaBase\WordPress\Security\KeyFile() )->remove();
+}

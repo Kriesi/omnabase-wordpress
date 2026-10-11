@@ -12,8 +12,9 @@ use OmnaBase\WordPress\Security\Vault;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * When the vault reads "unreadable" (the salts changed: a security plugin's "log everyone out"), replies and customer questions stop
- * arriving (the receivers answer 503). Administrators are told on every admin page, not only on the plugin's screen; nobody else is.
+ * When the vault reads "unreadable" (the key file it was locked with is gone, or the salts it was locked with changed: a security plugin's
+ * "log everyone out"), replies and customer questions stop arriving (the receivers answer 503). Administrators are told on every admin
+ * page, with the reason in plain words, not only on the plugin's screen; nobody else is.
  */
 final class Notices {
 
@@ -37,7 +38,7 @@ final class Notices {
 		printf(
 			'<div class="notice notice-error ob-wp-reconnect"><p><strong>%1$s</strong> %2$s <a href="%3$s">%4$s</a></p></div>',
 			esc_html__( 'OmnaBase: reconnect needed', 'omnabase' ),
-			esc_html__( 'The stored connection can no longer be read (the site\'s secret keys changed), so OmnaBase\'s replies are not arriving.', 'omnabase' ),
+			esc_html( ReconnectWords::notice( $this->vault->unreadableReason() ) ),
 			esc_url( SettingsScreen::url() ),
 			esc_html__( 'Connect again', 'omnabase' )
 		);

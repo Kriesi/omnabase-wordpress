@@ -6,7 +6,7 @@
  * @package OmnaBase
  *
  * @var array{state:string,scopes:string[],keyHint:string,liveError:string} $omnabase_connection
- * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,keySource:string,factsAt:int,cronOff:bool} $omnabase_health
+ * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,factsAt:int,cronOff:bool} $omnabase_health
  */
 
 defined( 'ABSPATH' ) || exit;

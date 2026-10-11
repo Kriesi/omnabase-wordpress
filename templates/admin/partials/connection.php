@@ -68,7 +68,7 @@ $omnabase_action_url = admin_url( 'admin-post.php' );
 		</div>
 	<?php elseif ( 'reconnect' === $omnabase_connection['state'] ) : ?>
 		<p class="ob-wp-settings__error"><strong><?php esc_html_e( 'OmnaBase: reconnect needed', 'omnabase' ); ?></strong></p>
-		<p class="description"><?php esc_html_e( 'The stored connection can no longer be read because the site\'s secret keys changed. Connect again to receive replies.', 'omnabase' ); ?></p>
+		<p class="description"><?php echo esc_html( $omnabase_connection['reasonLine'] ); ?></p>
 		<div class="ob-wp-settings__buttons">
 			<?php require __DIR__ . '/connect.php'; ?>
 			<?php require __DIR__ . '/disconnect.php'; ?>

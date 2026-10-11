@@ -75,7 +75,7 @@ Yes. Tick "Use the theme's styles only" on the Forms and messages tab of Setting
 
 = What happens when I delete the plugin? =
 
-It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs. On a multisite network it does this on every site. Your tickets stay in OmnaBase.
+It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs and the key file that protects its stored connection. On a multisite network it does this on every site. Your tickets stay in OmnaBase.
 
 = Someone disconnected my site in OmnaBase. What now? =
 
@@ -111,7 +111,7 @@ OmnaBase keeps its own copy of support conversations. To export or delete what O
 * Added: Settings › OmnaBase, the plugin's settings screen, showing whether the site is connected to OmnaBase.
 * Added: Connect from Settings › OmnaBase: approve the site once on OmnaBase and it is connected, with no key to copy; the screen names the workspace, the project, what the site may do and the key's last four characters.
 * Added: Disconnect stops the site's key at OmnaBase and forgets it; Check connection tests both directions, the site calling OmnaBase and OmnaBase calling the site.
-* Added: The site's key and secrets are stored encrypted; if the site's secret keys change, every admin page says "OmnaBase: reconnect needed" until you connect again.
+* Added: The site's key and secrets are stored encrypted; if the stored connection can no longer be read, every admin page says "OmnaBase: reconnect needed" and why, until you connect again.
 * Added: The site receives OmnaBase's signed calls and turns away anything unsigned; the screen lists the last 20 calls received, without their content.
 * Added: Customer data on your tickets: choose under Settings › OmnaBase what your team sees when a customer writes in (account, chosen user fields, WooCommerce and Easy Digital Downloads orders, subscriptions and licences); everything stays off until you turn it on.
 * Added: Licence keys are always shown masked, and user fields that look like passwords, tokens or keys are never sent, even when ticked.

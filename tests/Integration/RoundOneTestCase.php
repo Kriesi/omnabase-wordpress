@@ -1,5 +1,17 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the vault's usual key
+ * now lives in a file the plugin makes under wp-content, so changing the salts alone no longer makes a stored connection unreadable (that is
+ * the point of the round). The tests that need an unreadable vault call `rotateSalts()`; it now loses the key whatever locked the vault:
+ * the salts change as before AND the key folder is moved aside (as if a restore or a cleanup lost it). `restoreVaultKey()` undoes both
+ * (the salts back, the folder back, any key folder made meanwhile removed); `tear_down()` always calls it, so no test leaves the shared
+ * tests WordPress without its key folder. Added beside them: `keyFolders()` and `keyFiles()` (where the key file lives), `hideKeyFolders()`,
+ * `blockKeyFolders()` (a plain file where the folder would go, so no key file can be made and the salts lock the vault), `vaultRecord()`
+ * (the vault's stored option as an array) and `keyMaterial()` (the key's written forms found in a key file, for leak checks). Nothing
+ * existing was loosened: every test that called `rotateSalts()` still sees an unreadable vault, now for the right reason on either source.
+ * The key folder's candidates (`omnabase` under wp-content or under the main site's uploads folder) are the red team's pinned shape; the
+ * builder may change the list here (and tell the red team).
+ *
  * M14 ROUND FOUR, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order of 2026-10-10 replaces WordPress's tab and
  * button look with OmnaBase's kit (the tab strip becomes the kit's line tabs, the buttons the kit's), so the three readers that named
  * WordPress's classes now name the kit's: `navTabs()` reads the links with `ob-tabs__item` (was `nav-tab`), `openTabs()` the ones with
@@ -89,6 +101,7 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 		$_GET     = array();
 		$_POST    = array();
 		$_REQUEST = array();
+		$this->restoreVaultKey();
 		if ( class_exists( Vault::class ) ) {
 			( new Vault() )->clear();
 		}
@@ -633,9 +646,158 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 		return $this->deliver( '/omnabase/v1/events', self::event( $type, 'evt_' . $delivery, $data ), $secret, array( 'x-omnabase-event' => $type, 'x-omnabase-delivery' => $delivery ) );
 	}
 
-	/** The salts change (a security plugin's "log everyone out"), through WordPress's own `salt` filter. */
+	/**
+	 * The key that locked the vault is lost, whichever it was: the salts change (a security plugin's "log everyone out"), through WordPress's
+	 * own `salt` filter, and the key folder disappears (moved aside; `restoreVaultKey()` brings both back).
+	 */
 	protected function rotateSalts(): void {
 		add_filter( 'salt', static fn ( $salt, $scheme ) => 'rotated-by-the-red-team|' . $scheme, 99, 2 );
+		$this->hideKeyFolders();
+	}
+
+	/* ---------- the key file (fixing round "the vault's key from a file", the red team) ---------- */
+
+	/** @var array<string,string> each key folder moved aside: its place => where it waits */
+	private array $hiddenKeyFolders = array();
+
+	/** @var string[] the plain files put where a key folder would go */
+	private array $blockedKeyFolders = array();
+
+	/**
+	 * Where the key folder may live (the pinned candidates): `omnabase` under wp-content, or under the main site's uploads folder.
+	 *
+	 * @return string[]
+	 */
+	protected static function keyFolders(): array {
+		$uploads = is_multisite() ? ( static function () {
+			switch_to_blog( get_main_site_id() );
+			$dir = wp_upload_dir( null, false );
+			restore_current_blog();
+			return $dir;
+		} )() : wp_upload_dir( null, false );
+		return array_values( array_unique( array( WP_CONTENT_DIR . '/omnabase', untrailingslashit( (string) $uploads['basedir'] ) . '/omnabase' ) ) );
+	}
+
+	/**
+	 * The key files there are: every `.php` file in a key folder other than `index.php`.
+	 *
+	 * @return string[]
+	 */
+	protected static function keyFiles(): array {
+		clearstatcache();
+		$found = array();
+		foreach ( self::keyFolders() as $folder ) {
+			foreach ( is_dir( $folder ) ? ( glob( $folder . '/*.php' ) ?: array() ) : array() as $file ) {
+				if ( 'index.php' !== basename( $file ) ) {
+					$found[] = $file;
+				}
+			}
+		}
+		return $found;
+	}
+
+	/**
+	 * Every existing key folder disappears (as if a restore without wp-content or a cleanup plugin lost it): the shared one is moved aside
+	 * (put back by `restoreVaultKey()`), one made during this test while the shared one was aside is deleted.
+	 */
+	protected function hideKeyFolders(): void {
+		foreach ( self::keyFolders() as $folder ) {
+			if ( ! is_dir( $folder ) ) {
+				continue;
+			}
+			if ( isset( $this->hiddenKeyFolders[ $folder ] ) ) {
+				self::removeFolder( $folder );
+				continue;
+			}
+			$aside = $folder . '.red-hidden-' . wp_generate_password( 6, false );
+			$this->assertTrue( rename( $folder, $aside ), "the key folder {$folder} can be moved aside" );
+			$this->hiddenKeyFolders[ $folder ] = $aside;
+		}
+		clearstatcache();
+	}
+
+	/** Puts a plain file where each key folder would go (after moving existing ones aside): no key file can be made, the salts lock. */
+	protected function blockKeyFolders(): void {
+		$this->hideKeyFolders();
+		foreach ( self::keyFolders() as $folder ) {
+			if ( ! file_exists( $folder ) && false !== file_put_contents( $folder, "red team: no key folder here\n" ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions
+				$this->blockedKeyFolders[] = $folder;
+			}
+		}
+		clearstatcache();
+	}
+
+	/** The salts back, the plain files gone, any key folder made meanwhile removed, the moved key folders back in place. */
+	protected function restoreVaultKey(): void {
+		remove_all_filters( 'salt' );
+		foreach ( $this->blockedKeyFolders as $file ) {
+			if ( is_file( $file ) ) {
+				unlink( $file );
+			}
+		}
+		$this->blockedKeyFolders = array();
+		foreach ( $this->hiddenKeyFolders as $folder => $aside ) {
+			self::removeFolder( $folder );
+			rename( $aside, $folder );
+		}
+		$this->hiddenKeyFolders = array();
+		clearstatcache();
+	}
+
+	/**
+	 * Removes a folder and everything in it (a key folder made while the real one was aside).
+	 *
+	 * @param string $folder The folder.
+	 */
+	protected static function removeFolder( string $folder ): void {
+		if ( ! is_dir( $folder ) ) {
+			return;
+		}
+		$items = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $folder, \FilesystemIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST );
+		foreach ( $items as $item ) {
+			$item->isDir() ? rmdir( $item->getPathname() ) : unlink( $item->getPathname() );
+		}
+		rmdir( $folder );
+	}
+
+	/**
+	 * The vault's stored option, as an array (empty when there is none).
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected static function vaultRecord(): array {
+		$stored = get_option( \OmnaBase\WordPress\Options::VAULT, array() );
+		return is_array( $stored ) ? $stored : array();
+	}
+
+	/**
+	 * The key's written forms found in a key file: each base64 or hex run long enough to be a 32-byte key, with its raw bytes, its base64
+	 * (plain and web-safe, without padding) and its hex.
+	 *
+	 * @param string $content The key file's content.
+	 * @return string[]
+	 */
+	protected static function keyMaterial( string $content ): array {
+		$needles = array();
+		preg_match_all( '~[A-Za-z0-9+/_=-]{32,}~', $content, $m );
+		foreach ( $m[0] as $run ) {
+			if ( ctype_xdigit( $run ) && strlen( $run ) >= 64 && 0 === strlen( $run ) % 2 ) {
+				$raw = hex2bin( $run );
+			} else {
+				$decoded = base64_decode( strtr( $run, '-_', '+/' ), true );
+				$raw     = ( false !== $decoded && strlen( $decoded ) >= 32 ) ? $decoded : false;
+			}
+			if ( false === $raw ) {
+				continue;
+			}
+			$b64       = base64_encode( $raw );
+			$needles[] = $run;
+			$needles[] = $raw;
+			$needles[] = rtrim( $b64, '=' );
+			$needles[] = rtrim( strtr( $b64, '+/', '-_' ), '=' );
+			$needles[] = bin2hex( $raw );
+		}
+		return array_values( array_unique( $needles ) );
 	}
 
 	/* ---------- the time shift for the pending connect ---------- */

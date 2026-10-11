@@ -1,5 +1,10 @@
 <?php
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
+ * the "Stored connection" card ("go with the file-based key, remove the block"), so the Connection tab's list of cards loses
+ * `ob-wp-settings__advanced`; the connection box and the status block must still each be their own card, and `ConnectionTabTest` now pins
+ * that nothing else (no Advanced block) is left on the tab. No other shape changed.
+ *
  * M14 round four, the red team's readers for the settings screen's look (inside wp-env's tests WordPress): the shapes the screen must take
  * to wear OmnaBase's settings look (white cards on the gray page, the kit's line tabs, the kit's buttons), read from the rendered HTML.
  *
@@ -50,7 +55,7 @@ trait AdminLookShapes {
 
 	/** Each tab's sections that must each be their own card, by the classes the older tests keep (connected site, plain run). */
 	protected static array $cardsPerTab = array(
-		'connection' => array( 'ob-wp-settings__connection', 'ob-wp-settings__health', 'ob-wp-settings__advanced' ),
+		'connection' => array( 'ob-wp-settings__connection', 'ob-wp-settings__health' ),
 		'data'       => array( 'ob-wp-settings__sources', 'ob-wp-settings__user-fields' ),
 		'forums'     => array( 'ob-wp-settings__forum' ),
 		'pages'      => array( 'ob-wp-settings__portal', 'ob-wp-settings__shortcodes' ),

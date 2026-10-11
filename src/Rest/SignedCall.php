@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The `permission_callback` of `/events` and `/customer`. A call passes only with OmnaBase's signature over the raw body, made with this
  * receiver's own secret (the webhook secret for `/events`, the facts secret for `/customer`) within five minutes. Refusals:
- * - 503 while the vault is empty or unreadable (not connected yet, or the salts changed): OmnaBase keeps retrying, so a fixable gap loses
+ * - 503 while the vault is empty or unreadable (not connected yet, or the key that locked it lost): OmnaBase keeps retrying, so a fixable gap loses
  *   nothing. Never 410, which would switch the address off for good.
  * - 401 for a missing, stale or wrong signature.
  */

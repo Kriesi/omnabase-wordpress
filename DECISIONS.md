@@ -941,3 +941,53 @@ when the first meets an already-closed connection (`ECONNRESET`). Why: on a load
 runs failed at the same spots, each a fetch right after a long WP-CLI step: `php()`/`wp()` block Node while WP-CLI runs, the server closes
 the idle kept-alive connection after its 5 seconds unseen, and the next fetch reuses it. The assertions just before passed (the uninstall
 left nothing and made exactly one `DELETE /me`). No check changed; only a connection that was already closed is retried, once.
+
+## 2026-10-11 — The vault's key file; the Stored connection card gone
+
+The founder (2026-10-11): "go with the file-based key, remove the block"; a customer without coding knowledge must never be asked to add
+something to wp-config.php (WordPress's own settings file). Red team: `docs/reviews/vault-key-red-team-report.md`; builder:
+`docs/reviews/vault-key-builder-report.md`.
+
+- **The source order, chosen once per save** (`Security\VaultKey::choose()`): `OMNABASE_ENCRYPTION_KEY` when defined (32 bytes base64, any
+  other text hashed into a key, as before); else the random 32-byte key in the plugin's key file, made on the first save; else the salts
+  (the secret phrases WordPress mixes into its cookies), also when those live in the database, silently.
+- **The record**: the vault's option holds `v` 2, `source` (`constant`|`file`|`salts`), `kid` (16 hex characters of BLAKE2b keyed with the
+  key over a fixed label: tells keys apart, gives nothing of the key away) and the two sealed values. **Reading uses only the recorded
+  source**: it never re-chooses, never creates a file, never caches a key (each call reads the small file again; the tests lose the file
+  mid-process). A record without `source` (saved before this round) reads as unreadable: no migration at this stage, the site connects again.
+- **The key file's place and guards** (`Security\KeyFile`): `omnabase/key.php` under wp-content, else under the main site's uploads folder
+  (on a network the main site's, never a sub-site's: one file per network). Beside it `index.php` (no folder listing) and a `.htaccess`
+  refusing every request (Apache 2.4 and 2.2 forms). The file starts `<?php`, a comment, `exit;`, then `// omnabase-key <base64>`: run by a
+  web server it prints nothing (nginx ignores `.htaccess`, so this is the guard that always holds). **Made in one step, private from the
+  start**: a temporary file opened with `fopen( 'xb' )`, set to 0600 before the key is written into it, then `link()`ed into place (a hard
+  link fails when the file exists, so two requests at once keep one key); on a file system without hard links, `rename()` while the file is
+  still absent. Never rewritten once present; a present file this process cannot read is never replaced (the save falls back to the salts).
+  A file anyone on the server may read still works and is noted once per request in PHP's error log (a code line, no key), never on screen.
+- **The reconnect reasons**: `Vault::unreadableReason()` gives `file_gone` (recorded source `file`, the file missing or holding another
+  key), `keys_changed` (source `salts`, today's salts give another key id), else null (a damaged value, or a removed constant). The words
+  (`Admin\ReconnectWords`, one sentence per reason for the connection card and for the "OmnaBase: reconnect needed" notice): "…because the
+  file this site locks its connection with is gone", "…because the site's secret keys changed", or no reason.
+- **The pending connect seals like a save**: `Vault::seal()` chooses the key the same way (so the first Connect click may create the key
+  file) and prefixes `<source>.<kid>.`; `open()` finds that source's key and checks the key id.
+- **The screen**: `templates/admin/partials/advanced.php` deleted; the Connection tab ends with the Status card (the connection card while
+  not connected); `Health::view()` no longer reports a key source; `Vault::keySource()` removed (nothing called it). No new option.
+- **Uninstall** removes the key file, its guards, any leftover temporary file and the folder, once, after the per-site loop (every site's
+  stop at OmnaBase still needs the key). Disconnect keeps the file; a reconnect reuses it.
+- **Direct file calls with `phpcs:ignore`**: `fopen`/`chmod`/`link`/`rename`/`file_put_contents`/`file_get_contents`/`rmdir` in `KeyFile`.
+  WP_Filesystem cannot create a file only when absent and may ask for FTP credentials; the reason sits on each line.
+- **Two texts as nowdocs** (`KeyFile`): the key file's PHP template and the `.htaccess` directives. The prose guard (words for people go
+  through translation) would read them as untranslated prose; they are file contents for servers and for an administrator opening the file,
+  never shown on a screen and not translatable (a translated `.htaccess` breaks).
+- **The log line** is a code (`OmnaBase: key_file_readable_by_others (mode 644) <path>`), not a translated sentence: the vault may run before
+  WordPress loads translations, and a log is for the server's administrator.
+- **Customer texts**: the changelog line about reconnect needed now says "if the stored connection can no longer be read … and why" (also
+  its copy in readme.txt's Changelog); the "Details and Advanced" line reads "…waits behind "Details"; the Advanced block is gone" (the red
+  team's guard asks for that line); a new line "Changed: The stored connection is locked with a key the plugin keeps in a protected file;
+  nothing to set up." The FAQ "What happens when I delete the plugin?" names the key file. `.pot` regenerated.
+
+Tests: the red team's 12 parked files copied in unchanged. One test helper adjusted, not weakened: **`tests/Unit/Support/FakeNetwork.php`**
+gets a small file system (wp-content as the unit layer's stand-in folder, emptied of the key folder at each install, and fakes for
+`get_main_site_id`, `wp_upload_dir`, `wp_mkdir_p`, `wp_is_writable`, `wp_delete_file`, `untrailingslashit`), because the vault now reaches
+for the key file and the multisite tests' saves and uninstalls called WordPress functions the fake did not have. Its `traces()` now also
+reports a key folder left behind, so the uninstall tests' "nothing of the plugin is left" covers the key file too (stricter). No assertion
+changed.

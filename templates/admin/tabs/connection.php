@@ -1,6 +1,6 @@
 <?php
 /**
- * The Connection tab: the setup line, the connection box, the status block and the "Advanced" block. Included by settings.php.
+ * The Connection tab: the setup line, the connection box and the status block (the tab's last block). Included by settings.php.
  *
  * @package OmnaBase
  *
@@ -20,4 +20,3 @@ require dirname( __DIR__ ) . '/partials/connection.php';
 if ( in_array( $omnabase_connection['state'], array( 'connected', 'reconnect' ), true ) ) {
 	require dirname( __DIR__ ) . '/partials/health.php';
 }
-require dirname( __DIR__ ) . '/partials/advanced.php';

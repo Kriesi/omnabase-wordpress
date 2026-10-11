@@ -16,6 +16,11 @@
  *
  * Calls to OmnaBase (`wp_remote_request`) are recorded with the site they were made from and answered 204.
  *
+ * Fixing round "the vault's key file" (2026-10-11), the builder: the vault now keeps its key in a file under wp-content, one per network, so
+ * the fake gets a small file system too: wp-content is the unit layer's stand-in folder (`WP_CONTENT_DIR`, emptied of the key folder at
+ * every install so each test starts without a key file), the uploads folder beside it, and the few WordPress file helpers the key file
+ * calls. `traces()` now also reports a key folder left behind, so "nothing of the plugin is left" covers the key file as well.
+ *
  * @package OmnaBase
  */
 
@@ -139,6 +144,11 @@ final class FakeNetwork {
 				$found[] = "table {$table}";
 			}
 		}
+		foreach ( array( WP_CONTENT_DIR . '/omnabase', WP_CONTENT_DIR . '/uploads/omnabase' ) as $folder ) {
+			if ( file_exists( $folder ) ) {
+				$found[] = "folder {$folder}";
+			}
+		}
 		return $found;
 	}
 
@@ -154,6 +164,7 @@ final class FakeNetwork {
 		$this->installPostMeta();
 		$this->installCron();
 		$this->installHttp();
+		$this->installFiles();
 		Functions\when( 'wp_salt' )->justReturn( 'fake-network-salt' );
 		Functions\when( 'wp_generate_password' )->alias( static fn ( $length = 12 ) => substr( str_repeat( bin2hex( random_bytes( 32 ) ), 2 ), 0, (int) $length ) );
 		Functions\when( 'dbDelta' )->alias(
@@ -338,6 +349,28 @@ final class FakeNetwork {
 		Functions\when( 'wp_clear_scheduled_hook' )->alias( $clear );
 		Functions\when( 'wp_unschedule_hook' )->alias( $clear );
 		Functions\when( 'wp_next_scheduled' )->alias( fn ( $hook ) => isset( $this->cron[ $this->blog ][ $hook ] ) ? time() + 60 : false );
+	}
+
+	/** The stand-in wp-content (without a key folder) and the WordPress file helpers the vault's key file calls. */
+	private function installFiles(): void {
+		if ( ! defined( 'WP_CONTENT_DIR' ) ) {
+			define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
+		}
+		@mkdir( WP_CONTENT_DIR . '/uploads', 0777, true ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- a test's stand-in folder.
+		foreach ( array( WP_CONTENT_DIR . '/omnabase', WP_CONTENT_DIR . '/uploads/omnabase' ) as $folder ) {
+			foreach ( glob( $folder . '/{,.}*', GLOB_BRACE ) ?: array() as $file ) {
+				if ( is_file( $file ) ) {
+					unlink( $file );
+				}
+			}
+			@rmdir( $folder ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- a test's stand-in folder.
+		}
+		Functions\when( 'get_main_site_id' )->justReturn( $this->sites[0] );
+		Functions\when( 'wp_upload_dir' )->alias( fn () => array( 'basedir' => WP_CONTENT_DIR . '/uploads' . ( $this->multisite && $this->blog !== $this->sites[0] ? '/sites/' . $this->blog : '' ), 'error' => false ) );
+		Functions\when( 'wp_mkdir_p' )->alias( static fn ( $dir ) => is_dir( $dir ) || @mkdir( $dir, 0755, true ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		Functions\when( 'wp_is_writable' )->alias( static fn ( $path ) => is_writable( $path ) );
+		Functions\when( 'wp_delete_file' )->alias( static fn ( $path ) => is_file( $path ) && unlink( $path ) );
+		Functions\when( 'untrailingslashit' )->alias( static fn ( $s ) => rtrim( (string) $s, '/\\' ) );
 	}
 
 	private function installHttp(): void {

@@ -1,4 +1,10 @@
 /**
+ * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
+ * the "Stored connection" card and its Advanced block, so "the detail waits behind Details and Advanced" can no longer open an Advanced
+ * block to find the key-source line. It becomes "the detail waits behind Details": the key's last four are still hidden until Details is
+ * opened, and the flow now also asserts that no Advanced block and no key-source line exist at all (the old flow only asked them to be
+ * hidden). The other flows are unchanged.
+ *
  * M14 round one, the red team's failing flow: the tabbed settings screen in a real browser: the tab row moves between panels, the
  * technical detail waits behind closed "Details" and "Advanced" blocks, the Plugins list leads to the screen, and a key revoked in OmnaBase
  * shows the fourth state "Disconnected in OmnaBase".
@@ -62,23 +68,22 @@ test("the tab row moves between panels", async ({ page }) => {
 });
 
 /**
- * What it checks: The key's last four characters and the encryption advice are hidden until the owner opens "Details" or "Advanced".
- * Passes when: on the Connection tab of the connected site, the key's last four and the line about where the encryption key comes from are
- *   not visible; after clicking "Details" the last four are visible; after clicking "Advanced" the encryption line is visible.
- * Fails when: the first screen an owner sees is full of key characters and PHP lines, or the detail cannot be reached at all.
+ * What it checks: The key's last four characters are hidden until the owner opens "Details", and the removed Advanced block is gone.
+ * Passes when: on the Connection tab of the connected site, the key's last four are not visible; after clicking "Details" they are
+ *   visible; the page has no closed block whose summary reads "Advanced" and no line about where the encryption key comes from.
+ * Fails when: the first screen an owner sees is full of key characters, the detail cannot be reached at all, or the advice about
+ *   wp-config.php the founder removed is still on the page.
  */
-test("the detail waits behind Details and Advanced", async ({ page }) => {
+test("the detail waits behind Details", async ({ page }) => {
   await page.goto(SETTINGS);
   await expect(page.locator(".ob-wp-settings__connection")).toHaveAttribute("data-state", "connected");
   const last4 = page.getByText(`obw_…${key.slice(-4)}`).first();
-  const source = page.locator("[data-key-source]").first();
   await expect(last4).toBeHidden();
-  await expect(source).toBeHidden();
 
   for (const summary of await page.locator("details:not([open]) > summary", { hasText: /^\s*Details/ }).all()) await summary.click();
   await expect(last4).toBeVisible();
-  await page.locator("details > summary", { hasText: /^\s*Advanced/ }).first().click();
-  await expect(source).toBeVisible();
+  await expect(page.locator("details > summary", { hasText: /^\s*Advanced/ })).toHaveCount(0);
+  await expect(page.locator("[data-key-source]")).toHaveCount(0);
 });
 
 /**

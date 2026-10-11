@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
  * The check tests both directions: the site asks OmnaBase who it is (`GET /me`), and asks OmnaBase to call the site (`POST /me/ping`,
  * which answers once OmnaBase has sent a signed `ping` to the events receiver). The second counts as working only when a ping really
  * arrived after the check started; until then it is "waiting" for up to 30 seconds. A third result asks the site's own receiver
- * (a security plugin blocking the REST API shows there). The view adds where the vault's key comes from and the last deliveries.
+ * (a security plugin blocking the REST API shows there). The view adds the last deliveries.
  */
 final class Health {
 
@@ -33,7 +33,7 @@ final class Health {
 	 * @param Loopback    $loopback The site's call to itself.
 	 * @param LastPing    $ping     When the last ping arrived.
 	 * @param DeliveryLog $log      The last deliveries.
-	 * @param Vault       $vault    The key's source.
+	 * @param Vault       $vault    Whether OmnaBase refused the key (no check then).
 	 */
 	public function __construct( private Client $client, private Loopback $loopback, private LastPing $ping, private DeliveryLog $log, private Vault $vault ) {}
 
@@ -65,7 +65,7 @@ final class Health {
 	/**
 	 * What the screen shows.
 	 *
-	 * @return array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,keySource:string,deliveries:array<int,array<string,mixed>>}
+	 * @return array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,deliveries:array<int,array<string,mixed>>}
 	 */
 	public function view(): array {
 		$last    = get_option( Options::HEALTH, array() );
@@ -86,7 +86,6 @@ final class Health {
 			'at'         => $checked ? (int) $last['at'] : 0,
 			'results'    => $results,
 			'waiting'    => 'waiting' === ( $results['ping']['result'] ?? '' ),
-			'keySource'  => $this->vault->keySource(),
 			'deliveries' => $this->log->recent(),
 		);
 	}
