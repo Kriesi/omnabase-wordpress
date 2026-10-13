@@ -3,7 +3,7 @@ OmnaBase for WordPress — release notes for customers
 Each release has a section. A section headed "unreleased" is still being built; it gets its date on the release day, and a dated
 section is never changed again. At release the top section is copied into readme.txt's "Changelog".
 
-= 0.1.0 — unreleased =
+= 0.1.0 — 2026-10-13 =
 
 * Added: Settings › OmnaBase, the plugin's settings screen, showing whether the site is connected to OmnaBase.
 * Added: Connect from Settings › OmnaBase: approve the site once on OmnaBase and it is connected, with no key to copy; the screen names the workspace, the project, what the site may do and the key's last four characters.
