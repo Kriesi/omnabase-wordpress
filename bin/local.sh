@@ -66,7 +66,18 @@ ensure_stack() {
 	curl -s -X POST "$API/api/test/relay" -H 'content-type: application/json' -d '{"host":"wp.omnabase.test","to":"http://localhost:8888"}' >/dev/null
 	curl -s -X POST "$API/api/test/relay" -H 'content-type: application/json' -d '{"host":"localhost","to":"http://127.0.0.1"}' >/dev/null
 	echo "Relay set: wp.omnabase.test → $WP · localhost → LocalWP's router (127.0.0.1)"
+	mail_out_on
 	ensure_ticker
+}
+
+# A reply to a customer with a mail address leaves by mail, and the stack's fresh schema has the workspace's outgoing-mail flag off: a
+# reply then sits queued for ever and the message centre (which shows sent replies only) stays empty (the founder's test, 2026-10-15).
+# The flag is switched on for the seed's workspace at every start; the e2e server's transport only captures the mail. A reply written
+# before the flag turned on is never sent (by design), so this runs before anyone can write one.
+mail_out_on() {
+	docker exec omnabase-testpg psql -U postgres -d omnabase_test -q -c "insert into feature_flags (id, key, workspace_id, \"on\", updated_at) select 'flag-mail-out-local', 'mail_out', id, true, now() from organization where slug = 'kriesi' on conflict (id) do update set \"on\" = true, updated_at = now()" >/dev/null 2>&1 \
+		&& echo "Outgoing mail on for the local workspace (replies leave; the capture transport keeps them)." \
+		|| echo "WARNING: could not switch outgoing mail on (is the test database container omnabase-testpg up?)"
 }
 
 # the e2e server has no worker of its own: a ticker runs its webhooks (OmnaBase → the site) and mail sender jobs every 5 seconds while the
