@@ -80,12 +80,13 @@ mail_out_on() {
 		|| echo "WARNING: could not switch outgoing mail on (is the test database container omnabase-testpg up?)"
 }
 
-# the e2e server has no worker of its own: a ticker runs its webhooks (OmnaBase → the site) and mail sender jobs every 5 seconds while the
+# the e2e server has no worker of its own: a ticker runs its webhooks (OmnaBase → the site), mail sender, AI (drafts and investigations, on the
+# stack's fake AI and fake Anthropic: a real key never reaches Anthropic here; 2026-10-20), knowledge and notifier jobs every 5 seconds while the
 # stack is up, so a reply reaches the forum or the message centre without a browser window of ours open
 ensure_ticker() {
 	if [[ -f build/local-tick.pid ]] && kill -0 "$(cat build/local-tick.pid)" 2>/dev/null; then return; fi
 	mkdir -p build
-	nohup bash -c 'while true; do for j in webhooks sender; do curl -s -m 20 -X POST "'"$API"'/api/test/tick" -H "content-type: application/json" -d "{\"job\":\"$j\"}" >/dev/null 2>&1; done; sleep 5; done' >/dev/null 2>&1 &
+	nohup bash -c 'while true; do for j in webhooks sender drafts knowledge notifier; do curl -s -m 20 -X POST "'"$API"'/api/test/tick" -H "content-type: application/json" -d "{\"job\":\"$j\"}" >/dev/null 2>&1; done; sleep 5; done' >/dev/null 2>&1 &
 	echo $! >build/local-tick.pid
 	echo "Ticker running (webhooks and mail every 5 s)."
 }
