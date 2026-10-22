@@ -6,7 +6,8 @@
  *
  * M13 round three, the red team's failing flow: the forum and the inbox, both ways. The site connects for real (as facts.spec.ts does), the
  * administrator marks the Support (public) and Staff (hidden) forums and picks the support user, Ada posts a topic through bbPress's own form,
- * the outbox files it, and the founder sees it in OmnaBase's inbox marked "Public on wp.omnabase.test" with no customer facts beside it. The
+ * the outbox files it, and the founder sees it in OmnaBase's inbox marked "Public on wp.omnabase.test" with the customer's facts beside it (the
+ * app's ruling of 2026-10-11, M14 round five: the person reading the ticket sees the site's facts in both modes; only the AI's reading depends on the mode). The
  * founder answers in OmnaBase; after the inbox's few seconds and the webhooks' pass the answer appears on the forum under the support user with
  * the closing line. Ada answers on the forum and the ticket comes back to the team. A topic in the unmarked Members forum creates nothing; one
  * in the hidden Staff forum becomes a ticket that is not public. With the site unreachable the founder's next answer waits ("Waiting for
@@ -16,7 +17,7 @@
  * 'Public on wp.omnabase.test' even on a busy day; the team's answer appears in the forum under the support user; nothing is lost, posted
  * twice or echoed*"; its *Red team*: "Playwright: topic → ticket → reply in OmnaBase → tick → reply on the forum; with the site down, OmnaBase
  * shows 'Waiting for wp.omnabase.test'". The coordinator: "`forum.spec.ts`: the site connected; a visitor posts a topic in the marked forum →
- * the ticket appears in OmnaBase's inbox with 'Public on wp.omnabase.test' and no customer facts card; the founder replies in OmnaBase → the
+ * the ticket appears in OmnaBase's inbox with 'Public on wp.omnabase.test' (the facts card beside it since 2026-10-11); the founder replies in OmnaBase → the
  * reply appears on the forum under the support user with the closing line; the visitor replies on the forum → the ticket reopens with the
  * message; an unmarked forum's topic creates nothing; a hidden forum's topic creates a non-public ticket". OmnaBase's ticket page:
  * `.ob-site-mark` "Public on <host>", `.ob-detail` "Waiting for <host>", the composer `.ob-composer__editor` and "Send"
@@ -29,7 +30,8 @@
  *   `/forums/forum/<slug>/`; bbPress's posting throttle is set to 0 for the run (restored after).
  * - The outbox is worked with `wp cron event run omnabase_outbox` (WP-Cron cannot wake itself through the harness's address); OmnaBase's
  *   sender and webhooks passes through `/api/test/tick` with the test clock's `now`.
- * - The WooCommerce source is switched on so that a facts card would have something to show: its absence on a public topic is the point.
+ * - The WooCommerce source is switched on so that the facts card has something to show on the public topic (adjusted 2026-10-22 to the app's
+ *   ruling of 2026-10-11; before, its absence was the point).
  *
  * Shared-seed rules this file keeps: it disconnects the site at the end, forgets the forum and facts options, puts the throttle back, trashes
  * the topics it made and resets the relay.
@@ -223,13 +225,13 @@ test("the administrator marks the forums and picks the support user", async ({ p
 
 /**
  * What it checks: The round's first half: a customer's topic in the marked public forum arrives in the founder's inbox as a public forum
- *   ticket, and the customer's shop data is kept off it.
+ *   ticket, with the customer's shop data beside it for the team (the app's ruling of 2026-10-11; the AI's reading depends on the mode).
  * Passes when: after Ada posts in Support and the outbox runs, the topic holds a ticket number; OmnaBase's API reads that ticket as public,
  *   with replies going to the site and the reference "topic-<id>"; the founder's ticket page shows "Public on wp.omnabase.test" and, with
- *   the information column open, no customer facts card.
- * Fails when: forum topics never reach the inbox, or a customer's orders sit beside a ticket whose answer every forum visitor reads.
+ *   the information column open, the customer facts card from the shop.
+ * Fails when: forum topics never reach the inbox, or the team cannot see the customer's shop data on a public topic.
  */
-test("a visitor's topic becomes a public ticket without the customer facts card", async () => {
+test("a visitor's topic becomes a public ticket with the customer facts card beside it", async () => {
   topicId = await postTopic("support", `Forum flow ${run}`, `Since the update the switcher is gone (${run}).`);
   topicUrl = ada.url();
 
@@ -242,8 +244,7 @@ test("a visitor's topic becomes a public ticket without the customer facts card"
   expect(read.body).toMatchObject({ public: true, replyVia: "site", external: { id: `topic-${topicId}` } });
   await founderPage.goto(`${OMNABASE_APP}/kriesi/inbox/all-open/${ticket}?info=1`);
   await expect(founderPage.locator(".ob-site-mark")).toContainText(`Public on ${SITE_HOST}`);
-  await founderPage.waitForTimeout(2_000); // the facts card would have been asked for by now
-  await expect(founderPage.locator(".ob-site-data")).toHaveCount(0);
+  await expect(founderPage.locator(".ob-site-data")).toHaveCount(1, { timeout: 15_000 }); // adjusted 2026-10-22, not weakened: the app shows the facts to the team on a public topic since its ruling of 2026-10-11 (DECISIONS, M14 round five)
 });
 
 /**
