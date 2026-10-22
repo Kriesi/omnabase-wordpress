@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) moves "Theme styles only" to the new Appearance tab ("the moved switch … the plugin's
+ * stylesheet off entirely"). The three switch tests now read and flip it on the Appearance tab (`screen( 'appearance' )`, `flip( …, 'appearance' )`)
+ * and look for it inside the Appearance card (`ob-wp-settings__appearance`) instead of the Shortcodes section; what they ask of it (off by
+ * default, both pieces lose and regain the stylesheet, the nonce) is unchanged. The Shortcodes section's own test is unchanged.
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the Shortcodes block moves to the "Forms and messages" tab, keeping
  * its class `ob-wp-settings__shortcodes`, its `h2` "Shortcodes" and the theme switch inside it (brief `docs/briefs/m14-settings-cleanup.md`,
  * choice 1; review S1: "the `ShortcodesSectionTest` moves with it"). Every read of the screen now opens that tab (`screen( 'pages' )`), and
@@ -52,19 +58,19 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	}
 
 	/**
-	 * What it checks: The "theme styles only" switch sits in the Shortcodes section and is off until the site owner turns it on.
-	 * Passes when: the section holds a checkbox labelled "theme styles only", not ticked on a new site, and with it off the contact form and
-	 *   the message centre still load the plugin's small stylesheet.
+	 * What it checks: The "theme styles only" switch sits on the Appearance tab and is off until the site owner turns it on.
+	 * Passes when: the Appearance card holds a checkbox labelled "theme styles only", not ticked on a new site, and with it off the contact
+	 *   form and the message centre still load the plugin's small stylesheet.
 	 * Fails when: the switch is missing, or starts on so a new site's form looks unstyled.
 	 */
 	public function test_the_theme_styles_switch_is_offered_and_off_by_default(): void {
 		// Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): the tab's one save form wraps the whole Shortcodes
 		// block, so the block's own HTML holds no form and the form-reading helper found nothing in it. The switch is read with its form from
 		// the whole tab, and a second assertion still pins it inside the Shortcodes block.
-		$html = $this->screen( 'pages' );
+		$html = $this->screen( 'appearance' );
 		$box  = self::checkbox( $html, self::THEME_ONLY );
 		$this->assertNotNull( $box, 'the switch, inside the tab\'s save form' );
-		$this->assertSame( 1, self::nodes( self::section( $html, 'ob-wp-settings__shortcodes' ), "//input[@type='checkbox'][@name='" . $box['name'] . "']" )->length, 'the switch inside the Shortcodes section' );
+		$this->assertSame( 1, self::nodes( self::section( $html, 'ob-wp-settings__appearance' ), "//input[@type='checkbox'][@name='" . $box['name'] . "']" )->length, 'the switch inside the Appearance card' );
 		$this->assertFalse( $box['checked'] );
 
 		self::freshQueue();
@@ -87,7 +93,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	 */
 	public function test_theme_styles_only_keeps_the_stylesheet_away_from_both_pieces(): void {
 		$this->omnabaseKnows( $this->ada, true );
-		$this->flip( self::THEME_ONLY, true );
+		$this->flip( self::THEME_ONLY, true, true, 'appearance' );
 
 		self::freshQueue();
 		$this->asVisitor();
@@ -97,7 +103,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 		$this->view( $this->ada );
 		$this->assertFalse( $this->formCssQueued(), 'no stylesheet for the message centre' );
 
-		$this->flip( self::THEME_ONLY, false );
+		$this->flip( self::THEME_ONLY, false, true, 'appearance' );
 		self::freshQueue();
 		$this->asVisitor();
 		$this->render();
@@ -110,8 +116,8 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 	 * Fails when: another site can make an administrator's browser change how the shop's forms look.
 	 */
 	public function test_the_switch_needs_the_forms_token(): void {
-		$this->flip( self::THEME_ONLY, true, false );
-		$box = self::checkbox( $this->screen( 'pages' ), self::THEME_ONLY );
+		$this->flip( self::THEME_ONLY, true, false, 'appearance' );
+		$box = self::checkbox( $this->screen( 'appearance' ), self::THEME_ONLY );
 		$this->assertNotNull( $box );
 		$this->assertFalse( $box['checked'], 'still off' );
 		self::freshQueue();

@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) moves "Theme styles only" from this tab's Shortcodes block to the new Appearance tab. The
+ * first test now asks that the switch is no longer here (it must not show on two tabs); the second asks that this tab's save stores the page
+ * and leaves the switch alone, with the switch first turned on through the Appearance tab's own form (the old test asked this save to store
+ * the switch; the new risk is that it switches it off). The nonce and editor test and the merged-handler test are unchanged.
+ *
  * M14 round one, the red team's failing tests: the "Forms and messages" tab, with the message centre's page picker and the Shortcodes block
  * saved by one form through one action (the plain run).
  *
@@ -48,12 +54,13 @@ final class PagesTabTest extends TabsTestCase {
 	}
 
 	/**
-	 * What it checks: One form on the Forms and messages tab holds the page picker and the Shortcodes block with its theme switch.
+	 * What it checks: One form on the Forms and messages tab holds the page picker and the Shortcodes block; the theme switch has left for the
+	 *   Appearance tab.
 	 * Passes when: the tab's one save form (action `omnabase_save_pages`) contains the page picker inside `.ob-wp-settings__portal` and the
-	 *   "theme's styles only" checkbox inside `.ob-wp-settings__shortcodes`, whose heading is "Shortcodes"; the tab's name reads "Forms and
-	 *   messages".
-	 * Fails when: the picker and the switch need two saves (an owner changes both, saves one and loses the other), or the Shortcodes block loses
-	 *   its heading or its switch.
+	 *   Shortcodes block `.ob-wp-settings__shortcodes`, whose heading is "Shortcodes"; the tab holds no "theme's styles only" checkbox (it is on
+	 *   the Appearance tab now); the tab's name reads "Forms and messages".
+	 * Fails when: the picker and the Shortcodes block need two saves, the Shortcodes block loses its heading, or the switch shows on two tabs
+	 *   (an owner ticks it on one and the other's save unticks it).
 	 */
 	public function test_one_form_holds_the_picker_and_the_shortcodes_block(): void {
 		$html = $this->openTab( 'pages' );
@@ -65,33 +72,47 @@ final class PagesTabTest extends TabsTestCase {
 		$block = $xpath->query( './/*[' . self::hasClass( 'ob-wp-settings__shortcodes' ) . ']', $form['node'] )->item( 0 );
 		$this->assertNotNull( $block, 'the Shortcodes block inside the form' );
 		$this->assertSame( 1, $xpath->query( ".//h2[normalize-space(.)='Shortcodes']", $block )->length, 'its heading' );
-		$this->assertSame( 1, $xpath->query( ".//input[@type='checkbox'][@name='omnabase_theme_only']", $block )->length, 'the theme switch inside the block' );
+		$this->assertSame( 0, self::query( $html, "//input[@type='checkbox'][@name='omnabase_theme_only']" )->length, 'the theme switch is no longer on this tab' );
+		$labels = array_map( static fn ( $l ) => self::wordsOf( $l ), iterator_to_array( self::query( $html, '//label' ) ) );
+		$this->assertSame( array(), array_values( preg_grep( '/theme(\'s)? styles only/i', $labels ) ), 'no label for it either' );
 	}
 
 	/**
-	 * What it checks: One save stores the picked page and the theme switch together and returns to the tab.
-	 * Passes when: sending the form with a new page picked and the switch ticked stores both and redirects to the pages tab; sending it again
-	 *   with no page and the switch unticked clears both.
-	 * Fails when: one half of the tab is silently not saved, or the owner lands on another tab after saving.
+	 * What it checks: One save stores the picked page and returns to the tab, and never touches the theme switch that moved to Appearance.
+	 * Passes when: with "theme styles only" switched on (as the Appearance tab stores it), sending this tab's form with a new page picked stores
+	 *   the page, redirects to the pages tab and leaves the switch on; sending it again with no page clears the page and still leaves the switch
+	 *   on.
+	 * Fails when: the page is silently not saved, the owner lands on another tab after saving, or saving this tab switches "theme styles only"
+	 *   off because the switch is no longer in its form.
 	 */
 	public function test_one_save_stores_the_page_and_the_switch(): void {
+		$look = array_values( array_filter( self::formsIn( $this->openTab( 'appearance' ) ), static fn ( $f ) => 'omnabase_save_appearance' === $f['action'] ) );
+		$this->assertNotEmpty( $look, 'the Appearance tab\'s form, where the switch lives now' );
+		// Builder's fix (2026-10-22): the second label spelling was written 'theme\'s styles only', which XPath 1.0 cannot read (it has no
+		// backslash escapes), so the whole query failed; the spelling is now quoted with double quotes. Both spellings are still looked for.
+		$box = self::query( $this->openTab( 'appearance' ), "//form//input[@type='checkbox'][@id=//label[contains(translate(normalize-space(.),'TS','ts'),'theme styles only') or contains(translate(normalize-space(.),'TS','ts'),\"theme's styles only\")]/@for] | //form//label[contains(translate(normalize-space(.),'TS','ts'),'theme styles only')]//input[@type='checkbox']" )->item( 0 );
+		$this->assertInstanceOf( \DOMElement::class, $box, 'the switch on the Appearance tab' );
+		$on = $look[0]['fields'];
+		self::putField( $on, (string) $box->getAttribute( 'name' ), $box->hasAttribute( 'value' ) ? (string) $box->getAttribute( 'value' ) : 'on' );
+		$this->postFields( $on );
+		$switch_on = fn (): bool => 1 === self::query( $this->openTab( 'appearance' ), "//input[@type='checkbox'][@name='" . $box->getAttribute( 'name' ) . "'][@checked]" )->length;
+		$this->assertTrue( $switch_on(), 'the switch is on before this tab is saved' );
+
 		$next = $this->page( 'Help centre' );
 		$form = $this->saveForm();
 		$this->assertNotNull( $form );
-		$fields                             = $form['fields'];
-		$fields['omnabase_portal']['page']  = (string) $next;
-		$fields['omnabase_theme_only']      = '1';
+		$fields                            = $form['fields'];
+		$fields['omnabase_portal']['page'] = (string) $next;
 
 		$this->assertSame( 'pages', $this->tabIn( $this->postFields( $fields ) ) );
 		$this->assertSame( $next, (int) ( get_option( 'omnabase_portal' )['page'] ?? 0 ) );
-		$this->assertTrue( (bool) ( get_option( 'omnabase_display' )['theme_only'] ?? false ) );
+		$this->assertTrue( $switch_on(), 'saving this tab leaves the switch on' );
 
 		$fields                            = $this->saveForm()['fields'];
 		$fields['omnabase_portal']['page'] = '0';
-		unset( $fields['omnabase_theme_only'] );
 		$this->postFields( $fields );
 		$this->assertSame( 0, (int) ( get_option( 'omnabase_portal' )['page'] ?? 0 ) );
-		$this->assertFalse( (bool) ( get_option( 'omnabase_display' )['theme_only'] ?? true ) );
+		$this->assertTrue( $switch_on(), 'and again' );
 	}
 
 	/**

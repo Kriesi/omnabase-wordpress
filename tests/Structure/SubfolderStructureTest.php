@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * Fixing round "sites in a subfolder", the red team's failing tests: file-level checks (no WordPress needed) for the customer words, the
  * translation template and the multisite rules.
  *
@@ -74,14 +81,14 @@ final class SubfolderStructureTest extends TestCase {
 
 	/**
 	 * What it checks: The customer release notes say that subfolder installs and networks now work.
-	 * Passes when: changelog.txt's top section is still "= 0.1.0 — unreleased =" and has a line naming a subfolder and a line (the same or
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13, frozen) and has a line naming a subfolder and a line (the same or
 	 *   another) naming a multisite or network.
 	 * Fails when: the fix ships without a word in the release notes, so customers who were refused never learn they can connect now.
 	 */
 	public function test_the_changelog_has_a_line_for_subfolders_and_networks(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertSame( 1, preg_match( '/^= (.+?) =\s*$(.*?)(?=^= |\z)/ms', $changelog, $top ), 'a top section' );
-		$this->assertSame( '0.1.0 — unreleased', $top[1], 'still unreleased' );
+		$this->assertSame( 1, preg_match( '/^= (0\.1\.0 — [^=]+) =\s*$(.*?)(?=^= |\z)/ms', $changelog, $top ), 'the 0.1.0 section' );
+		$this->assertSame( '0.1.0 — 2026-10-13', $top[1], 'released and dated 2026-10-13 (frozen)' );
 		$lines = array_filter( explode( "\n", $top[2] ), static fn ( $l ) => str_starts_with( ltrim( $l ), '*' ) );
 		$this->assertNotSame( array(), array_filter( $lines, static fn ( $l ) => (bool) preg_match( '/sub-?folder/i', $l ) ), 'a line naming subfolders' );
 		$this->assertNotSame( array(), array_filter( $lines, static fn ( $l ) => (bool) preg_match( '/multisite|network/i', $l ) ), 'a line naming networks' );

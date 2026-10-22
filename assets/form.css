@@ -1,154 +1,427 @@
-/* Built by bin/build-css.php from OmnaBase's packages/ui/src/styles/tokens.css (the light block, the variables the form uses) and
+/* Built by bin/build-css.php from OmnaBase's packages/ui/src/styles/tokens.css (the variables the form and the message centre uses, light and dark) and
    styles/form.css. Do not edit: change styles/form.css and build again. */
 
 .ob-wp {
   --ob-gray-50: #f8f8f8;
+  --ob-gray-100: #f2f2f2;
   --ob-gray-200: #e6e6e6;
   --ob-gray-300: #d4d4d4;
+  --ob-gray-400: #b0b0b0;
   --ob-gray-500: #878787;
   --ob-gray-600: #636363;
+  --ob-gray-700: #474747;
   --ob-gray-900: #1a1a1a;
   --ob-amber-50: #fffaea;
   --ob-amber-500: #f2b705;
+  --ob-amber-600: #d9a204;
   --ob-green-100: #e2f4e8;
-  --ob-blue-50: #f0f6fc;
   --ob-blue-500: #2271b1;
   --ob-blue-600: #135e96;
   --ob-red-100: #fbe4e1;
-  --ob-red-500: #d84a3f;
+  --ob-red-700: #b42318;
   --ob-space-1: 4px;
   --ob-space-2: 8px;
   --ob-space-3: 12px;
   --ob-space-4: 16px;
   --ob-space-5: 20px;
+  --ob-space-6: 24px;
+  --ob-space-8: 32px;
   --ob-text-xs: 13px;
   --ob-text-sm: 14px;
   --ob-text-base: 15px;
+  --ob-text-md: 17px;
+  --ob-text-lg: 18px;
+  --ob-radius-sm: 6px;
   --ob-radius-md: 6px;
   --ob-radius-lg: 6px;
   --ob-radius-full: 999px;
   --ob-bg-surface: #ffffff;
-  --ob-bg-muted: var(--ob-gray-50);
+  --ob-bg-muted: var(--ob-gray-100);
+  --ob-bg-hover: var(--ob-gray-50);
   --ob-border: var(--ob-gray-200);
   --ob-border-strong: var(--ob-gray-300);
   --ob-text: var(--ob-gray-900);
   --ob-text-secondary: var(--ob-gray-600);
-  --ob-text-muted: var(--ob-gray-500);
   --ob-accent: var(--ob-blue-500);
   --ob-accent-hover: var(--ob-blue-600);
-  --ob-accent-soft: var(--ob-blue-50);
   --ob-on-accent: #ffffff;
   --ob-focus: var(--ob-blue-500);
   --ob-btn-primary-bg: var(--ob-accent);
   --ob-btn-primary-hover: var(--ob-accent-hover);
   --ob-btn-primary-text: var(--ob-on-accent);
+  --ob-status-new: var(--ob-gray-900);
+  --ob-status-open: var(--ob-gray-700);
+  --ob-status-pending: var(--ob-gray-500);
+  --ob-status-resolved: var(--ob-gray-400);
+  --ob-error: var(--ob-red-700);
+  --ob-error-soft: var(--ob-red-100);
+  --ob-success-soft: var(--ob-green-100);
+  --ob-warning: var(--ob-amber-600);
+  --ob-warning-soft: var(--ob-amber-50);
+  --ob-night-900: #151515;
+  --ob-night-800: #1e1e1e;
+  --ob-night-750: #242424;
+  --ob-night-700: #303030;
+  --ob-night-600: #444444;
+  --ob-night-500: #6b6b6b;
+  --ob-night-400: #8f8f8f;
+  --ob-night-300: #adadad;
+  --ob-night-200: #cfcfcf;
+  --ob-night-50: #eeeeee;
+  --ob-blue-300: #6db3ec;
+  --ob-red-300: #f28b82;
+  --ob-night-red: #3a1714;
+  --ob-night-green: #12301e;
+  --ob-night-amber: #2e2608;
 }
 
-/* The front end's own rules, the shortcode form's and (round five) the message centre's (the source; bin/build-css.php puts the kit's tokens above them into assets/form.css).
-   Every rule names the plugin's own classes inside .ob-wp (where the variables live), so the theme's own styles are never touched; the
-   theme's font and text colour carry through. */
-
-.ob-wp-form {
-  display: grid;
-  gap: var(--ob-space-4);
-  max-width: 640px;
-  font: inherit;
-  color: inherit;
+.ob-wp[data-accent] {
+  --ob-accent: var(--ob-accent-user);
+  --ob-accent-hover: color-mix(in oklab, var(--ob-accent-user), #000 14%);
+  --ob-on-accent: var(--ob-on-accent-user);
+  --ob-focus: var(--ob-accent-user);
 }
 
-.ob-wp-form .ob-wp-form__field {
-  margin: 0;
+@media (prefers-color-scheme: dark) {
+  .ob-wp:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ob-bg-surface: var(--ob-night-900);
+    --ob-bg-muted: var(--ob-night-800);
+    --ob-bg-hover: var(--ob-night-750);
+    --ob-border: var(--ob-night-700);
+    --ob-border-strong: var(--ob-night-600);
+    --ob-text: var(--ob-night-50);
+    --ob-text-secondary: var(--ob-night-300);
+    --ob-accent: var(--ob-blue-500);
+    --ob-accent-hover: var(--ob-blue-600);
+    --ob-on-accent: #ffffff;
+    --ob-focus: var(--ob-blue-300);
+    --ob-btn-primary-bg: var(--ob-accent);
+    --ob-btn-primary-hover: var(--ob-accent-hover);
+    --ob-btn-primary-text: var(--ob-on-accent);
+    --ob-status-new: var(--ob-night-50);
+    --ob-status-open: var(--ob-night-200);
+    --ob-status-pending: var(--ob-night-400);
+    --ob-status-resolved: var(--ob-night-500);
+    --ob-error: var(--ob-red-300);
+    --ob-error-soft: var(--ob-night-red);
+    --ob-success-soft: var(--ob-night-green);
+    --ob-warning: var(--ob-amber-500);
+    --ob-warning-soft: var(--ob-night-amber);
+  }
+
+  .ob-wp[data-accent]:not([data-theme="light"]) {
+    --ob-accent: var(--ob-accent-user);
+    --ob-accent-hover: color-mix(in oklab, var(--ob-accent-user), #000 14%);
+    --ob-on-accent: var(--ob-on-accent-user);
+    --ob-focus: color-mix(in oklab, var(--ob-accent-user), #fff 45%);
+  }
+
 }
 
-.ob-wp-form label {
-  display: grid;
-  gap: var(--ob-space-1);
+.ob-wp[data-theme="dark"] {
+  color-scheme: dark;
+  --ob-bg-surface: var(--ob-night-900);
+  --ob-bg-muted: var(--ob-night-800);
+  --ob-bg-hover: var(--ob-night-750);
+  --ob-border: var(--ob-night-700);
+  --ob-border-strong: var(--ob-night-600);
+  --ob-text: var(--ob-night-50);
+  --ob-text-secondary: var(--ob-night-300);
+  --ob-accent: var(--ob-blue-500);
+  --ob-accent-hover: var(--ob-blue-600);
+  --ob-on-accent: #ffffff;
+  --ob-focus: var(--ob-blue-300);
+  --ob-btn-primary-bg: var(--ob-accent);
+  --ob-btn-primary-hover: var(--ob-accent-hover);
+  --ob-btn-primary-text: var(--ob-on-accent);
+  --ob-status-new: var(--ob-night-50);
+  --ob-status-open: var(--ob-night-200);
+  --ob-status-pending: var(--ob-night-400);
+  --ob-status-resolved: var(--ob-night-500);
+  --ob-error: var(--ob-red-300);
+  --ob-error-soft: var(--ob-night-red);
+  --ob-success-soft: var(--ob-night-green);
+  --ob-warning: var(--ob-amber-500);
+  --ob-warning-soft: var(--ob-night-amber);
 }
 
-.ob-wp-form .ob-wp-form__label {
-  font-size: var(--ob-text-sm);
-  font-weight: 600;
+.ob-wp[data-accent][data-theme="dark"] {
+  --ob-accent: var(--ob-accent-user);
+  --ob-accent-hover: color-mix(in oklab, var(--ob-accent-user), #000 14%);
+  --ob-on-accent: var(--ob-on-accent-user);
+  --ob-focus: color-mix(in oklab, var(--ob-accent-user), #fff 45%);
 }
 
-.ob-wp-form .ob-wp-form__input {
+/* The front end's own rules: the contact form [omnabase_form] and the message centre [omnabase_messages] (the source; bin/build-css.php puts
+   OmnaBase's tokens above them into assets/form.css, the light block on .ob-wp, the dark block on .ob-wp[data-theme="dark"] and on
+   .ob-wp:not([data-theme="light"]) when the visitor's device is dark, then the accent blocks).
+   Every rule sits under .ob-wp, the wrapper of the plugin's output, so the theme's page is never touched. The reused class names are the
+   kit's (ob-btn, ob-input, ob-textarea, ob-select, ob-pill, ob-notice, ob-portal-confirm), copied here under .ob-wp because they are not the
+   plugin's own. Semantic tokens only: no palette token, no colour written by hand. The typeface comes from the theme unless the owner loads
+   OmnaBase's (assets/fonts.css, its own stylesheet). */
+
+/* ---------- the wrapper: it paints its own surface and text, so a chosen theme reads the same on any page ---------- */
+
+.ob-wp {
   box-sizing: border-box;
-  width: 100%;
-  padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--ob-border-strong);
-  border-radius: var(--ob-radius-md);
+  max-width: 100%;
+  padding: var(--ob-space-6);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
   background: var(--ob-bg-surface);
   color: var(--ob-text);
-  font: inherit;
+  font-size: var(--ob-text-base);
+  line-height: 1.55;
 }
 
-.ob-wp-form .ob-wp-form__input:focus {
+.ob-wp *,
+.ob-wp *::before,
+.ob-wp *::after {
+  box-sizing: border-box;
+}
+
+.ob-wp.ob-wp-form-wrap {
+  max-width: 680px;
+}
+
+.ob-wp.ob-wp-messages {
+  max-width: 780px;
+}
+
+/* links in running text: the text colour, underlined (OmnaBase's blue reads at 3.5 to 1 on the night surface) */
+.ob-wp a {
+  color: var(--ob-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ob-wp a:focus-visible,
+.ob-wp button:focus-visible {
   outline: 2px solid var(--ob-focus);
-  outline-offset: 1px;
-  border-color: var(--ob-focus);
+  outline-offset: 2px;
 }
 
-.ob-wp-form .ob-wp-form__message {
-  min-height: 8em;
-  resize: vertical;
+.ob-wp svg {
+  flex: none;
+  fill: currentColor;
 }
 
-.ob-wp-form .ob-wp-form__error {
-  display: block;
-  margin-top: var(--ob-space-1);
-  color: var(--ob-red-500);
-  font-size: var(--ob-text-sm);
-}
+/* ---------- the kit's buttons ---------- */
 
-.ob-wp-form .ob-wp-form__error[hidden] {
-  display: none;
-}
-
-.ob-wp-form .ob-wp-form__actions {
+.ob-wp .ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ob-space-2);
+  min-height: 38px;
   margin: 0;
+  padding: 0 var(--ob-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--ob-radius-md);
+  background: transparent;
+  color: var(--ob-text);
+  font: inherit;
+  font-size: var(--ob-text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
 }
 
-.ob-wp-form .ob-wp-form__submit {
-  padding: var(--ob-space-2) var(--ob-space-5);
-  border: 0;
-  border-radius: var(--ob-radius-md);
+.ob-wp .ob-btn--primary {
   background: var(--ob-btn-primary-bg);
   color: var(--ob-btn-primary-text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
 }
 
-.ob-wp-form .ob-wp-form__submit:hover {
+.ob-wp .ob-btn--primary:hover {
   background: var(--ob-btn-primary-hover);
+  color: var(--ob-btn-primary-text);
 }
 
-.ob-wp-form .ob-wp-form__submit:disabled {
+.ob-wp .ob-btn--outline {
+  border-color: var(--ob-border-strong);
+  background: var(--ob-bg-surface);
+  color: var(--ob-text);
+}
+
+.ob-wp .ob-btn--outline:hover {
+  background: var(--ob-bg-hover);
+}
+
+.ob-wp .ob-btn--ghost {
+  color: var(--ob-text-secondary);
+}
+
+.ob-wp .ob-btn--ghost:hover {
+  background: var(--ob-bg-hover);
+  color: var(--ob-text);
+}
+
+.ob-wp .ob-btn:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.ob-wp-form .ob-wp-form__status {
+/* ---------- the kit's fields: a text field is the .ob-input box around its .ob-input__field ---------- */
+
+.ob-wp .ob-input {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-sm);
+  background: var(--ob-bg-surface);
+}
+
+.ob-wp .ob-input:focus-within {
+  border-color: var(--ob-focus);
+}
+
+.ob-wp .ob-input__field {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
   margin: 0;
-  min-height: 1.5em;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ob-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ob-text);
+  font: inherit;
 }
 
-.ob-wp-form .ob-wp-form__status--error {
-  color: var(--ob-red-500);
+.ob-wp .ob-textarea,
+.ob-wp .ob-select {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-sm);
+  background: var(--ob-bg-surface);
+  box-shadow: none;
+  color: var(--ob-text);
+  font: inherit;
 }
 
-.ob-wp-form .ob-wp-form__privacy,
-.ob-wp-form .ob-wp-form__note {
+.ob-wp .ob-textarea {
+  min-height: 140px;
+  padding: 10px 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.ob-wp .ob-select {
+  height: 38px;
+  padding: 0 10px;
+}
+
+.ob-wp .ob-input__field:focus,
+.ob-wp .ob-textarea:focus,
+.ob-wp .ob-select:focus {
+  outline: none;
+}
+
+.ob-wp .ob-input__field:focus-visible,
+.ob-wp .ob-textarea:focus-visible,
+.ob-wp .ob-select:focus-visible {
+  outline: 2px solid var(--ob-focus);
+  outline-offset: 2px;
+}
+
+.ob-wp .ob-textarea:focus,
+.ob-wp .ob-select:focus {
+  border-color: var(--ob-focus);
+}
+
+.ob-wp .ob-input__field::placeholder,
+.ob-wp .ob-textarea::placeholder {
+  color: var(--ob-text-secondary);
+}
+
+/* ---------- the contact form: label above, the field, the error under it ---------- */
+
+.ob-wp .ob-wp-form__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--ob-error);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp .ob-wp-form__error[hidden] {
+  display: none;
+}
+
+.ob-wp .ob-wp-form__error svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.ob-wp .ob-wp-form {
+  display: grid;
+  gap: var(--ob-space-4);
+  margin: 0;
+}
+
+.ob-wp .ob-wp-form[hidden] {
+  display: none;
+}
+
+.ob-wp .ob-wp-form__field {
+  margin: 0;
+}
+
+.ob-wp .ob-wp-form__label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ob-text);
+  font-size: var(--ob-text-sm);
+  font-weight: 600;
+}
+
+.ob-wp .ob-input--invalid,
+.ob-wp .ob-textarea[aria-invalid="true"],
+.ob-wp .ob-select[aria-invalid="true"] {
+  border-color: var(--ob-error);
+}
+
+.ob-wp .ob-wp-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ob-space-3);
+  margin: 0;
+}
+
+.ob-wp .ob-wp-form__status {
   margin: 0;
   color: var(--ob-text-secondary);
   font-size: var(--ob-text-sm);
 }
 
-.ob-wp-form .ob-wp-form__privacy a {
-  color: var(--ob-accent);
+.ob-wp .ob-wp-form__status:empty {
+  display: none;
+}
+
+.ob-wp .ob-wp-form__status--error {
+  color: var(--ob-error);
+}
+
+.ob-wp .ob-wp-form__privacy,
+.ob-wp .ob-wp-form__note {
+  margin: 0;
+  color: var(--ob-text-secondary);
+  font-size: var(--ob-text-sm);
 }
 
 /* the honeypot: off screen for people, still a real input for bots (never display: none, which some bots skip) */
-.ob-wp-form .ob-wp-form__trap {
+.ob-wp .ob-wp-form__trap {
   position: absolute;
   left: -10000px;
   width: 1px;
@@ -156,43 +429,131 @@
   overflow: hidden;
 }
 
-.ob-wp-form-notice {
-  padding: var(--ob-space-2) var(--ob-space-3);
-  border-left: 4px solid var(--ob-amber-500);
-  background: var(--ob-amber-50);
-}
+/* ---------- the success card: it takes the form's place ---------- */
 
-/* The message centre [omnabase_messages] (round five): the same tokens, the theme's font; its prompt mirrors the kit's PortalConfirm. */
-
-.ob-wp-messages {
+.ob-wp .ob-wp-form__done {
   display: grid;
-  gap: var(--ob-space-4);
-  max-width: 720px;
-  font: inherit;
-  color: inherit;
+  justify-items: center;
+  gap: var(--ob-space-2);
+  padding: var(--ob-space-6) 0;
+  text-align: center;
 }
 
-.ob-wp-messages .ob-wp-messages__title {
-  margin: var(--ob-space-2) 0 0;
+.ob-wp .ob-wp-form__done[hidden] {
+  display: none;
 }
 
-.ob-wp-messages .ob-wp-messages__notice,
-.ob-wp-messages .ob-wp-messages__refusal {
+.ob-wp .ob-wp-form__done-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--ob-space-2);
+  border-radius: var(--ob-radius-full);
+  background: var(--ob-accent);
+  color: var(--ob-on-accent);
+}
+
+.ob-wp .ob-wp-form__done-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.ob-wp .ob-wp-form__done-title {
   margin: 0;
-  padding: var(--ob-space-3) var(--ob-space-4);
+  color: var(--ob-text);
+  font-size: var(--ob-text-md);
+  font-weight: 600;
+}
+
+.ob-wp .ob-wp-form__done-title:focus {
+  outline: none;
+}
+
+.ob-wp .ob-wp-form__done-line {
+  margin: 0 0 var(--ob-space-2);
+  color: var(--ob-text-secondary);
+}
+
+/* ---------- the kit's notice: a soft box with an icon, in both themes ---------- */
+
+.ob-wp .ob-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ob-space-3);
+  margin: 0;
+  padding: var(--ob-space-3);
   border-radius: var(--ob-radius-md);
   background: var(--ob-bg-muted);
+  color: var(--ob-text);
+  font-size: var(--ob-text-sm);
 }
 
-.ob-wp-messages .ob-wp-messages__notice--ok {
-  background: var(--ob-green-100);
+.ob-wp .ob-notice svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
 }
 
-.ob-wp-messages .ob-wp-messages__notice--error {
-  background: var(--ob-red-100);
+.ob-wp .ob-notice__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.ob-wp-messages .ob-wp-messages__confirm {
+.ob-wp .ob-notice--ok {
+  background: var(--ob-success-soft);
+}
+
+.ob-wp .ob-notice--error {
+  background: var(--ob-error-soft);
+}
+
+/* the administrators' notes where a shortcode cannot work */
+.ob-wp.ob-wp-form-notice,
+.ob-wp.ob-wp-messages-notice {
+  padding: var(--ob-space-3) var(--ob-space-4);
+  border-left: 4px solid var(--ob-warning);
+  background: var(--ob-warning-soft);
+}
+
+/* ---------- the message centre: the app's inbox ---------- */
+
+.ob-wp .ob-wp-messages__section {
+  display: grid;
+  gap: var(--ob-space-4);
+}
+
+.ob-wp.ob-wp-messages {
+  display: grid;
+  gap: var(--ob-space-5);
+}
+
+.ob-wp .ob-wp-messages__title {
+  margin: 0;
+  color: var(--ob-text);
+  font-size: var(--ob-text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ob-wp .ob-wp-messages__refusal,
+.ob-wp .ob-wp-messages__empty,
+.ob-wp .ob-wp-messages__login {
+  margin: 0;
+  color: var(--ob-text-secondary);
+}
+
+.ob-wp .ob-wp-messages__login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ob-space-3);
+}
+
+/* the confirmation prompt, the app's PortalConfirm card */
+.ob-wp .ob-portal-confirm {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -203,172 +564,245 @@
   background: var(--ob-bg-surface);
 }
 
-.ob-wp-messages .ob-wp-messages__confirm-text {
-  flex: 1 1 280px;
+.ob-wp .ob-portal-confirm__icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--ob-text-secondary);
+}
+
+.ob-wp .ob-portal-confirm__text {
+  flex: 1 1 240px;
   min-width: 0;
 }
 
-.ob-wp-messages .ob-wp-messages__confirm-title {
+.ob-wp .ob-portal-confirm__title {
   margin: 0;
+  color: var(--ob-text);
   font-size: var(--ob-text-base);
   font-weight: 600;
 }
 
-.ob-wp-messages .ob-wp-messages__confirm-line {
+.ob-wp .ob-portal-confirm__line {
   margin: 2px 0 0;
   color: var(--ob-text-secondary);
   font-size: var(--ob-text-sm);
 }
 
-.ob-wp-messages .ob-wp-messages__confirm-form {
+.ob-wp .ob-portal-confirm__form {
+  flex: none;
   margin: 0;
 }
 
-.ob-wp-messages .ob-wp-messages__list,
-.ob-wp-messages .ob-wp-messages__thread {
+/* the list: the app's ticket rows, divided by a hairline, a tint on hover */
+.ob-wp .ob-wp-messages__list,
+.ob-wp .ob-wp-messages__thread {
   display: grid;
-  gap: var(--ob-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.ob-wp-messages .ob-wp-messages__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--ob-space-2) var(--ob-space-3);
-  padding: var(--ob-space-3) var(--ob-space-4);
-  border: 1px solid var(--ob-border);
-  border-radius: var(--ob-radius-md);
-  background: var(--ob-bg-surface);
+.ob-wp .ob-wp-messages__list {
+  border-top: 1px solid var(--ob-border);
 }
 
-.ob-wp-messages .ob-wp-messages__subject {
-  flex: 1 1 240px;
+.ob-wp .ob-wp-messages__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--ob-space-1) var(--ob-space-3);
+  margin: 0;
+  padding: var(--ob-space-3) var(--ob-space-2);
+  border-bottom: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-md);
+  transition: background 150ms ease-out;
+}
+
+.ob-wp .ob-wp-messages__row:hover,
+.ob-wp .ob-wp-messages__row:focus-within {
+  background: var(--ob-bg-hover);
+}
+
+.ob-wp .ob-wp-messages__subject {
   min-width: 0;
-  color: var(--ob-accent);
+  color: var(--ob-text);
   font-weight: 600;
+  text-decoration: none;
   overflow-wrap: anywhere;
 }
 
-.ob-wp-messages .ob-wp-messages__status {
-  padding: 0 var(--ob-space-2);
-  border-radius: var(--ob-radius-full);
-  background: var(--ob-bg-muted);
-  font-size: var(--ob-text-xs);
-  font-weight: 600;
+.ob-wp .ob-wp-messages__subject:hover {
+  text-decoration: underline;
 }
 
-.ob-wp-messages .ob-wp-messages__status--open {
-  background: var(--ob-accent-soft);
-}
-
-.ob-wp-messages .ob-wp-messages__when,
-.ob-wp-messages .ob-wp-messages__number,
-.ob-wp-messages .ob-wp-messages__empty {
-  color: var(--ob-text-muted);
-  font-size: var(--ob-text-sm);
-}
-
-.ob-wp-messages .ob-wp-messages__meta,
-.ob-wp-messages .ob-wp-messages__back,
-.ob-wp-messages .ob-wp-messages__paging {
+.ob-wp .ob-wp-messages__row-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ob-space-3);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ob-space-2) var(--ob-space-3);
+}
+
+.ob-wp .ob-wp-messages__when,
+.ob-wp .ob-wp-messages__number {
+  color: var(--ob-text-secondary);
+  font-size: var(--ob-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ob-wp .ob-wp-messages__paging,
+.ob-wp .ob-wp-messages__back,
+.ob-wp .ob-wp-messages__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ob-space-2) var(--ob-space-3);
   margin: 0;
 }
 
-.ob-wp-messages .ob-wp-messages__message {
+.ob-wp .ob-wp-messages__back {
+  margin-left: calc(-1 * var(--ob-space-3));
+}
+
+/* the status pill: the word in readable text, the status colour on its dot only */
+.ob-wp .ob-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--ob-radius-sm);
+  background: var(--ob-bg-muted);
+  color: var(--ob-text-secondary);
+  font-size: var(--ob-text-xs);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ob-wp .ob-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: var(--ob-radius-full);
+  background: var(--ob-status-open);
+}
+
+.ob-wp .ob-pill--new::before {
+  background: var(--ob-status-new);
+}
+
+.ob-wp .ob-pill--open {
+  color: var(--ob-text);
+}
+
+.ob-wp .ob-pill--pending::before {
+  background: var(--ob-status-pending);
+}
+
+.ob-wp .ob-pill--resolved::before {
+  background: var(--ob-status-resolved);
+}
+
+.ob-wp .ob-pill--archived::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ob-status-pending);
+}
+
+/* the thread: the visitor's own messages tinted and set in, the team's on the surface; each names its author in words */
+.ob-wp .ob-wp-messages__thread {
+  gap: var(--ob-space-3);
+}
+
+.ob-wp .ob-wp-messages__message {
+  margin: 0;
   padding: var(--ob-space-3) var(--ob-space-4);
   border: 1px solid var(--ob-border);
   border-radius: var(--ob-radius-md);
   background: var(--ob-bg-surface);
 }
 
-.ob-wp-messages .ob-wp-messages__message--you {
+.ob-wp .ob-wp-messages__message--you {
+  margin-left: var(--ob-space-8);
+  border-color: transparent;
   background: var(--ob-bg-muted);
 }
 
-.ob-wp-messages .ob-wp-messages__author {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ob-space-2);
-  margin: 0 0 var(--ob-space-1);
+.ob-wp .ob-wp-messages__message--other {
+  border-style: dashed;
 }
 
-.ob-wp-messages .ob-wp-messages__body {
+.ob-wp .ob-wp-messages__author {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ob-space-1) var(--ob-space-2);
+  margin: 0 0 var(--ob-space-1);
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp .ob-wp-messages__author strong {
+  color: var(--ob-text);
+  font-weight: 600;
+}
+
+.ob-wp .ob-wp-messages__body {
+  color: var(--ob-text);
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 
-.ob-wp-messages .ob-wp-messages__form {
+/* the reply box: the app's composer, the box and its foot with the send button */
+.ob-wp .ob-wp-messages__form {
   display: grid;
   gap: var(--ob-space-3);
-}
-
-.ob-wp-messages .ob-wp-messages__field,
-.ob-wp-messages .ob-wp-messages__actions {
   margin: 0;
 }
 
-.ob-wp-messages label {
-  display: grid;
-  gap: var(--ob-space-1);
+.ob-wp .ob-wp-messages__field,
+.ob-wp .ob-wp-messages__actions {
+  margin: 0;
 }
 
-.ob-wp-messages .ob-wp-messages__label {
+.ob-wp .ob-wp-messages__label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ob-text);
   font-size: var(--ob-text-sm);
   font-weight: 600;
 }
 
-.ob-wp-messages .ob-wp-messages__input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: var(--ob-space-2) var(--ob-space-3);
+.ob-wp .ob-wp-messages__composer {
+  overflow: hidden;
   border: 1px solid var(--ob-border-strong);
   border-radius: var(--ob-radius-md);
   background: var(--ob-bg-surface);
-  color: var(--ob-text);
-  font: inherit;
 }
 
-.ob-wp-messages .ob-wp-messages__text {
-  min-height: 7em;
-  resize: vertical;
-}
-
-.ob-wp-messages .ob-wp-messages__input:focus {
-  outline: 2px solid var(--ob-focus);
-  outline-offset: 1px;
+.ob-wp .ob-wp-messages__composer:focus-within {
   border-color: var(--ob-focus);
 }
 
-.ob-wp-messages .ob-wp-messages__button {
-  display: inline-block;
-  padding: var(--ob-space-2) var(--ob-space-5);
+.ob-wp .ob-wp-messages__composer .ob-textarea {
+  min-height: 120px;
   border: 0;
-  border-radius: var(--ob-radius-md);
-  background: var(--ob-btn-primary-bg);
-  color: var(--ob-btn-primary-text);
-  font: inherit;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
+  border-radius: 0;
 }
 
-.ob-wp-messages .ob-wp-messages__button:hover {
-  background: var(--ob-btn-primary-hover);
+.ob-wp .ob-wp-messages__composer .ob-textarea:focus-visible {
+  outline-offset: -2px;
 }
 
-.ob-wp-messages .ob-wp-messages__button:disabled {
-  opacity: 0.6;
-  cursor: default;
+.ob-wp .ob-wp-messages__composer-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--ob-space-2);
+  border-top: 1px solid var(--ob-border);
 }
 
-/* the New ticket form's honeypot, as the contact form's */
-.ob-wp-messages .ob-wp-form__trap {
+/* the New question form's honeypot, as the contact form's */
+.ob-wp.ob-wp-messages .ob-wp-form__trap {
   position: absolute;
   left: -10000px;
   width: 1px;
@@ -376,8 +810,32 @@
   overflow: hidden;
 }
 
-.ob-wp-messages-notice {
-  padding: var(--ob-space-2) var(--ob-space-3);
-  border-left: 4px solid var(--ob-amber-500);
-  background: var(--ob-amber-50);
+/* ---------- phones: one column, a smaller frame, 16 px field text (iPhone zooms into anything smaller) ---------- */
+
+@media (max-width: 480px) {
+  .ob-wp {
+    padding: var(--ob-space-4);
+  }
+
+  .ob-wp .ob-input__field,
+  .ob-wp .ob-textarea,
+  .ob-wp .ob-select {
+    font-size: 16px;
+  }
+
+  .ob-wp .ob-wp-messages__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ob-wp .ob-wp-messages__row-meta {
+    justify-content: flex-start;
+  }
+
+  .ob-wp .ob-wp-messages__message--you {
+    margin-left: var(--ob-space-4);
+  }
+
+  .ob-wp .ob-btn--primary {
+    width: 100%;
+  }
 }

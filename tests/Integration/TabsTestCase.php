@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance" (slug `appearance`), after "Forms and messages" and before
+ * "Activity", with one save form (`omnabase_save_appearance`, the red team's pinned shape) holding the theme, the accent, the font and the moved
+ * "Theme styles only" switch; the brief asks that the five-tab pins be adjusted with a DECISIONS entry (`FrontendDesignStructureTest` asks for
+ * that entry). Here the Appearance tab's card (`ob-wp-settings__appearance`) joins the sections each tab must hold alone, and its save action joins the
+ * tabs with settings. Nothing removed.
+ *
  * M14 ROUND FOUR, THE RED TEAM: ADJUSTED, NOT WEAKENED (comment only). The tab links are now the kit's line tabs (`ob-tabs__item`, the open
  * one `ob-tabs__item--active`; see `RoundOneTestCase`'s readers), not WordPress's `nav-tab`; the words and shapes below describe round one's
  * markup and stay as its record. No code in this file changed.
@@ -28,6 +35,7 @@ abstract class TabsTestCase extends RoundOneTestCase {
 		'data'       => array( 'ob-wp-settings__facts' ),
 		'forums'     => array( 'ob-wp-settings__forum' ),
 		'pages'      => array( 'ob-wp-settings__portal', 'ob-wp-settings__shortcodes' ),
+		'appearance' => array( 'ob-wp-settings__appearance' ),
 		'activity'   => array( 'ob-wp-settings__outbox', 'ob-wp-settings__deliveries' ),
 	);
 
@@ -35,7 +43,8 @@ abstract class TabsTestCase extends RoundOneTestCase {
 	protected const SAVES = array(
 		'data'   => 'omnabase_save_facts',
 		'forums' => 'omnabase_save_forum',
-		'pages'  => 'omnabase_save_pages',
+		'pages'      => 'omnabase_save_pages',
+		'appearance' => 'omnabase_save_appearance',
 	);
 
 	/**

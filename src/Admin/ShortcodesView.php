@@ -12,8 +12,8 @@ use OmnaBase\WordPress\Forms\Display;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The template names both shortcodes and their attributes; this hands it the two switches ("theme styles only", the My Account link) and
- * whether WooCommerce is active (the My Account switch is offered only then).
+ * The template names both shortcodes and their attributes; this hands it the My Account switch ("theme styles only" lives on the Appearance
+ * tab since 2026-10-22) and whether WooCommerce is active (the My Account switch is offered only then).
  */
 final class ShortcodesView {
 
@@ -27,11 +27,10 @@ final class ShortcodesView {
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{themeOnly:bool,myAccount:bool,shop:bool}
+	 * @return array{myAccount:bool,shop:bool}
 	 */
 	public function build(): array {
 		return array(
-			'themeOnly' => $this->display->themeOnly(),
 			'myAccount' => $this->display->myAccount(),
 			'shop'      => self::shopActive(),
 		);

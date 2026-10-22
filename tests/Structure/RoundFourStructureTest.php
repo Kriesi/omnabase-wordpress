@@ -1,5 +1,23 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order of 2026-10-21
+ * ("option for light and dark themes … should use the styling of our OmnaBase app") and its brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rules 1 and 2) reverse two of round four's choices for the form's stylesheet: the dark block is now
+ * copied (scoped to the plugin's wrapper: `.ob-wp[data-theme="dark"]` and, inside the device's dark setting, `.ob-wp:not([data-theme="light"])`),
+ * and the kit's typeface may be loaded when the owner asks for it. So `test_the_stylesheet_comes_from_the_kit_tokens_in_the_plugins_scope` no
+ * longer refuses every dark block and every mention of the typeface: it refuses a dark block anywhere but the form's stylesheet, any dark rule
+ * not under the plugin's wrapper, and the typeface anywhere but the one stylesheet that declares the font (`@font-face`, loaded only on the
+ * option; `FrontendDesignStructureTest` pins that sheet). What it protected stays protected: the theme's page is never recoloured (nothing on
+ * `:root`, every dark rule under `.ob-wp`), the settings screen stays light (M14 round four's own guard), and the theme's font stays unless the
+ * owner chooses otherwise (the integration and browser layers check the option). Every other test in this file is unchanged.
+ *
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * M13 round four, the red team's failing tests: the structure guard extended for the shortcode form (file-level checks, no WordPress needed).
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) "Round four": "`Forms/Shortcode`, `Forms/Token`, `Forms/Guard`, `Rest/Form`,
@@ -93,19 +111,41 @@ final class RoundFourStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The form's stylesheet comes from OmnaBase's kit tokens, kept inside the plugin's own scope, without the dark block or the
-	 *   kit's typeface, and the build knows where the tokens come from.
-	 * Passes when: a stylesheet under assets/ uses the kit's --ob- variables under a .ob-wp selector, never sets them on :root, has no
-	 *   prefers-color-scheme dark block and no "Plus Jakarta Sans"; a script under bin/ reads tokens.css (a line of code, not a comment).
-	 * Fails when: the plugin restyles the whole theme, turns dark on a light site, swaps the theme's font, or the colours drift from the
-	 *   product's because nobody knows how they were made.
+	 * What it checks: The form's stylesheet comes from OmnaBase's kit tokens, kept inside the plugin's own scope; its dark colours apply only
+	 *   inside the plugin's own output, and the kit's typeface appears only in the font's own stylesheet; the build knows where the tokens come
+	 *   from.
+	 * Passes when: a stylesheet under assets/ uses the kit's --ob- variables under a .ob-wp selector and never sets them on :root; a dark block
+	 *   (prefers-color-scheme dark, or a data-theme="dark" mark) appears in no stylesheet but the form's, and every selector inside it starts at
+	 *   the plugin's wrapper (.ob-wp); "Plus Jakarta Sans" appears in no stylesheet except the one that declares the font (@font-face); a script
+	 *   under bin/ reads tokens.css (a line of code, not a comment).
+	 * Fails when: the plugin restyles the whole theme, turns the theme's own page dark, swaps the theme's font for every visitor, or the colours
+	 *   drift from the product's because nobody knows how they were made.
 	 */
 	public function test_the_stylesheet_comes_from_the_kit_tokens_in_the_plugins_scope(): void {
-		$css = implode( "\n", array_map( fn ( $f ) => $this->read( $f ), $this->filesUnder( 'assets', 'css' ) ) );
+		$files = $this->filesUnder( 'assets', 'css' );
+		$css   = implode( "\n", array_map( fn ( $f ) => $this->read( $f ), $files ) );
 		$this->assertMatchesRegularExpression( '/\.ob-wp[^{]*\{[^}]*--ob-[a-z0-9-]+\s*:/s', $css, 'the kit\'s variables under .ob-wp' );
 		$this->assertDoesNotMatchRegularExpression( '/:root\s*\{[^}]*--ob-/s', $css, 'never on :root' );
-		$this->assertDoesNotMatchRegularExpression( '/prefers-color-scheme\s*:\s*dark/i', $css, 'the dark block dropped' );
-		$this->assertStringNotContainsString( 'Plus Jakarta', $css, 'the theme\'s font' );
+		foreach ( $files as $file ) {
+			$one  = (string) preg_replace( '#/\*.*?\*/#s', '', $this->read( $file ) );
+			$dark = (bool) preg_match( '/prefers-color-scheme\s*:\s*dark|data-theme\s*=\s*[\'"]?dark/i', $one );
+			if ( 'assets/form.css' !== $file ) {
+				$this->assertFalse( $dark, "{$file}: no dark block outside the form's stylesheet" );
+			}
+			if ( $dark ) {
+				preg_match_all( '/([^{}]+)\{/', (string) preg_replace( '/@media[^{]*\{/', '', $one ), $heads );
+				foreach ( $heads[1] as $head ) {
+					foreach ( array_map( 'trim', explode( ',', $head ) ) as $selector ) {
+						if ( '' !== $selector && ! str_starts_with( $selector, '@' ) ) {
+							$this->assertStringStartsWith( '.ob-wp', $selector, "{$file}: every rule lives under the plugin's wrapper" );
+						}
+					}
+				}
+			}
+			if ( ! preg_match( '/@font-face/i', $one ) ) {
+				$this->assertStringNotContainsString( 'Plus Jakarta', $one, "{$file}: the theme's font, unless this is the font's own stylesheet" );
+			}
+		}
 		$bin   = implode( "\n", array_map( fn ( $f ) => $this->read( $f ), $this->filesUnder( 'bin', '' ) ) );
 		$lines = array_filter( explode( "\n", $bin ), static fn ( $l ) => str_contains( $l, 'tokens.css' ) && ! preg_match( '#^\s*(\#|//|\*)#', $l ) );
 		$this->assertNotEmpty( $lines, 'a build step (not a comment) reads the kit\'s tokens.css' );
@@ -122,13 +162,13 @@ final class RoundFourStructureTest extends TestCase {
 
 	/**
 	 * What it checks: The customer changelog and the decisions record round four.
-	 * Passes when: changelog.txt's unreleased section has a line about the contact form shortcode, and DECISIONS.md has a dated "M13 round four"
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13) has a line about the contact form shortcode, and DECISIONS.md has a dated "M13 round four"
 	 *   heading.
 	 * Fails when: site owners are not told the form exists, or the round's choices are not written down.
 	 */
 	public function test_the_changelog_and_decisions_record_round_four(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$top       = (string) preg_replace( '/^.*?^= \d+\.\d+\.\d+ — unreleased =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
+		$top       = (string) preg_replace( '/^.*?^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
 		$this->assertMatchesRegularExpression( '/^\* .*(\[omnabase_form\]|shortcode).*\bform\b|^\* .*\bform\b.*(\[omnabase_form\]|shortcode)/mi', $top );
 		$this->assertMatchesRegularExpression( '/^## \d{4}-\d{2}-\d{2} — M13 round four/m', $this->read( 'DECISIONS.md' ) );
 	}

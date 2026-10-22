@@ -1,5 +1,14 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ * Also adjusted here: `test_the_readme_names_the_tabs` asks that the FAQ's theme-styles answer name the Appearance tab instead of Forms and
+ * messages, because the brief (rule 2) moves the "Theme styles only" switch to the new Appearance tab; the rest of that test is unchanged.
+ *
  * M14 round one, the red team's failing tests: the words outside the screen follow the screen (file-level checks, no WordPress needed): the
  * plugin's description on the Plugins list, the readme's Description, Installation, FAQ and External services, and the customer changelog.
  *
@@ -67,8 +76,8 @@ final class M14RoundOneStructureTest extends TestCase {
 
 	/**
 	 * What it checks: The readme sends owners to the tabs by the names the screen shows.
-	 * Passes when: the FAQ's answer about the theme's styles names the "Forms and messages" tab and no longer says "Shortcodes section"; the
-	 *   Installation steps name the tabs "Customer data", "Forums" and "Forms and messages".
+	 * Passes when: the FAQ's answer about the theme's styles names the "Appearance" tab (where the switch moved in the front-end design round)
+	 *   and no longer says "Shortcodes section"; the Installation steps name the tabs "Customer data", "Forums" and "Forms and messages".
 	 * Fails when: an owner follows the readme to a "Shortcodes section" that no longer exists as such, or to "the same screen" without knowing
 	 *   which tab.
 	 */
@@ -76,7 +85,7 @@ final class M14RoundOneStructureTest extends TestCase {
 		$readme = $this->read( 'readme.txt' );
 		$faq    = self::sectionOf( $readme, 'Frequently Asked Questions' );
 		$this->assertDoesNotMatchRegularExpression( '/Shortcodes section/i', $faq );
-		$this->assertMatchesRegularExpression( '/theme[^=]*\?\s*=\s*\R+[^=]*Forms and messages/i', $faq, 'the theme-styles answer names Forms and messages' );
+		$this->assertMatchesRegularExpression( '/theme[^=]*\?\s*=\s*\R+[^=]*Appearance/i', $faq, 'the theme-styles answer names the Appearance tab (front-end design round: the switch moved there)' );
 		$install = self::sectionOf( $readme, 'Installation' );
 		foreach ( array( 'Customer data', 'Forums', 'Forms and messages' ) as $tab ) {
 			$this->assertStringContainsString( $tab, $install, $tab );
@@ -84,15 +93,15 @@ final class M14RoundOneStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The unreleased changelog tells customers about this round's changes, in plain words.
-	 * Passes when: changelog.txt's top section is still "0.1.0 — unreleased" and has a line about the settings tabs, a line about "Disconnected
+	 * What it checks: The release notes tell customers about this round's changes, in plain words.
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13, frozen) and has a line about the settings tabs, a line about "Disconnected
 	 *   in OmnaBase", and a line about the Settings link on the Plugins list; outside short bracketed names and backticks, none of its lines
 	 *   holds a banned word.
 	 * Fails when: customers are not told the screen changed, or the release notes still say "WP-Cron" while the screen says "timer".
 	 */
 	public function test_the_changelog_names_this_rounds_changes_in_plain_words(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — unreleased =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the top section is 0.1.0, unreleased' );
+		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the 0.1.0 section (released 2026-10-13)' );
 		$section = $m[1];
 		$this->assertMatchesRegularExpression( '/^\* .*\btabs?\b/mi', $section, 'a line about the tabs' );
 		$this->assertMatchesRegularExpression( '/^\* .*Disconnected in OmnaBase/m', $section, 'a line about the fourth state' );

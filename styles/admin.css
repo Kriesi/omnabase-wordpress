@@ -245,3 +245,9 @@
   .ob-wp-settings .ob-form__section { padding: var(--ob-space-4); }
   .ob-wp-settings .ob-wp-settings__tabs { margin-bottom: var(--ob-space-4); }
 }
+
+/* the Appearance tab (2026-10-22): a row's radio choices one under another, the owner's colour field beside its choice */
+.ob-wp-settings .ob-wp-settings__choices { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ob-space-2); }
+.ob-wp-settings .ob-wp-settings__choice { display: inline-flex; align-items: center; gap: var(--ob-space-2); font-size: var(--ob-text-sm); color: var(--ob-text); cursor: pointer; }
+.ob-wp-settings .ob-wp-settings__choice-line { display: inline-flex; align-items: center; gap: var(--ob-space-3); }
+.ob-wp-settings .ob-wp-settings__colour { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--ob-border-strong); border-radius: var(--ob-radius-sm); background: var(--ob-bg-surface); cursor: pointer; }

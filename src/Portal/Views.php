@@ -38,16 +38,17 @@ final class Views {
 			$model['ticket']   = self::worded( $model['ticket'] );
 			$model['messages'] = array_map( static fn ( array $m ) => $m + array( 'when' => self::date( $m['createdAt'] ) ), $model['messages'] );
 		}
-		return $this->render( $model + array( 'loginUrl' => '' ) );
+		return $this->render( $model + array( 'loginUrl' => '', 'wrapper' => array() ) );
 	}
 
 	/**
 	 * A visitor who is not signed in: a login link that brings them back.
 	 *
-	 * @param string $back Where to come back to.
+	 * @param string               $back    Where to come back to.
+	 * @param array<string,string> $wrapper The wrapper's marks for the chosen look.
 	 */
-	public function loggedOut( string $back ): string {
-		return $this->render( array( 'view' => 'login', 'loginUrl' => wp_login_url( $back ), 'notice' => null ) );
+	public function loggedOut( string $back, array $wrapper = array() ): string {
+		return $this->render( array( 'view' => 'login', 'loginUrl' => wp_login_url( $back ), 'notice' => null, 'wrapper' => $wrapper ) );
 	}
 
 	/**

@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * M14 round four, the red team's failing tests: the settings screen's stylesheet and templates (file-level checks, no WordPress needed): the
  * screen's look comes from OmnaBase's kit tokens through a build step, like the shortcode form's, and WordPress's own tab, table and button
  * classes leave the templates.
@@ -263,15 +270,15 @@ final class M14RoundFourStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The unreleased changelog tells customers the settings screen has a new look.
-	 * Passes when: changelog.txt's top section is still "0.1.0 — unreleased" and has a line naming the settings screen together with its look,
+	 * What it checks: The release notes tell customers the settings screen has a new look.
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13, frozen) and has a line naming the settings screen together with its look,
 	 *   design, cards or style.
 	 * Fails when: customers updating the plugin find a different-looking screen with no word about it, or a dated (released) section was
 	 *   edited.
 	 */
 	public function test_the_changelog_names_the_new_look(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — unreleased =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the top section is 0.1.0, unreleased' );
+		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the 0.1.0 section (released 2026-10-13)' );
 		$this->assertMatchesRegularExpression( '/^\* .*settings.*\b(look|design|cards?|styles?|styling)\b/mi', $m[1], 'a line about the settings screen\'s look' );
 	}
 

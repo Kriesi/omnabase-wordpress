@@ -991,3 +991,84 @@ gets a small file system (wp-content as the unit layer's stand-in folder, emptie
 for the key file and the multisite tests' saves and uninstalls called WordPress functions the fake did not have. Its `traces()` now also
 reports a key folder left behind, so the uninstall tests' "nothing of the plugin is left" covers the key file too (stricter). No assertion
 changed.
+
+## 2026-10-22 — The front end's design: light and dark, the Appearance tab, the form and the message centre in the kit's look
+
+The founder's order of 2026-10-21 ("option for light and dark themes, better design for the forms and for the message centre …; should use
+the styling of our OmnaBase app"). Brief: OmnaBase `docs/briefs/plugin-frontend-design.md` with its section "After the red team's review"
+(final); red team: `docs/reviews/plugin-frontend-design-red-team-report.md`; builder: `docs/reviews/plugin-frontend-design-builder-report.md`.
+
+- **Six tabs.** The settings screen gains a sixth tab, **Appearance** (slug `appearance`), after Forms and messages and before Activity, as
+  the brief asks; the five-tab tests were adjusted by the red team to six (nothing weakened). One card, "Look on your site", in one save form
+  (`omnabase_save_appearance`, `Admin\AppearanceActions`) with four rows: Theme (Light, Dark, Follow the visitor's system; default Light),
+  Accent (OmnaBase's blue, or "Your own colour" with a colour field), Font (Inherit the theme's font, default; Load OmnaBase's font) and
+  "Theme styles only". The radio groups are labelled by their row (`role="radiogroup"` with `aria-labelledby`, finding 19).
+- **One option, `Options::APPEARANCE` (`omnabase_appearance`)**: `theme`, `accent` ('' for OmnaBase's blue or `#rrggbb` in lower case),
+  `font`, `themeOnly`; read and written by `Look\Appearance` alone. **Only a real colour is kept** (finding 13): anything but `#rrggbb` leaves
+  the blue, and choosing OmnaBase's own blue as one's own colour stores the blue (as the app does). On the uninstall list.
+- **"Theme styles only" moved** (finding 3): its value lives in the new option and only the Appearance save writes it; the Forms and messages
+  save stores the page and the My Account switch alone (`Display::save( $my_account )`), and drops the old `theme_only` key from
+  `omnabase_display` when it saves (development stage: no migration; a site that had the switch on turns it on again on the new tab).
+  The switch now also keeps the font's stylesheet away, and the `omnabase_form_styles` filter drops both (finding 23).
+- **The wrapper's marks as the app writes them** (`Look\WrapperMarks`): `data-theme="light|dark"`, none for the visitor's system;
+  `data-accent="custom"` with `--ob-accent-user` and `--ob-on-accent-user` in the style. Kept as `data-theme` (finding 11): every plugin rule
+  stays under `.ob-wp`. The marks stay with "Theme styles only" on, so a theme may style by them.
+- **Text on the accent: the readable choice** (the founder's question, decided under the standing autonomy rule): whichever of white and
+  `#1a1a1a` has the higher contrast with the owner's colour. The app's own rule (white below a brightness of one half) is not changed.
+- **The stylesheet** (`bin/build-css.php`, its reading in `bin/lib/css-tokens.php`): the kit's light block on `.ob-wp`, the accent block on
+  `.ob-wp[data-accent]`, then inside `@media (prefers-color-scheme: dark)` the dark block on `.ob-wp:not([data-theme="light"])` and its
+  accent block, then the dark block on `.ob-wp[data-theme="dark"]` and its accent block: the kit's own order, so an own colour wins in both
+  themes (finding 4b). Both dark blocks say `color-scheme: dark` (4c). The primitives a dark value refers to are copied into the light block
+  (they have the same value everywhere). The wrapper paints its own surface, text, border and padding (4a). The stale muted grey is gone by
+  the rebuild (finding 1). Not done: the recommended `styles/tokens.lock` record for CI; the structure test against the live file stays the
+  guard on the Mac (CI has only this repository).
+- **New tokens in OmnaBase's kit** (finding 14; recorded in OmnaBase's DECISIONS too): `--ob-error` (the error's words: red-700 #b42318 by
+  day, 6.6 to 1; #f28b82 at night), `--ob-error-soft`, `--ob-success-soft`, `--ob-warning`, `--ob-warning-soft`, each with dark values in
+  both dark blocks; and in both dark accent blocks the focus ring is the accent mixed 45 % towards white, so a dark accent such as Black
+  still shows on the night ground (finding 5). The plugin's rules use no raw palette token any more.
+- **Readable everywhere** (finding 5): visitors' secondary text (privacy line, dates, pills) is `--ob-text-secondary`, never the muted grey;
+  the status pill shows its word in readable text and the status colour only on its dot (Closed: a hollow dot); subjects in the text colour.
+- **The form**: the kit's `ob-input ob-input--text` box around an `ob-input__field` (finding 10), `ob-select`, `ob-textarea`, `ob-btn
+  ob-btn--primary`; labels above with `for`; each field's error line under it with the kit's error icon, its id named by the field's
+  `aria-describedby`, `aria-invalid="true"` while it shows (finding 8). No field help (finding 17: no project setting supplies one). Field
+  names, the honeypot, the token and the limits are unchanged.
+- **The success card** (findings 6 and 7): printed hidden beside the form, outside it, with `role="status"`; its words are translated in the
+  template (`data-sent` "Thanks. Your reference is #%d", `data-queued` for a message on its way, `data-taken` for the trap's "sent"), so the
+  card never shows "#undefined"; focus moves to its first line. A refusal keeps the form and its words. "Send another" empties the message,
+  turns Send off and fetches a fresh time token. The REST answers and their sentences are unchanged.
+- **The message centre**: the kit's notice (`ob-notice--ok|--error`, an icon, both themes); rows with the subject, the pill (`ob-pill
+  ob-pill--<status>`: Open, Answered, Resolved, Closed) and the date; paging as `ob-btn--outline`; the back link `ob-btn--ghost`; the thread
+  with the visitor's messages tinted with the muted surface and set in from the left, the team's on the surface, a third person's dashed,
+  each naming its author in words (finding 9); the reply box as the composer (the textarea and a foot with the primary button); the prompt
+  as `.ob-portal-confirm`. No logo picture: the API gives none.
+- **The font** (finding 12): the kit's two variable subsets and `OFL.txt` copied into `assets/fonts/` by the build, `assets/fonts.css` (the
+  kit's `@font-face` rules, `font-display: swap`, the family on `.ob-wp`) queued only with "Load OmnaBase's font", never on the admin. The
+  readme names Plus Jakarta Sans and the SIL Open Font License.
+- **Phones**: one column, the wrapper's padding 16 px under 480 px, 16 px field text (iPhone zooms into smaller, finding 21), Send full width.
+- **Release notes** (finding 2): a new `= 0.2.0 — unreleased =` section above the frozen 0.1.0; the version bumped in the header,
+  `OMNABASE_VERSION`, readme.txt's Stable tag and package.json; CLAUDE.md's changelog paragraph corrected.
+- **The lane switch** (finding 16): `bin/lane.sh set <api> <web> | reset | show`, run by the flows' global setup when Playwright is given
+  other ports than `.wp-env.json`'s and put back by its teardown. `round-trip.spec.ts` now reads the version from package.json and the
+  development notice's address from the lane (adjusted, not weakened).
+- **`AdminParts` split out of `Plugin`**: the admin wiring (the settings screen, its actions, the notices) moved from `Plugin` into its own
+  container part, `src/AdminParts.php`, like `Forms` and `Portal`. Why now: Plugin Check looks for the direct-access stop only in a file's
+  first 50 lines, and the Appearance tab's three imports pushed `Plugin.php`'s to line 54 (an error in the release check). `Plugin` keeps
+  the parts every request needs and is 64 lines.
+- **The form's field ids** are `ob-wp-form-<project>-<field>`, the same on every view (a page cache may keep the page; the cache-safety
+  test renders the form twice and wants the same HTML); when one page shows the same project's form twice, the form's script renames the
+  second copy's ids and the references to them.
+- **Not done** (not pinned): a sample card on the Appearance tab (finding 20); the light focus ring for a pale own colour on white (the
+  app's light accent block keeps the owner's colour as the ring).
+
+Tests: the red team's five new files copied in; its 19 adjusted files kept as adjusted. The builder adjusted six more, none weakened (the
+reason sits beside each change):
+
+- **`tests/Integration/PagesTabTest.php`** (a red-team adjustment): its XPath wrote the second label spelling as `'theme\'s styles only'`, which
+  XPath 1.0 cannot read, so the query failed before looking; now quoted with double quotes. Both spellings still looked for.
+- **`tests/e2e/frontend-look.spec.ts`** (two): the font flow watches only the plugin's own font files (the test WordPress's theme serves its own
+  Manrope font, which the flow counted although the page used the theme's font as asked); the message-centre flow chooses OmnaBase's blue, as
+  the form's flow does (the flow before it leaves the accent on Black, and the prompt's button rightly wore it).
+- **`tests/e2e/round-trip.spec.ts`**: the version line read from package.json and the development notice's address from the lane (a written
+  0.1.0 and 3011 broke with the bump and the lane switch).
+- **`tests/Unit/PluginInfoTest.php`** and **`tests/Structure/RoundSixStructureTest.php`** (the `.pot`'s header): the version read from
+  package.json and from the plugin header instead of a written 0.1.0; both checks stay exact.

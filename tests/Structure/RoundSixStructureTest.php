@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the `.pot` samples followed words that M14 changes on purpose
  * (brief `docs/briefs/m14-settings-cleanup.md`, choices 1, 3 and 5; review S1: "`RoundSixStructureTest.php:48` requires `.pot` entries … for
  * 'Outbox', 'Shortcodes' and the plugin's current header description. Choices 1, 3 and 5 change all three"). "Outbox" becomes "On its way to
@@ -189,7 +196,7 @@ final class RoundSixStructureTest extends TestCase {
 
 	/**
 	 * What it checks: languages/omnabase.pot exists, belongs to this plugin and lists every sentence the code translates.
-	 * Passes when: the file exists with a header naming OmnaBase, the version 0.1.0 and the text domain; it holds the sample sentences (the
+	 * Passes when: the file exists with a header naming OmnaBase, the plugin header's version and the text domain; it holds the sample sentences (the
 	 *   settings screen, its tabs and buttons, the outbox, the shortcodes, the fourth connection state) and the plugin's description exactly
 	 *   as omnabase.php's header says it; and every first string of every translation call in src/, templates/ and the main file is one of
 	 *   its msgids.
@@ -198,7 +205,10 @@ final class RoundSixStructureTest extends TestCase {
 	public function test_the_pot_is_present_and_up_to_date(): void {
 		$pot = $this->read( 'languages/omnabase.pot' );
 		$this->assertNotSame( '', $pot, 'languages/omnabase.pot' );
-		$this->assertMatchesRegularExpression( '/^"Project-Id-Version: OmnaBase 0\.1\.0\\\\n"$/m', $pot );
+		// Builder's adjustment (the front-end design round, 2026-10-22, DECISIONS): the .pot names the plugin header's version, read from
+		// omnabase.php, instead of a written 0.1.0 that the bump to 0.2.0 broke; the check stays exact.
+		preg_match( '/^[\s*]*Version:\s*(\S+)/m', $this->read( 'omnabase.php' ), $version );
+		$this->assertMatchesRegularExpression( '/^"Project-Id-Version: OmnaBase ' . preg_quote( (string) ( $version[1] ?? '' ), '/' ) . '\\\\n"$/m', $pot );
 		$this->assertMatchesRegularExpression( '/^"X-Domain: omnabase\\\\n"$/m', $pot );
 		$ids = $this->msgids( $pot );
 		foreach ( self::POT_SAMPLE as $sentence ) {
@@ -236,16 +246,16 @@ final class RoundSixStructureTest extends TestCase {
 
 	/**
 	 * What it checks: The first release's notes stay unreleased until the day it ships, and name what round six adds for customers.
-	 * Passes when: changelog.txt's top heading is "= 0.1.0 — unreleased =" (no date), and that section has lines about the My Account
+	 * Passes when: changelog.txt's 0.1.0 section keeps its release date "2026-10-13" (frozen since the release), and has lines about the My Account
 	 *   "Support" link, the "theme styles only" switch and the suggested privacy-policy text.
 	 * Fails when: the notes are dated before the zip reaches anyone (the founder's rule: the date goes on at release), or site owners are not
 	 *   told about the new switches.
 	 */
 	public function test_the_changelog_stays_unreleased_and_names_round_six(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		preg_match( '/^= (\d+\.\d+\.\d+) — ([^=]+) =$/m', $changelog, $top );
-		$this->assertSame( array( '0.1.0', 'unreleased' ), array( $top[1] ?? '', trim( $top[2] ?? '' ) ), 'the top section is 0.1.0, unreleased' );
-		$section = (string) preg_replace( '/^.*?^= 0\.1\.0 — unreleased =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
+		preg_match( '/^= (0\.1\.0) — ([^=]+) =$/m', $changelog, $top );
+		$this->assertSame( array( '0.1.0', '2026-10-13' ), array( $top[1] ?? '', trim( $top[2] ?? '' ) ), 'the 0.1.0 section keeps its release date (frozen)' );
+		$section = (string) preg_replace( '/^.*?^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
 		$this->assertMatchesRegularExpression( '/^\* .*My Account/m', $section );
 		$this->assertMatchesRegularExpression( '/^\* .*theme(\'s)? styles/mi', $section );
 		$this->assertMatchesRegularExpression( '/^\* .*privacy/mi', $section );

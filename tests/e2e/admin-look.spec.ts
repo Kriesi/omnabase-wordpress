@@ -1,4 +1,9 @@
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance" (`&tab=appearance`), after "Forms and messages". The list of
+ * tabs every flow here walks gains it in that place, so the phone check, the "no Stored connection card" check and the founder's pictures cover
+ * the Appearance tab too (`appearance.png`, `appearance-phone.png`); the words "five tabs" in the descriptions become "six". No check changed.
+ *
  * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
  * the "Stored connection" card and its Advanced block ("go with the file-based key, remove the block"), so "Advanced opens like the kit's
  * More" has nothing left to open. It becomes "a closed block opens like the kit's More" on the Customer data tab's "Choose user fields",
@@ -43,7 +48,7 @@ import { expect, test } from "./fixtures";
 import { REPO } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
-const TABS = ["connection", "data", "forums", "pages", "activity"] as const;
+const TABS = ["connection", "data", "forums", "pages", "appearance", "activity"] as const;
 const SHOTS = resolve(REPO, "test-results/admin-look");
 const DESKTOP = { width: 1280, height: 900 };
 const PHONE = { width: 390, height: 844 };
@@ -174,9 +179,9 @@ test("rows sit side by side on a wide window and stacked on a phone", async ({ p
 /**
  * What it checks: On a phone nothing on any tab is wider than the screen, and the tab strip scrolls sideways on its own.
  * Passes when: at 390px wide, on each tab the screen's wrapper is no wider inside than it shows (nothing pokes out to the side); the tab strip
- *   is wider inside than it shows (the five tabs do not fit) yet ends within the wrapper, lets its own content scroll (overflow auto or
+ *   is wider inside than it shows (the six tabs do not fit) yet ends within the wrapper, lets its own content scroll (overflow auto or
  *   scroll), and really scrolls when asked to.
- * Fails when: a table or a long line pushes the page sideways on a phone (the owner must pan to read it), or the five tabs wrap into a
+ * Fails when: a table or a long line pushes the page sideways on a phone (the owner must pan to read it), or the six tabs wrap into a
  *   jumble or run off the screen with no way to reach Activity.
  */
 test("on a phone no tab overflows and the tab strip scrolls itself", async ({ page }) => {
@@ -199,7 +204,7 @@ test("on a phone no tab overflows and the tab strip scrolls itself", async ({ pa
       };
     });
     expect(m.rootScroll, `${tab}: nothing wider than the screen`).toBeLessThanOrEqual(m.rootClient);
-    expect(m.navScroll, `${tab}: the five tabs are wider than a phone`).toBeGreaterThan(m.navClient);
+    expect(m.navScroll, `${tab}: the six tabs are wider than a phone`).toBeGreaterThan(m.navClient);
     expect(m.navRight, `${tab}: the strip ends inside the screen`).toBeLessThanOrEqual(m.rootRight + 0.5);
     expect(["auto", "scroll"], `${tab}: the strip scrolls its own content`).toContain(m.navOverflow);
     expect(m.navScrolled, `${tab}: and it does scroll`).toBeGreaterThan(0);
@@ -312,7 +317,7 @@ test("the stylesheet loads on the plugin's screen alone", async ({ page }) => {
 
 /**
  * What it checks: The founder gets a picture of every tab, wide and on a phone, to judge the look (a record, not a comparison).
- * Passes when: for each of the five tabs, once its cards are on the page, a full-page picture is saved as
+ * Passes when: for each of the six tabs, once its cards are on the page, a full-page picture is saved as
  *   test-results/admin-look/<tab>.png (1280px wide) and <tab>-phone.png (390px wide), each a real image file.
  * Fails when: the pictures are missing or show the old look, so the founder has to click through every tab by hand to see the round's
  *   result.

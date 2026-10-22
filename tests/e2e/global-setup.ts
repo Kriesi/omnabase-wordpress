@@ -1,11 +1,15 @@
 /**
  * Before the flows: wp-env, OmnaBase's e2e server and its connect page must answer, then the administrator signs in to wp-admin once and the session is
  * kept for every flow (tests/e2e/.auth/admin.json, git-ignored). wp-env's administrator is `admin` / `password`, its documented default.
+ * The lane switch (2026-10-22): when the flows run against another OmnaBase stack than .wp-env.json's (OMNABASE_E2E_PORT / OMNABASE_APP_URL,
+ * e.g. lane 3 on 3031 and 4411), WordPress is pointed at the same ports first (bin/lane.sh set) and put back after the run (the teardown this
+ * returns runs bin/lane.sh reset), so no run reaches a stack it was not given.
  */
 import { chromium, type FullConfig } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, WP_LOCAL, routeSite } from "./harness";
+import { ADMIN_STATE, LANE, OMNABASE_APP, OMNABASE_E2E, REPO, SITE, WP_LOCAL, routeSite } from "./harness";
 
 async function answers(url: string): Promise<boolean> {
   try { await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5_000) }); return true; } catch { return false; }
@@ -16,7 +20,23 @@ async function waitFor(url: string, ms: number): Promise<boolean> {
   return false;
 }
 
-export default async function globalSetup(_config: FullConfig): Promise<void> {
+/** the founder's stack, as .wp-env.json writes it: no switch needed there */
+const DEFAULT_LANE = { api: "3011", web: "4391" };
+const lane = (...args: string[]) => process.stdout.write(execFileSync("bin/lane.sh", args, { cwd: REPO, encoding: "utf8" }));
+
+export default async function globalSetup(config: FullConfig): Promise<(() => void) | void> {
+  const switched = LANE.api !== DEFAULT_LANE.api || LANE.web !== DEFAULT_LANE.web;
+  if (switched && (await answers(WP_LOCAL))) lane("set", LANE.api, LANE.web);
+  try {
+    await prepare(config);
+  } catch (e) {
+    if (switched) lane("reset");
+    throw e;
+  }
+  if (switched) return () => lane("reset");
+}
+
+async function prepare(_config: FullConfig): Promise<void> {
   if (!(await answers(WP_LOCAL))) throw new Error(`wp-env does not answer at ${WP_LOCAL}: run \`npx wp-env start\` (and \`npm run seed\`) first`);
   if (!(await answers(`${OMNABASE_E2E}/health`))) throw new Error(`OmnaBase's e2e server does not answer at ${OMNABASE_E2E}: see CLAUDE.md, "The OmnaBase e2e server"`);
   // round one: Connect sends the browser to OmnaBase's connect page (Vite, started beside the API by bin/omnabase-e2e.sh); give it a minute

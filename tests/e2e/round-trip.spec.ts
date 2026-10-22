@@ -4,11 +4,19 @@
  * through the relay. The key comes from OmnaBase's test hook and is written into the vault by the harness's `set-key` (round one's real
  * connect is connect.spec.ts); since round one the receiver exists, so the relayed webhook is checked and accepted.
  *
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE BUILDER: ADJUSTED, NOT WEAKENED. The version line is read from package.json (the round
+ * bumped 0.1.0 to 0.2.0, and every round that bumps it would break a written number), and the development notice names the OmnaBase
+ * address the lane switch gave WordPress (lane 3 talks to port 3031, not 3011). Both checks stay exact.
+ *
  * M14 round one, the builder: ADJUSTED, NOT WEAKENED. The menu link is found inside the admin menu by a name starting with "OmnaBase" (the
  * count bubble may follow it); the test's PM lines are unchanged.
  */
 import { expect, test } from "./fixtures";
-import { SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, wp } from "./harness";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { REPO, SITE, SITE_HOST, WP_LOCAL, WP_OMNABASE_API, omnabaseHook, publicApi, wp } from "./harness";
+
+const VERSION = (JSON.parse(readFileSync(resolve(REPO, "package.json"), "utf8")) as { version: string }).version;
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 type RelayAnswer = { ok: boolean; routes: { host: string; to: string }[]; calls: { url: string; method: string; status: number | null; excerpt: string; error?: string }[] };
@@ -43,8 +51,8 @@ test("the settings screen renders under Settings › OmnaBase", async ({ page })
   await expect(page.getByRole("heading", { level: 1, name: "OmnaBase" })).toBeVisible();
   await expect(page.locator(".ob-wp-settings__connection")).toHaveAttribute("data-state", "not_connected");
   await expect(page.getByText("This site is not connected to OmnaBase yet.")).toBeVisible();
-  await expect(page.getByText("Development: this site talks to http://host.docker.internal:3011 instead of app.omnabase.com.")).toBeVisible();
-  await expect(page.getByText("OmnaBase for WordPress 0.1.0")).toBeVisible();
+  await expect(page.getByText(`Development: this site talks to ${WP_OMNABASE_API} instead of app.omnabase.com.`)).toBeVisible();
+  await expect(page.getByText(`OmnaBase for WordPress ${VERSION}`)).toBeVisible();
   // Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): while an earlier flow leaves a call needing attention,
   // the menu entry carries WordPress's count bubble after "OmnaBase" ("OmnaBase 2 calls need attention" to a screen reader), so the exact
   // name no longer matched. The link is found by a name that starts with "OmnaBase"; its address is checked as before.

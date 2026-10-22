@@ -18,13 +18,22 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
   the kit's line tabs, rows and buttons) and a little vanilla JS. No Vue. Its stylesheet `assets/admin.css` is built from OmnaBase's kit
   tokens and `styles/admin.css` (the source: the kit's rules for the reused class names, every rule under `.ob-wp-settings`, no raw colour,
   no typeface, no dark block); edit the source and run `php bin/build-css.php`, never the built file. WordPress's notices keep their look.
+  Six tabs since 2026-10-22: Connection, Customer data, Forums, Forms and messages, Appearance, Activity.
+- **The front end's look (2026-10-22)**: the form and the message centre wear the kit's pieces (`ob-btn`, `ob-input`, `ob-textarea`,
+  `ob-select`, `ob-pill`, `ob-notice`, `ob-portal-confirm`) under the wrapper `.ob-wp`, which carries the owner's choices from the Appearance
+  tab (`data-theme="light|dark"`, none for the visitor's system; `data-accent="custom"` with `--ob-accent-user`/`--ob-on-accent-user`).
+  `assets/form.css` is built from `styles/form.css` with the kit's light block, its dark block twice (`.ob-wp[data-theme="dark"]` and, in the
+  device's dark setting, `.ob-wp:not([data-theme="light"])`) and the accent blocks after them; semantic tokens only (a new colour goes into
+  OmnaBase's `tokens.css` first, with its dark values). `assets/fonts.css` and `assets/fonts/` (OmnaBase's typeface and its OFL licence) are
+  built too and queued only when the owner loads OmnaBase's font. Text 4.5 to 1 and focus rings 3 to 1 in both themes.
 
 ## Layout
 
 - `omnabase.php` the header and the start; `uninstall.php` removes everything the plugin stores (a list that grows with every option, table,
   meta key and scheduled job: add yours there in the same change).
-- `src/` by concern: `Api Connect Security Rest Outbox Facts Sync Forum Forms Portal Admin Privacy`. `Plugin` is the hand-wired
-  container (with `CustomerData`, `Forums`, `Forms`, `Portal`, `Privacy`); each part registers its own hooks. `Options::ALL` lists every
+- `src/` by concern: `Api Connect Security Rest Outbox Facts Sync Forum Forms Portal Look Admin Privacy` (`Look`: the Appearance choices, the
+  wrapper's marks and the front end's stylesheets). `Plugin` is the hand-wired
+  container (with `CustomerData`, `Forums`, `Forms`, `Portal`, `Privacy`, and `AdminParts` for the admin); each part registers its own hooks. `Options::ALL` lists every
   option name; the user and post meta names and transient prefixes are on `Options` too; `UserNotes` keeps the per-site notes on users.
 - `templates/` the PHP templates (escape everything on output); `assets/` CSS and JS; `languages/omnabase.pot` the translation template
   (committed; regenerate it with `bin/make-pot.sh` after changing any translated sentence: the structure guard and the release check
@@ -32,11 +41,12 @@ WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode for
 - `tests/Unit` (brain/monkey), `tests/Structure` (file-level guards), `tests/Integration` (inside wp-env), `tests/e2e` (Playwright),
   `tests/wp-env/mu-plugins` the local test harness (never shipped), `tests/fakes` the paid add-ons' fakes (from round two; the harness
   loads them in the development WordPress when the real add-on is absent).
-- `bin/` the scripts: `seed.sh`, `build-dist.sh` (`--release` for the customer zip), `check-version.sh` (the header, `OMNABASE_VERSION`,
+- `bin/` the scripts: `lane.sh` (the browser flows' lane switch, below), `seed.sh`, `build-dist.sh` (`--release` for the customer zip), `check-version.sh` (the header, `OMNABASE_VERSION`,
   readme.txt's Stable tag, the changelog's top section, `package.json`'s version), `make-pot.sh` (the `.pot` through `wp i18n make-pot` in
   wp-env; also `composer i18n:pot`, `npm run pot`), `test-integration.sh`, `omnabase-e2e.sh`, `build-css.php` (both stylesheets from OmnaBase's
-  kit tokens: the form's `assets/form.css` from `styles/form.css`, the settings screen's `assets/admin.css` from `styles/admin.css`; the
-  results are committed, `build-dist.sh` rebuilds them).
+  kit tokens: the form's `assets/form.css` from `styles/form.css`, the settings screen's `assets/admin.css` from `styles/admin.css`, the
+  font's `assets/fonts.css` and `assets/fonts/`; its token reading lives in `bin/lib/css-tokens.php`; the results are committed,
+  `build-dist.sh` rebuilds them).
 - `paid/` (git-ignored): the founder's paid add-on zips when he has them (WooCommerce Subscriptions, EDD Software Licensing, EDD Recurring).
 
 ## The rounds and the red team
@@ -90,9 +100,11 @@ is. Rules and options are a list, never a sentence with commas. Sentence case fo
 
 ## Changelog
 
-`changelog.txt` is the customer changelog: `= 0.1.0 — unreleased =` until the release day, then dated and frozen (a new version above
-it, bumped everywhere `bin/check-version.sh` checks). At release the top section is copied into `readme.txt`'s "Changelog". One line per
-customer-visible change, no class or file names.
+`changelog.txt` is the customer changelog. The top section is `= X.Y.Z — unreleased =` while it is being built and gets its date on the
+release day; a dated section is frozen and never changed again (0.1.0 was released on 2026-10-13). New work after a release goes into a new
+`= X.Y.Z — unreleased =` section above it, with the version bumped everywhere `bin/check-version.sh` checks (the plugin header,
+`OMNABASE_VERSION`, readme.txt's Stable tag, package.json). At release the top section is copied into `readme.txt`'s "Changelog". One line
+per customer-visible change, no class or file names. The current unreleased section is 0.2.0 (the front-end design round).
 
 ## The three test layers
 
@@ -104,6 +116,13 @@ customer-visible change, no class or file names.
   with bbPress loaded; all three must pass.
 - **Browser flows** (Playwright against wp-env with OmnaBase's e2e server as the backend): `npx playwright test`. Needs `npx wp-env start`,
   `bin/seed.sh`, Node 22 and OmnaBase's e2e server (below).
+- **The lane switch (2026-10-22)**: agents never run the flows against the founder's stack (3011/4391). Give Playwright a lane by its ports,
+  e.g. lane 3: `set -a; source <lane3-db.env>; set +a; OMNABASE_E2E_PORT=3031 OMNABASE_WEB_PORT=4411 OMNABASE_APP_URL=http://localhost:4411
+  npx playwright test <file> --workers=1`. The global setup then points the development WordPress at the same ports (`bin/lane.sh set 3031
+  4411`: `OMNABASE_API_URL`/`OMNABASE_APP_URL` in wp-config.php) and its teardown puts `.wp-env.json`'s values back (`bin/lane.sh reset`; run
+  it by hand after a killed run; `bin/lane.sh show` tells what WordPress uses). One Playwright run at a time, never beside an integration run.
+- **Review pictures**: `frontend-look.spec.ts` writes the form and the message centre (light and dark, desktop and phone) into
+  `test-results/frontend-look/`, `admin-look.spec.ts` the tabs into `test-results/admin-look/`; records for the founder's eye, never baselines.
 - **The release checks** run with the flows (they need wp-env): `release.spec.ts` builds the zip, checks its contents, runs Plugin Check
   on it (no error allowed; warnings listed) and compares the `.pot`; `uninstall.spec.ts` deletes the plugin's data from the development
   WordPress the way WordPress does and expects one `DELETE /me`; `fresh.spec.ts` installs the zip on the fresh WordPress (below);

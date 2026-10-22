@@ -3,7 +3,7 @@
  * Plugin Name:       OmnaBase
  * Plugin URI:        https://omnabase.com/wordpress
  * Description:       Connects your site to OmnaBase, the support inbox: forum topics, form messages and your customers' orders on every ticket. Set it up under Settings › OmnaBase.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 6.8
  * Requires PHP:      8.1
  * Author:            Kriesi Media GmbH
@@ -19,7 +19,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // The version, kept equal to the header above (bin/check-version.sh and the structure guard compare them).
-define( 'OMNABASE_VERSION', '0.1.0' );
+define( 'OMNABASE_VERSION', '0.2.0' );
 
 // The PSR-4 autoloader comes from Composer (`composer install` in a checkout; `--no-dev -o` in the release zip).
 if ( ! is_readable( __DIR__ . '/vendor/autoload.php' ) ) {

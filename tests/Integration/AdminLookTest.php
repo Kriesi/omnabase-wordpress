@@ -1,5 +1,10 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance", after "Forms and messages", with settings of its own. Here: the tab strip holds six links (counted from the list of tabs, `TABS`, no longer the number 5), the data provider of the tabs with
+ * settings gains `appearance` (so its rows must be the kit's rows like every other tab's), and the card test (through `AdminLookShapes`)
+ * expects the Appearance card on its tab. Every assertion is as strict as before.
+ *
  * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
  * the "Stored connection" card and its Advanced block, so on the Connection tab of a site in full use one closed block is left (the status
  * card's Details), not two: `test_every_disclosure_is_the_kits_more` now expects at least one there (every closed block on the tab is still
@@ -50,14 +55,14 @@ final class AdminLookTest extends TabsTestCase {
 		$this->answers['GET /api/public/v1/me'] = self::answer( 200, self::meAnswer() );
 	}
 
-	/** The five tabs' slugs, for the data provider. */
+	/** The six tabs' slugs, for the data provider. */
 	public static function tabs(): array {
 		return array_map( static fn ( $t ) => array( $t ), array_combine( array_keys( self::TABS ), array_keys( self::TABS ) ) );
 	}
 
 	/** The tabs with settings in the plain run (Forums has its settings only with bbPress: `AdminLookForumTest`). */
 	public static function settingsTabs(): array {
-		return array( 'data' => array( 'data' ), 'pages' => array( 'pages' ) );
+		return array( 'data' => array( 'data' ), 'pages' => array( 'pages' ), 'appearance' => array( 'appearance' ) );
 	}
 
 	/** The tabs with closed blocks on a site in full use. */
@@ -95,7 +100,7 @@ final class AdminLookTest extends TabsTestCase {
 
 	/**
 	 * What it checks: The tab strip is OmnaBase's own line tabs, with the open tab marked, and nothing of WordPress's tab look is left.
-	 * Passes when: on each tab the wrapper holds one `nav` with a label and the kit's classes for line tabs; it holds exactly the five tab
+	 * Passes when: on each tab the wrapper holds one `nav` with a label and the kit's classes for line tabs; it holds exactly the six tab
 	 *   links (each with the kit's tab-item class, leading to `page=omnabase&tab=<slug>`, in order) and nothing else to click; exactly the
 	 *   open tab carries the kit's active class and says it is the current page; no element anywhere on the screen carries `nav-tab`,
 	 *   `nav-tab-wrapper` or `nav-tab-active`.
@@ -116,7 +121,7 @@ final class AdminLookTest extends TabsTestCase {
 		$this->assertNotSame( '', trim( (string) $nav->getAttribute( 'aria-label' ) ), "{$tab}: the strip is named for screen readers" );
 
 		$links = iterator_to_array( $xpath->query( './/a', $nav ) );
-		$this->assertCount( 5, $links, "{$tab}: the five tabs and nothing else" );
+		$this->assertCount( count( self::TABS ), $links, "{$tab}: the six tabs and nothing else" );
 		$this->assertSame( 0, $xpath->query( './/button | .//input', $nav )->length, "{$tab}: no other control in the strip" );
 		$slugs  = array();
 		$active = array();
@@ -132,7 +137,7 @@ final class AdminLookTest extends TabsTestCase {
 				$this->assertFalse( $a->hasAttribute( 'aria-current' ), "{$tab}: a closed tab is not announced as current" );
 			}
 		}
-		$this->assertSame( array_keys( self::TABS ), $slugs, "{$tab}: the five tabs in order" );
+		$this->assertSame( array_keys( self::TABS ), $slugs, "{$tab}: the six tabs in order" );
 		$this->assertSame( array( $tab ), $active, "{$tab}: exactly the open tab is marked" );
 
 		$tokens = self::classTokens( $html );
@@ -168,7 +173,8 @@ final class AdminLookTest extends TabsTestCase {
 	/**
 	 * What it checks: Every section of every tab is a white card of its own, with a heading, and nothing a person reads floats outside a card.
 	 * Passes when: on a site in full use, each tab's sections (Connection: the connection box, the status block with Details; Customer
-	 *   data: the sources, the user fields; Forums: the forum section; Forms and messages: the page picker, the Shortcodes block; Activity: the
+	 *   data: the sources, the user fields; Forums: the forum section; Forms and messages: the page picker, the Shortcodes block; Appearance:
+	 *   its card; Activity: the
 	 *   outbox, the list of what OmnaBase sent) each sit in a card, no two in the same card; every card is a section element with exactly one
 	 *   heading in the kit's title style, never inside another card, its intro (if any) at most 30 words; every heading outside the builder's
 	 *   dialog is a card's title; no paragraph, list, table or setting outside the page head, the tab strip, the dialog, WordPress's notices
@@ -202,7 +208,7 @@ final class AdminLookTest extends TabsTestCase {
 
 	/**
 	 * What it checks: Every setting is a row in the kit's layout, and WordPress's settings tables are gone.
-	 * Passes when: on a site in full use, Customer data and Forms and messages (the plain run's tabs with settings; Forums is pinned in the
+	 * Passes when: on a site in full use, Customer data, Forms and messages and Appearance (the plain run's tabs with settings; Forums is pinned in the
 	 *   forum run) hold no element with WordPress's `form-table` class and no table row heading; every select,
 	 *   text box and tick box outside the builder's dialog sits inside a row's control; every row sits in a card and has one label with words,
 	 *   at most one help of at most 30 words and one control, label and help before the control and outside it (a `<label for>` naming a field

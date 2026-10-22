@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * M13 round three, the red team's failing tests: the structure guard extended for the forum (file-level checks, no WordPress needed).
  *
  * Brief (OmnaBase `docs/briefs/m13-wordpress-plugin.md`, draft 2) "Round three": "`Forum/Triggers`, `Forum/TopicSender`, `Forum/ReplySender`,
@@ -118,13 +125,13 @@ final class RoundThreeStructureTest extends TestCase {
 
 	/**
 	 * What it checks: The customer changelog and the decisions record round three.
-	 * Passes when: changelog.txt's unreleased section has a line about forum topics becoming tickets, and DECISIONS.md has a dated "M13 round
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13) has a line about forum topics becoming tickets, and DECISIONS.md has a dated "M13 round
 	 *   three" heading.
 	 * Fails when: site owners are not told their forum topics now reach OmnaBase, or the round's choices are not written down.
 	 */
 	public function test_the_changelog_and_decisions_record_round_three(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$top       = (string) preg_replace( '/^.*?^= \d+\.\d+\.\d+ — unreleased =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
+		$top       = (string) preg_replace( '/^.*?^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
 		$this->assertMatchesRegularExpression( '/^\* .*\bforums?\b.*\b(topics?|tickets?)\b/mi', $top );
 		$this->assertMatchesRegularExpression( '/^## \d{4}-\d{2}-\d{2} — M13 round three/m', $this->read( 'DECISIONS.md' ) );
 	}

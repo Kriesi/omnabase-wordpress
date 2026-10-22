@@ -1,11 +1,11 @@
 <?php
 /**
  * Settings › OmnaBase: the Shortcodes card ("Build a shortcode", which opens the builder's dialog; both shortcodes and their attributes for
- * a browser without JavaScript; the front-end switches as rows of the kit's), inside the Forms and messages tab's one form.
+ * a browser without JavaScript; the My Account switch as a row of the kit's; "Theme styles only" is on the Appearance tab), inside the Forms and messages tab's one form.
  *
  * @package OmnaBase
  *
- * @var array{themeOnly:bool,myAccount:bool,shop:bool} $omnabase_shortcodes
+ * @var array{myAccount:bool,shop:bool} $omnabase_shortcodes
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -26,15 +26,6 @@ defined( 'ABSPATH' ) || exit;
 			<li class="ob-help-list__item"><code>project="slug"</code> <?php esc_html_e( 'in the message centre: the project new questions go to.', 'omnabase' ); ?></li>
 		</ul>
 	</noscript>
-	<div class="ob-form-row">
-		<div class="ob-form-row__text">
-			<label class="ob-form-row__label" for="omnabase-theme-only"><?php esc_html_e( 'Theme styles only', 'omnabase' ); ?></label>
-			<div class="ob-form-row__help"><?php esc_html_e( 'Use the theme\'s styles only: the form and the message centre load no OmnaBase stylesheet.', 'omnabase' ); ?></div>
-		</div>
-		<div class="ob-form-row__control">
-			<input type="checkbox" role="switch" class="ob-switch" id="omnabase-theme-only" name="omnabase_theme_only" value="1" <?php checked( $omnabase_shortcodes['themeOnly'] ); ?>>
-		</div>
-	</div>
 	<?php if ( $omnabase_shortcodes['shop'] ) : ?>
 		<div class="ob-form-row">
 			<div class="ob-form-row__text">

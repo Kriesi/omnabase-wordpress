@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance" (slug `appearance`), after "Forms and messages" and before
+ * "Activity", with one save form (`omnabase_save_appearance`, the red team's pinned shape) holding the theme, the accent, the font and the moved
+ * "Theme styles only" switch; the brief asks that the five-tab pins be adjusted with a DECISIONS entry (`FrontendDesignStructureTest` asks for
+ * that entry). Here: the tab row's test asks for six tabs (renamed `..._six_tabs_...`); the one-save-form test counts Appearance among the tabs with
+ * settings; the way-back test also saves Appearance and expects to return to it. Nothing loosened.
+ *
  * M14 round one, the red team's failing tests: Settings › OmnaBase becomes five tabs, each section in its tab, one save form per settings
  * tab, and every save coming back to the tab it was made on (the plain run, without bbPress or the shops).
  *
@@ -37,15 +44,15 @@ final class TabsTest extends TabsTestCase {
 	}
 
 	/**
-	 * What it checks: The screen shows five tabs, in this order, with names that say what each is for.
-	 * Passes when: the screen's tab row holds exactly Connection, Customer data, Forums, Forms and messages, Activity, each a link to the
-	 *   screen's address with its own tab name in it (connection, data, forums, pages, activity).
+	 * What it checks: The screen shows six tabs, in this order, with names that say what each is for.
+	 * Passes when: the screen's tab row holds exactly Connection, Customer data, Forums, Forms and messages, Appearance, Activity, each a link
+	 *   to the screen's address with its own tab name in it (connection, data, forums, pages, appearance, activity).
 	 * Fails when: a site owner faces one long page again, a tab is missing or misnamed, or a tab's link leads nowhere.
 	 */
-	public function test_the_screen_has_five_tabs_in_order_with_their_names(): void {
+	public function test_the_screen_has_six_tabs_in_order_with_their_names(): void {
 		$tabs = self::navTabs( $this->openTab( '' ) );
 
-		$this->assertSame( array_keys( self::TABS ), array_keys( $tabs ), 'the five tabs, in order' );
+		$this->assertSame( array_keys( self::TABS ), array_keys( $tabs ), 'the six tabs, in order' );
 		$this->assertSame( array_values( self::TABS ), array_values( $tabs ), 'their names (no outbox row needs attention, so Activity carries no count)' );
 	}
 
@@ -94,7 +101,7 @@ final class TabsTest extends TabsTestCase {
 
 	/**
 	 * What it checks: A tab with settings has one save form ending in one blue "Save" button; Connection and Activity have none.
-	 * Passes when: Customer data and Forms and messages each hold exactly one form that saves settings (its action the tab's save action), with
+	 * Passes when: Customer data, Forms and messages and Appearance each hold exactly one form that saves settings (its action the tab's save action), with
 	 *   exactly one submit button, a primary one reading "Save"; Connection and Activity hold no form that saves settings and no "Save" button.
 	 * Fails when: a tab has two save buttons (an owner saves one half and loses the other), a button reads "Save display settings" beside
 	 *   "Save page", or a tab without settings shows a Save button that does nothing.
@@ -104,7 +111,7 @@ final class TabsTest extends TabsTestCase {
 		foreach ( array_keys( self::TABS ) as $tab ) {
 			$html  = $this->openTab( $tab );
 			$saves = array_values( array_filter( self::formsIn( $html ), static fn ( $f ) => str_starts_with( $f['action'], 'omnabase_save_' ) ) );
-			if ( in_array( $tab, array( 'data', 'pages' ), true ) ) {
+			if ( in_array( $tab, array( 'data', 'pages', 'appearance' ), true ) ) {
 				$this->assertCount( 1, $saves, "{$tab}: one save form" );
 				$this->assertSame( self::SAVES[ $tab ], $saves[0]['action'], "{$tab}: its save action" );
 				$this->assertSame( array( array( 'words' => 'Save', 'primary' => true ) ), self::submitsOf( $saves[0]['node'] ), "{$tab}: one primary Save button" );
@@ -139,7 +146,8 @@ final class TabsTest extends TabsTestCase {
 
 	/**
 	 * What it checks: Every save and every action brings the owner back to the tab it was made on.
-	 * Passes when: saving Customer data returns to the data tab, saving Forms and messages to pages, saving the forum settings to forums,
+	 * Passes when: saving Customer data returns to the data tab, saving Forms and messages to pages, saving Appearance to appearance, saving
+	 *   the forum settings to forums,
 	 *   Retry, Discard and Send now to activity, Check connection and Disconnect to connection; each on Settings › OmnaBase.
 	 * Fails when: after saving the forum settings the owner lands on Connection and has to find the tab again to see whether it worked.
 	 */
@@ -152,6 +160,10 @@ final class TabsTest extends TabsTestCase {
 		$pages = array_values( array_filter( self::formsIn( $this->openTab( 'pages' ) ), static fn ( $f ) => 'omnabase_save_pages' === $f['action'] ) );
 		$this->assertNotEmpty( $pages, 'the Forms and messages form' );
 		$this->assertSame( 'pages', $this->tabIn( $this->postFields( $pages[0]['fields'] ) ), 'Forms and messages' );
+
+		$look = array_values( array_filter( self::formsIn( $this->openTab( 'appearance' ) ), static fn ( $f ) => 'omnabase_save_appearance' === $f['action'] ) );
+		$this->assertNotEmpty( $look, 'the Appearance form' );
+		$this->assertSame( 'appearance', $this->tabIn( $this->postFields( $look[0]['fields'] ) ), 'Appearance' );
 
 		$forum = array( 'action' => 'omnabase_save_forum', '_wpnonce' => wp_create_nonce( 'omnabase_save_forum' ), 'omnabase_forum' => array( 'closing_line' => 'Cheers, {agent}' ) );
 		$this->assertSame( 'forums', $this->tabIn( $this->postFields( $forum ) ), 'the forum settings' );

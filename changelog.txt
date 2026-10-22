@@ -3,6 +3,14 @@ OmnaBase for WordPress — release notes for customers
 Each release has a section. A section headed "unreleased" is still being built; it gets its date on the release day, and a dated
 section is never changed again. At release the top section is copied into readme.txt's "Changelog".
 
+= 0.2.0 — unreleased =
+
+* Added: An Appearance tab under Settings › OmnaBase: the contact form and the message centre in light, dark or following the visitor's device, in OmnaBase's blue or your own colour, in your theme's font or OmnaBase's.
+* Changed: The contact form has a new look, the OmnaBase app's fields and buttons; an error shows under the field it belongs to, and after sending a card with your reference number takes the form's place, with "Send another".
+* Changed: The message centre has a new look, the OmnaBase app's inbox: each conversation with its status in words and its date, your messages told apart from the team's, the answer box as in the app.
+* Changed: The "Theme styles only" switch moved to the Appearance tab; it now also keeps OmnaBase's font away.
+* Fixed: Error messages, notices and help text on the form and the message centre are easier to read, and keyboard users see a clear focus ring in both light and dark.
+
 = 0.1.0 — 2026-10-13 =
 
 * Added: Settings › OmnaBase, the plugin's settings screen, showing whether the site is connected to OmnaBase.

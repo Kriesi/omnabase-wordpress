@@ -7,9 +7,9 @@
 
 namespace OmnaBase\WordPress\Portal;
 
-use OmnaBase\WordPress\Forms\Display;
 use OmnaBase\WordPress\Forms\Projects;
 use OmnaBase\WordPress\Forms\Shortcode as FormShortcode;
+use OmnaBase\WordPress\Look\FrontStyles;
 use OmnaBase\WordPress\PluginInfo;
 
 defined( 'ABSPATH' ) || exit;
@@ -32,10 +32,10 @@ final class Shortcode {
 	 * @param PickedPage $page     The picked page.
 	 * @param Projects   $projects Whether the site is connected.
 	 * @param Centre     $centre   The signed-in view's model.
-	 * @param Views      $views    The output.
-	 * @param Display    $display  The "theme styles only" switch.
+	 * @param Views       $views    The output.
+	 * @param FrontStyles $styles   The stylesheets and the wrapper's marks for the chosen look.
 	 */
-	public function __construct( private PluginInfo $info, private PickedPage $page, private Projects $projects, private Centre $centre, private Views $views, private Display $display ) {}
+	public function __construct( private PluginInfo $info, private PickedPage $page, private Projects $projects, private Centre $centre, private Views $views, private FrontStyles $styles ) {}
 
 	/** Registers the shortcode. */
 	public function register(): void {
@@ -61,7 +61,7 @@ final class Shortcode {
 			return $this->guest( (string) $atts['guest'], (string) $atts['project'] );
 		}
 		$this->enqueue();
-		return $this->views->centre( $this->centre->model( $user, sanitize_key( (string) $atts['project'] ) ) );
+		return $this->views->centre( array( 'wrapper' => $this->styles->marks() ) + $this->centre->model( $user, sanitize_key( (string) $atts['project'] ) ) );
 	}
 
 	/**
@@ -74,15 +74,13 @@ final class Shortcode {
 		if ( 'form' === $guest ) {
 			return do_shortcode( '[' . FormShortcode::TAG . ( '' === $project ? '' : ' project="' . esc_attr( sanitize_key( $project ) ) . '"' ) . ']' );
 		}
-		return $this->views->loggedOut( $this->page->url() );
+		$this->styles->enqueue();
+		return $this->views->loggedOut( $this->page->url(), $this->styles->marks() );
 	}
 
-	/** Queues the message centre's small script and the stylesheet it shares with the form (the same switch and filter keep it away). */
+	/** Queues the message centre's small script and the look's stylesheets it shares with the form (the same switch and filter keep them away). */
 	private function enqueue(): void {
-		$version = $this->info->version();
-		wp_enqueue_script( 'omnabase-messages', plugins_url( 'assets/messages.js', $this->info->mainFile() ), array(), $version, array( 'in_footer' => true, 'strategy' => 'defer' ) );
-		if ( $this->display->wantsStylesheet() ) {
-			wp_enqueue_style( 'omnabase-form', plugins_url( 'assets/form.css', $this->info->mainFile() ), array(), $version );
-		}
+		wp_enqueue_script( 'omnabase-messages', plugins_url( 'assets/messages.js', $this->info->mainFile() ), array(), $this->info->version(), array( 'in_footer' => true, 'strategy' => 'defer' ) );
+		$this->styles->enqueue();
 	}
 }

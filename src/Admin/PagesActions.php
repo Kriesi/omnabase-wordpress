@@ -1,6 +1,6 @@
 <?php
 /**
- * The Forms and messages tab's one save: the message centre's page and the two front-end switches.
+ * The Forms and messages tab's one save: the message centre's page and the My Account switch.
  *
  * @package OmnaBase
  */
@@ -14,13 +14,13 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * A thin handler at `admin-post.php` (WordPress's address that hands a posted admin form to a plugin): its nonce (a short-lived form token)
- * and `manage_options`, then the picked page is stored (a published page, or none), both switches as ticked, and the browser goes back to
- * the tab. Without WooCommerce the My Account switch is not on the form, so its stored value is kept.
+ * and `manage_options`, then the picked page is stored (a published page, or none), the My Account switch as ticked, and the browser goes back
+ * to the tab. Without WooCommerce the My Account switch is not on the form, so its stored value is kept. "Theme styles only" moved to the
+ * Appearance tab (2026-10-22): this save never touches it, so saving here cannot switch it off.
  */
 final class PagesActions {
 
 	public const SAVE       = 'omnabase_save_pages';
-	public const THEME_ONLY = 'omnabase_theme_only';
 	public const MY_ACCOUNT = 'omnabase_my_account';
 
 	/**
@@ -37,15 +37,14 @@ final class PagesActions {
 		add_action( 'admin_post_' . self::SAVE, array( $this, 'save' ) );
 	}
 
-	/** Stores the page and both switches. */
+	/** Stores the page and the My Account switch. */
 	public function save(): void {
 		Guard::check( self::SAVE );
 		$this->page->save( self::postedPage() );
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- checked by Guard::check() above; only the presence of each box is read.
-		$theme_only = isset( $_POST[ self::THEME_ONLY ] );
 		$my_account = ShortcodesView::shopActive() ? isset( $_POST[ self::MY_ACCOUNT ] ) : $this->display->myAccount();
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		$this->display->save( $theme_only, $my_account );
+		$this->display->save( $my_account );
 		$this->flash->set( get_current_user_id(), 'success', __( 'Forms and messages settings saved.', 'omnabase' ) );
 		Guard::backToScreen( Tabs::PAGES );
 	}

@@ -1,30 +1,39 @@
 <?php
 /**
- * The front-end switches: "theme styles only" and WooCommerce's My Account "Support" link.
+ * The front-end switches: whether the stylesheet loads, and WooCommerce's My Account "Support" link.
  *
  * @package OmnaBase
  */
 
 namespace OmnaBase\WordPress\Forms;
 
+use OmnaBase\WordPress\Look\Appearance;
 use OmnaBase\WordPress\Options;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Both switches live in one option and start off: the contact form and the message centre bring the plugin's small stylesheet until the
- * administrator asks for the theme's styles alone, and My Account stays as WooCommerce made it until the link is turned on. The same option
- * keeps the first-display marks (`first_shown`), which saving the switches leaves alone.
+ * The My Account switch lives in one option and starts off: My Account stays as WooCommerce made it until the link is turned on. The same
+ * option keeps the first-display marks (`first_shown`), which saving the switch leaves alone. "Theme styles only" moved to the Appearance tab
+ * (2026-10-22) and is read from the look's own option (`Look\Appearance`): the contact form and the message centre bring the plugin's
+ * stylesheet until the administrator asks for the theme's styles alone.
  */
 final class Display {
 
-	private const THEME_ONLY = 'theme_only';
-	private const MY_ACCOUNT = 'my_account';
-	private const FIRST_SHOWN = 'first_shown';
+	private const OLD_THEME_ONLY = 'theme_only';
+	private const MY_ACCOUNT     = 'my_account';
+	private const FIRST_SHOWN    = 'first_shown';
 
-	/** Whether the administrator asked for the theme's styles alone. */
+	/**
+	 * Builds the switches.
+	 *
+	 * @param Appearance $appearance The stored look ("Theme styles only").
+	 */
+	public function __construct( private Appearance $appearance = new Appearance() ) {}
+
+	/** Whether the administrator asked for the theme's styles alone (the Appearance tab's switch). */
 	public function themeOnly(): bool {
-		return $this->flag( self::THEME_ONLY );
+		return $this->appearance->themeOnly();
 	}
 
 	/** Whether My Account gets the "Support" link. */
@@ -33,15 +42,15 @@ final class Display {
 	}
 
 	/**
-	 * Stores both switches.
+	 * Stores the My Account switch (the first-display marks kept; the switch that moved to the Appearance tab is no longer kept here).
 	 *
-	 * @param bool $theme_only The theme's styles alone.
 	 * @param bool $my_account The My Account link.
 	 */
-	public function save( bool $theme_only, bool $my_account ): void {
+	public function save( bool $my_account ): void {
 		$stored = get_option( Options::DISPLAY, array() );
 		$kept   = is_array( $stored ) ? $stored : array();
-		update_option( Options::DISPLAY, array( self::THEME_ONLY => $theme_only, self::MY_ACCOUNT => $my_account ) + $kept, false );
+		unset( $kept[ self::OLD_THEME_ONLY ] );
+		update_option( Options::DISPLAY, array( self::MY_ACCOUNT => $my_account ) + $kept, false );
 	}
 
 	/**

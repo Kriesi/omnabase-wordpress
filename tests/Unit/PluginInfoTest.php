@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * What it checks: the plugin reads its own name, version and minimum PHP and WordPress versions from the header WordPress shows on
  *   the Plugins screen, so the version the plugin reports is always the one an admin sees.
- * Passes when: the real omnabase.php reads as "OmnaBase" 0.1.0, PHP 8.1, WordPress 6.8, text domain "omnabase", and a header
+ * Passes when: the real omnabase.php reads as "OmnaBase" with the version package.json names (0.2.0 since the front-end design round), PHP 8.1, WordPress 6.8, text domain "omnabase", and a header
  *   written in other spacing or with a missing field reads the same way WordPress would read it.
  * Fails when: the reader misses or garbles a field, so the settings screen, the build and the version checks would report a
  *   different version than WordPress shows (a customer could not tell which plugin version they run).
@@ -24,7 +24,9 @@ final class PluginInfoTest extends TestCase {
 		$info = PluginInfo::fromFile( OMNABASE_REPO . '/omnabase.php' );
 
 		$this->assertSame( 'OmnaBase', $info->field( 'name' ) );
-		$this->assertSame( '0.1.0', $info->version() );
+		// Builder's adjustment (the front-end design round, 2026-10-22, DECISIONS): the version is read from package.json, the release's other
+		// version source, instead of a written number every bump would break; the check stays exact (the header must say that version).
+		$this->assertSame( (string) json_decode( (string) file_get_contents( OMNABASE_REPO . '/package.json' ), true )['version'], $info->version() ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		$this->assertSame( '8.1', $info->requiresPhp() );
 		$this->assertSame( '6.8', $info->requiresWp() );
 		$this->assertSame( 'omnabase', $info->textDomain() );

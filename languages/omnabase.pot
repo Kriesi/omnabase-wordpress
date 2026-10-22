@@ -2,22 +2,22 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: OmnaBase 0.1.0\n"
+"Project-Id-Version: OmnaBase 0.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omnabase\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-11T05:37:26+00:00\n"
+"POT-Creation-Date: 2026-10-22T00:16:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
 
 #. Plugin Name of the plugin
 #: omnabase.php
-#: src/Admin/SettingsScreen.php:71
 #: src/Admin/SettingsScreen.php:72
+#: src/Admin/SettingsScreen.php:73
 #: src/Privacy/Eraser.php:40
 #: src/Privacy/Exporter.php:38
 #: src/Privacy/Exporter.php:133
@@ -48,6 +48,10 @@ msgstr ""
 
 #: omnabase.php:30
 msgid "OmnaBase is missing its vendor folder. Please reinstall the plugin from its zip."
+msgstr ""
+
+#: src/Admin/AppearanceActions.php:41
+msgid "Appearance saved."
 msgstr ""
 
 #: src/Admin/BuilderActions.php:40
@@ -145,7 +149,7 @@ msgid "Forum settings saved."
 msgstr ""
 
 #: src/Admin/Guard.php:26
-#: src/Admin/SettingsScreen.php:85
+#: src/Admin/SettingsScreen.php:86
 msgid "Sorry, you are not allowed to manage OmnaBase."
 msgstr ""
 
@@ -188,7 +192,7 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
-#: src/Admin/PagesActions.php:49
+#: src/Admin/PagesActions.php:48
 msgid "Forms and messages settings saved."
 msgstr ""
 
@@ -253,7 +257,7 @@ msgid "The stored connection can no longer be read, so OmnaBase's replies are no
 msgstr ""
 
 #. translators: %d: how many calls to OmnaBase need the administrator.
-#: src/Admin/SettingsScreen.php:123
+#: src/Admin/SettingsScreen.php:124
 #, php-format
 msgid "%d call needs attention"
 msgid_plural "%d calls need attention"
@@ -271,13 +275,13 @@ msgid "Connect"
 msgstr ""
 
 #: src/Admin/SetupLine.php:67
-#: src/Admin/Tabs.php:52
+#: src/Admin/Tabs.php:53
 #: templates/admin/partials/facts.php:17
 msgid "Customer data"
 msgstr ""
 
 #: src/Admin/SetupLine.php:70
-#: src/Admin/Tabs.php:53
+#: src/Admin/Tabs.php:54
 #: templates/admin/partials/forum-rows.php:20
 #: templates/admin/partials/forum.php:15
 #: templates/admin/partials/forum.php:23
@@ -320,16 +324,20 @@ msgstr ""
 msgid "%1$s · %2$s"
 msgstr ""
 
-#: src/Admin/Tabs.php:51
+#: src/Admin/Tabs.php:52
 #: templates/admin/partials/connection.php:16
 msgid "Connection"
 msgstr ""
 
-#: src/Admin/Tabs.php:54
+#: src/Admin/Tabs.php:55
 msgid "Forms and messages"
 msgstr ""
 
-#: src/Admin/Tabs.php:55
+#: src/Admin/Tabs.php:56
+msgid "Appearance"
+msgstr ""
+
+#: src/Admin/Tabs.php:57
 msgid "Activity"
 msgstr ""
 
@@ -542,23 +550,23 @@ msgid "Not sent: the message is no longer stored on the site."
 msgstr ""
 
 #. translators: 1: the project the shortcode named, 2: the site's projects.
-#: src/Forms/Shortcode.php:118
+#: src/Forms/Shortcode.php:119
 #, php-format
 msgid "OmnaBase form: the project \"%1$s\" is not one of this site's projects (%2$s)."
 msgstr ""
 
 #. translators: %s: the site's projects.
-#: src/Forms/Shortcode.php:120
+#: src/Forms/Shortcode.php:121
 #, php-format
 msgid "OmnaBase form: this site has several projects (%s); name one, as in [omnabase_form project=\"slug\"]."
 msgstr ""
 
-#: src/Forms/Shortcode.php:121
+#: src/Forms/Shortcode.php:122
 msgid "OmnaBase form: this site is not connected, so the form has no project yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
-#: src/Forms/Shortcode.php:123
-#: src/Portal/Views.php:62
+#: src/Forms/Shortcode.php:124
+#: src/Portal/Views.php:63
 msgid "Only administrators see this note."
 msgstr ""
 
@@ -736,7 +744,7 @@ msgid "Please write your answer."
 msgstr ""
 
 #: src/Portal/Notices.php:55
-#: templates/messages.php:35
+#: templates/messages.php:47
 msgid "This conversation was not found."
 msgstr ""
 
@@ -765,24 +773,24 @@ msgstr ""
 msgid "OmnaBase message centre: this site is not connected yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
-#: src/Portal/Views.php:93
+#: src/Portal/Views.php:94
 msgid "Answered"
 msgstr ""
 
-#: src/Portal/Views.php:94
+#: src/Portal/Views.php:95
 msgid "Resolved"
 msgstr ""
 
-#: src/Portal/Views.php:95
+#: src/Portal/Views.php:96
 msgid "Closed"
 msgstr ""
 
-#: src/Portal/Views.php:96
+#: src/Portal/Views.php:97
 msgid "Open"
 msgstr ""
 
 #. translators: the date format of a ticket's last change in the message centre (PHP date format; keep the year).
-#: src/Portal/Views.php:108
+#: src/Portal/Views.php:109
 msgid "j M Y"
 msgstr ""
 
@@ -1174,6 +1182,7 @@ msgstr ""
 
 #: templates/admin/partials/facts.php:78
 #: templates/admin/partials/forum.php:35
+#: templates/admin/tabs/appearance.php:78
 #: templates/admin/tabs/pages.php:24
 msgid "Save"
 msgstr ""
@@ -1497,19 +1506,11 @@ msgstr ""
 msgid "in the message centre: the project new questions go to."
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:31
-msgid "Theme styles only"
-msgstr ""
-
 #: templates/admin/partials/shortcodes.php:32
-msgid "Use the theme's styles only: the form and the message centre load no OmnaBase stylesheet."
-msgstr ""
-
-#: templates/admin/partials/shortcodes.php:41
 msgid "My Account menu"
 msgstr ""
 
-#: templates/admin/partials/shortcodes.php:42
+#: templates/admin/partials/shortcodes.php:33
 msgid "Add \"Support\" to WooCommerce's My Account menu, leading to the message centre page."
 msgstr ""
 
@@ -1527,109 +1528,203 @@ msgstr ""
 msgid "OmnaBase for WordPress %s"
 msgstr ""
 
-#: templates/form.php:27
-msgid "Name"
+#: templates/admin/tabs/appearance.php:24
+msgid "Look on your site"
 msgstr ""
 
-#: templates/form.php:34
-msgid "Email"
+#: templates/admin/tabs/appearance.php:25
+msgid "How the contact form and the message centre look to visitors; a cached page shows a change once its cache is cleared."
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:29
+msgid "Theme"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:30
+msgid "The visitor's system means light or dark as the visitor's own device is set."
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:34
+msgid "Light"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:35
+msgid "Dark"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:36
+msgid "Follow the visitor's system"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:43
+msgid "Accent"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:44
+msgid "The colour of buttons, focus rings and the success card's check; the words on it turn white or near-black, whichever reads better."
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:47
+msgid "OmnaBase's blue"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:49
+msgid "Your own colour"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:50
+msgid "Your colour"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:57
+msgid "Font"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:58
+msgid "OmnaBase's font comes from this site's own files and loads only when chosen."
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:62
+msgid "Inherit the theme's font"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:63
+msgid "Load OmnaBase's font"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:70
+msgid "Theme styles only"
+msgstr ""
+
+#: templates/admin/tabs/appearance.php:71
+msgid "The form and the message centre load no OmnaBase stylesheet or font: your theme styles them alone."
+msgstr ""
+
+#. translators: %d: the ticket's number (the success card shows it in the form's place).
+#: templates/form.php:26
+#, php-format
+msgid "Thanks. Your reference is #%d"
 msgstr ""
 
 #: templates/form.php:42
+msgid "Name"
+msgstr ""
+
+#: templates/form.php:47
+msgid "Email"
+msgstr ""
+
+#: templates/form.php:53
 msgid "Product"
 msgstr ""
 
-#: templates/form.php:44
+#: templates/form.php:55
 msgid "Choose a product (optional)"
 msgstr ""
 
-#: templates/form.php:56
+#: templates/form.php:65
 msgid "Licence key (optional)"
 msgstr ""
 
-#: templates/form.php:64
-#: templates/messages.php:125
+#: templates/form.php:71
+#: templates/messages.php:144
 msgid "Subject"
 msgstr ""
 
-#: templates/form.php:71
-#: templates/messages.php:131
+#: templates/form.php:76
+#: templates/messages.php:148
 msgid "Message"
 msgstr ""
 
-#: templates/form.php:79
-#: templates/messages.php:137
+#: templates/form.php:83
+#: templates/messages.php:153
 msgid "Leave this field empty"
 msgstr ""
 
-#: templates/form.php:85
+#: templates/form.php:89
 msgid "This form needs JavaScript to send. Please turn it on in your browser and reload the page."
 msgstr ""
 
-#: templates/form.php:89
-#: templates/messages.php:141
+#: templates/form.php:94
+#: templates/messages.php:157
 msgid "Send"
 msgstr ""
 
-#: templates/form.php:95
+#: templates/form.php:99
 msgid "We use your details only to answer your message."
 msgstr ""
 
-#: templates/form.php:96
+#: templates/form.php:100
 msgid "Privacy policy"
 msgstr ""
 
-#: templates/messages.php:27
+#: templates/form.php:107
+msgid "Thanks, your message is on its way."
+msgstr ""
+
+#: templates/form.php:108
+msgid "Thanks. Your message was sent."
+msgstr ""
+
+#: templates/form.php:112
+msgid "We answer by email."
+msgstr ""
+
+#: templates/form.php:113
+msgid "Send another"
+msgstr ""
+
+#: templates/messages.php:39
 msgid "Sign in"
 msgstr ""
 
-#: templates/messages.php:28
+#: templates/messages.php:40
 msgid "to read and answer your support conversations."
 msgstr ""
 
-#: templates/messages.php:36
-#: templates/messages.php:40
+#: templates/messages.php:48
+#: templates/messages.php:52
 msgid "← All conversations"
 msgstr ""
 
-#: templates/messages.php:63
+#: templates/messages.php:75
 msgid "Your answer"
 msgstr ""
 
-#: templates/messages.php:67
+#: templates/messages.php:79
 msgid "Send answer"
 msgstr ""
 
-#: templates/messages.php:74
+#: templates/messages.php:89
 msgid "Confirm your email to see your earlier conversations"
 msgstr ""
 
 #. translators: %s: the visitor's address, partly hidden.
-#: templates/messages.php:78
+#: templates/messages.php:93
 #, php-format
 msgid "Your earlier email conversations and forum topics show here once you confirm %s. The tickets you wrote here show already."
 msgstr ""
 
-#: templates/messages.php:85
+#: templates/messages.php:100
 msgid "Show my email conversations"
 msgstr ""
 
-#: templates/messages.php:90
+#: templates/messages.php:106
 msgid "Your conversations"
 msgstr ""
 
-#: templates/messages.php:92
+#: templates/messages.php:108
 msgid "No conversations yet."
 msgstr ""
 
-#: templates/messages.php:107
+#: templates/messages.php:125
 msgid "← Newest"
 msgstr ""
 
-#: templates/messages.php:110
+#: templates/messages.php:128
 msgid "Older conversations →"
 msgstr ""
 
-#: templates/messages.php:115
+#: templates/messages.php:135
 msgid "New question"
 msgstr ""

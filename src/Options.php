@@ -52,11 +52,17 @@ final class Options {
 	public const PORTAL = 'omnabase_portal';
 
 	/**
-	 * The front-end switches (round six): `[ 'theme_only' => bool, 'my_account' => bool, 'first_shown' => [ <tag> => <time> ] ]`, the "theme
-	 * styles only" switch, WooCommerce's My Account "Support" link (both off when missing) and when each tag first showed on the public site
-	 * (M14). Read and written by `Forms\Display` alone.
+	 * The front-end switches (round six): `[ 'my_account' => bool, 'first_shown' => [ <tag> => <time> ] ]`, WooCommerce's My Account
+	 * "Support" link (off when missing) and when each tag first showed on the public site (M14). "Theme styles only" moved to
+	 * `APPEARANCE` (2026-10-22). Read and written by `Forms\Display` alone.
 	 */
 	public const DISPLAY = 'omnabase_display';
+
+	/**
+	 * The front end's look (the Appearance tab, 2026-10-22): `[ 'theme' => light|dark|system, 'accent' => '' (OmnaBase's blue) | '#rrggbb',
+	 * 'font' => inherit|load, 'themeOnly' => bool ]`. Read and written by `Look\Appearance` alone; only the Appearance tab's save writes it.
+	 */
+	public const APPEARANCE = 'omnabase_appearance';
 
 	/** The settings screen's setup line (M14): `[ 'dismissed' => <time> ]` once the administrator dismissed it. Read and written by `Admin\SetupLine` alone. */
 	public const SETUP = 'omnabase_setup';
@@ -77,6 +83,7 @@ final class Options {
 		self::FORUM,
 		self::PORTAL,
 		self::DISPLAY,
+		self::APPEARANCE,
 		self::SETUP,
 	);
 

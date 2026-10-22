@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Forms;
 
+use OmnaBase\WordPress\Look\FrontStyles;
 use OmnaBase\WordPress\PluginInfo;
 
 defined( 'ABSPATH' ) || exit;
@@ -28,10 +29,10 @@ final class Shortcode {
 	 *
 	 * @param PluginInfo $info     The plugin's folder and version.
 	 * @param Projects   $projects Which project.
-	 * @param Settings   $settings The project's form settings.
-	 * @param Display    $display  The "theme styles only" switch.
+	 * @param Settings    $settings The project's form settings.
+	 * @param FrontStyles $styles   The stylesheets and the wrapper's marks for the chosen look.
 	 */
-	public function __construct( private PluginInfo $info, private Projects $projects, private Settings $settings, private Display $display ) {}
+	public function __construct( private PluginInfo $info, private Projects $projects, private Settings $settings, private FrontStyles $styles ) {}
 
 	/** Registers the shortcode. */
 	public function register(): void {
@@ -67,6 +68,9 @@ final class Shortcode {
 		$signed   = $user->exists();
 		$privacy  = '' !== $settings['privacyUrl'] ? $settings['privacyUrl'] : (string) get_privacy_policy_url();
 		return array(
+			// the same for every view (a cached page stays right); the form's script renames them if one page shows this form twice
+			'id'         => 'ob-wp-form-' . sanitize_html_class( $slug ),
+			'wrapper'    => $this->styles->marks(),
 			'project'    => $slug,
 			'subject'    => $subject,
 			'name'       => $signed ? (string) $user->display_name : '',
@@ -93,13 +97,10 @@ final class Shortcode {
 		return (string) ob_get_clean();
 	}
 
-	/** Queues the form's script and stylesheet (printed in the footer; the stylesheet stays away with "theme styles only" or a filter). */
+	/** Queues the form's script (in the footer) and the look's stylesheets (they stay away with "theme styles only" or a filter). */
 	private function enqueue(): void {
-		$version = $this->info->version();
-		wp_enqueue_script( 'omnabase-form', plugins_url( 'assets/form.js', $this->info->mainFile() ), array(), $version, array( 'in_footer' => true, 'strategy' => 'defer' ) );
-		if ( $this->display->wantsStylesheet() ) {
-			wp_enqueue_style( 'omnabase-form', plugins_url( 'assets/form.css', $this->info->mainFile() ), array(), $version );
-		}
+		wp_enqueue_script( 'omnabase-form', plugins_url( 'assets/form.js', $this->info->mainFile() ), array(), $this->info->version(), array( 'in_footer' => true, 'strategy' => 'defer' ) );
+		$this->styles->enqueue();
 	}
 
 	/**

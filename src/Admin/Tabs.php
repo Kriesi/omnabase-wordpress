@@ -1,6 +1,6 @@
 <?php
 /**
- * The settings screen's five tabs: the fixed list, the open one, and the tab row.
+ * The settings screen's six tabs: the fixed list, the open one, and the tab row.
  *
  * @package OmnaBase
  */
@@ -10,8 +10,8 @@ namespace OmnaBase\WordPress\Admin;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The tabs as OmnaBase's line tabs (a strip of links under the page head), the open one named in the address (`&tab=…`). Only these five
- * slugs exist; no tab, or any other value, opens Connection. Activity carries the number of outbox rows needing attention as the tab's count.
+ * The tabs as OmnaBase's line tabs (a strip of links under the page head), the open one named in the address (`&tab=…`). Only these six
+ * slugs exist (Appearance, the sixth, since 2026-10-22); no tab, or any other value, opens Connection. Activity carries the number of outbox rows needing attention as the tab's count.
  */
 final class Tabs {
 
@@ -19,10 +19,11 @@ final class Tabs {
 	public const DATA       = 'data';
 	public const FORUMS     = 'forums';
 	public const PAGES      = 'pages';
+	public const APPEARANCE = 'appearance';
 	public const ACTIVITY   = 'activity';
 
 	/** The slugs, in the row's order. */
-	public const ALL = array( self::CONNECTION, self::DATA, self::FORUMS, self::PAGES, self::ACTIVITY );
+	public const ALL = array( self::CONNECTION, self::DATA, self::FORUMS, self::PAGES, self::APPEARANCE, self::ACTIVITY );
 
 	/**
 	 * A slug from the fixed list: the given one when it is on it, else Connection.
@@ -52,6 +53,7 @@ final class Tabs {
 			self::DATA       => __( 'Customer data', 'omnabase' ),
 			self::FORUMS     => __( 'Forums', 'omnabase' ),
 			self::PAGES      => __( 'Forms and messages', 'omnabase' ),
+			self::APPEARANCE => __( 'Appearance', 'omnabase' ),
 			self::ACTIVITY   => __( 'Activity', 'omnabase' ),
 		);
 		$row = array();

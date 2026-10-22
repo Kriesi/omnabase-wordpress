@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
+ * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
+ * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
+ * test read "the top section, 0.1.0, unreleased", which has failed since the release and would read the new round's section instead of the
+ * one that carries this round's lines. It now reads the 0.1.0 section by its version, whatever its date, and asks the same lines of it; where
+ * it asked that the section stay undated, it now asks that the released section keep its release date (frozen). No line it asks for changed.
+ *
  * Fixing round "the vault's key from a file" (2026-10-11), the red team's failing tests: file-level checks (no WordPress needed) that the
  * "Stored connection" card is gone from the code, the translation template and the release notes, that no visible sentence names
  * wp-config.php or OMNABASE_ENCRYPTION_KEY any more, that deleting the plugin removes the key file once for the network, and that the key
@@ -21,7 +28,7 @@
  * Shapes pinned (the builder may rename and tell the red team): the card's file `templates/admin/partials/advanced.php` and its classes
  * `ob-wp-settings__advanced`, `ob-wp-settings__security`, `ob-wp-settings__keysource`, the mark `data-key-source`, the screen data's
  * `keySource` (all to disappear); uninstall.php's per-site part is the closure assigned to `$omnabase_uninstall_site` (as today), and its
- * header comment names "the key file"; the changelog's top section is still `= 0.1.0 — unreleased =`.
+ * header comment names "the key file"; the changelog's 0.1.0 section (released 2026-10-13, frozen) holds the lines.
  *
  * Why these fail today: the card's template, its sentences in the `.pot`, the key source on the screen's data and the advice naming
  * wp-config.php and OMNABASE_ENCRYPTION_KEY are all there; uninstall.php knows no key file; the changelog has no such line and still says the
@@ -142,7 +149,7 @@ final class VaultKeyStructureTest extends TestCase {
 	/**
 	 * What it checks: The release notes tell customers the connection is now locked with a key in a protected file and that the Advanced block
 	 *   is gone, and no other line still promises an Advanced block.
-	 * Passes when: changelog.txt's top section is still "0.1.0 — unreleased", has a line naming a key kept in a file, has a line saying the
+	 * Passes when: changelog.txt's 0.1.0 section (released 2026-10-13, frozen), has a line naming a key kept in a file, has a line saying the
 	 *   Advanced block is gone (or removed), every line naming "Advanced" says it is gone, and no line names wp-config.php, the constant,
 	 *   "salts" or "encryption key".
 	 * Fails when: customers are not told, or the notes still say the detail waits behind "Details" and "Advanced" while the screen has no
@@ -150,7 +157,7 @@ final class VaultKeyStructureTest extends TestCase {
 	 */
 	public function test_the_changelog_says_the_key_file_and_the_advanced_blocks_end(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — unreleased =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the top section is 0.1.0, unreleased' );
+		$this->assertSame( 1, preg_match( '/^= 0\.1\.0 — [^=]+ =$(.*?)(?:^= |\z)/ms', $changelog, $m ), 'the 0.1.0 section (released 2026-10-13)' );
 		$lines = array_values( array_filter( array_map( 'trim', explode( "\n", $m[1] ) ), static fn ( $l ) => str_starts_with( $l, '* ' ) ) );
 		$this->assertNotEmpty( array_filter( $lines, static fn ( $l ) => preg_match( '/\bkey\b/i', $l ) && preg_match( '/\bprotected file\b|\bfile\b/i', $l ) ), 'a line about the key kept in a file' );
 		$advanced = array_values( array_filter( $lines, static fn ( $l ) => str_contains( $l, 'Advanced' ) ) );

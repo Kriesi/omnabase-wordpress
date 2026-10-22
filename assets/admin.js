@@ -174,9 +174,23 @@
 		}
 	}
 
-	if ('loading' === document.readyState) {
-		document.addEventListener('DOMContentLoaded', init);
-	} else {
+	/** The Appearance tab: picking a colour in the colour field picks "Your own colour" too. */
+	function initColour() {
+		var field = document.querySelector('input[type="color"][name="omnabase_appearance[colour]"]');
+		var own = document.querySelector('input[type="radio"][name="omnabase_appearance[accent]"][value="own"]');
+		if (field && own) {
+			field.addEventListener('input', function () { own.checked = true; });
+		}
+	}
+
+	function start() {
 		init();
+		initColour();
+	}
+
+	if ('loading' === document.readyState) {
+		document.addEventListener('DOMContentLoaded', start);
+	} else {
+		start();
 	}
 })();

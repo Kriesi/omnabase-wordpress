@@ -13,9 +13,9 @@ use OmnaBase\WordPress\PluginInfo;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only, in five tabs (`Tabs`): Connection (the
+ * The plugin's one admin screen (`options-general.php?page=omnabase`), for administrators only, in six tabs (`Tabs`): Connection (the
  * setup line, the connection and its status), Customer data, Forums, Forms and messages (the message centre's page and
- * the shortcodes with the builder's dialog), Activity (what goes to OmnaBase and what OmnaBase sent). Only the open tab's sections are built and printed. The menu
+ * the shortcodes with the builder's dialog), Appearance (the front end's look), Activity (what goes to OmnaBase and what OmnaBase sent). Only the open tab's sections are built and printed. The menu
  * entry stays "OmnaBase", with WordPress's bubble after it while outbox rows need attention. The way back from OmnaBase's connect page
  * arrives here too, handled at the page's load hook before anything is printed.
  */
@@ -30,6 +30,7 @@ final class SettingsScreen {
 		Tabs::DATA       => array( 'facts' ),
 		Tabs::FORUMS     => array( 'forum' ),
 		Tabs::PAGES      => array( 'portal', 'shortcodes', 'builder' ),
+		Tabs::APPEARANCE => array( 'appearance' ),
 		Tabs::ACTIVITY   => array( 'outbox', 'deliveries' ),
 	);
 

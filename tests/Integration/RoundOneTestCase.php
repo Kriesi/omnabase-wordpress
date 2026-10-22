@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance" (slug `appearance`), after "Forms and messages" and before
+ * "Activity", with one save form (`omnabase_save_appearance`, the red team's pinned shape) holding the theme, the accent, the font and the moved
+ * "Theme styles only" switch; the brief asks that the five-tab pins be adjusted with a DECISIONS entry (`FrontendDesignStructureTest` asks for
+ * that entry). Here the list of tabs every tab test walks (`TABS`) gains `'appearance' => 'Appearance'` in that place; every test that walks it (the
+ * plain words, the secrets, the disconnected state, the vault file, the connection tab) now also checks the Appearance tab. Nothing removed.
+ *
  * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the vault's usual key
  * now lives in a file the plugin makes under wp-content, so changing the salts alone no longer makes a stored connection unreadable (that is
  * the point of the round). The tests that need an unreadable vault call `rotateSalts()`; it now loses the key whatever locked the vault:
@@ -285,12 +292,13 @@ abstract class RoundOneTestCase extends \WP_UnitTestCase {
 
 	/* ---------- M14 round one: the tabs, the plain words, the forms (the red team) ---------- */
 
-	/** The five tabs by their address slug, in order, with their labels (M14 brief, choice 1). */
+	/** The six tabs by their address slug, in order, with their labels (M14 brief, choice 1; the front-end design brief, rule 2: Appearance). */
 	protected const TABS = array(
 		'connection' => 'Connection',
 		'data'       => 'Customer data',
 		'forums'     => 'Forums',
 		'pages'      => 'Forms and messages',
+		'appearance' => 'Appearance',
 		'activity'   => 'Activity',
 	);
 

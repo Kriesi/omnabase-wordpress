@@ -4,7 +4,7 @@ Tags: support, helpdesk, tickets, woocommerce, bbpress
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,7 +19,7 @@ OmnaBase is a shared support inbox for small teams. This plugin connects your Wo
 * **A contact form.** Put `[omnabase_form]` on any page: messages become tickets, with your project's product list, licence field and privacy link. Bots and double clicks file nothing.
 * **A message centre.** Put `[omnabase_messages]` on a page you pick: signed-in customers read and answer their tickets there, and see their earlier email conversations and forum topics once they confirm their address. A "Support" link in WooCommerce's My Account leads there if you want one.
 * **Nothing gets lost.** What the site sends to OmnaBase waits on your site when OmnaBase cannot be reached and goes out once it is back; the Activity tab of Settings › OmnaBase shows what waits, with Send now, Retry and Discard.
-* **Your theme's look.** The form and the message centre bring a small stylesheet in your theme's font; one switch leaves them to your theme alone.
+* **Light or dark, in your colour.** The form and the message centre look like the OmnaBase app, light, dark or following the visitor's device, in OmnaBase's blue or your own colour, in your theme's font or OmnaBase's; one switch leaves them to your theme alone.
 * **Health at a glance.** One line on the Connection tab says whether the connection works both ways, and the screen warns about anything that would stop the plugin working, such as WordPress's timer turned off or an outdated shop plugin.
 
 The plugin needs an OmnaBase workspace and a site with a public https address.
@@ -71,7 +71,15 @@ Click "Build a shortcode" on the Forms and messages tab of Settings › OmnaBase
 
 = Can I use my theme's styles for the form? =
 
-Yes. Tick "Use the theme's styles only" on the Forms and messages tab of Settings › OmnaBase, and the plugin loads no stylesheet of its own.
+Yes. Turn on "Theme styles only" on the Appearance tab of Settings › OmnaBase, and the plugin loads no stylesheet or font of its own.
+
+= Can the form and the message centre be dark, or in my colours? =
+
+Yes. On the Appearance tab of Settings › OmnaBase choose Light, Dark or "Follow the visitor's system", OmnaBase's blue or your own colour, and your theme's font or OmnaBase's. Pages kept by a cache show the new look once the cache is cleared.
+
+= Which font does the plugin bring? =
+
+Plus Jakarta Sans, under the SIL Open Font License 1.1 (the licence ships beside the font files in assets/fonts). It loads from your own site, never from a font service, and only when you choose "Load OmnaBase's font".
 
 = What happens when I delete the plugin? =
 

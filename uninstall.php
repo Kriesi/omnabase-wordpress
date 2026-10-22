@@ -60,6 +60,7 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 		'omnabase_forum',
 		'omnabase_portal',
 		'omnabase_display',
+		'omnabase_appearance',
 		'omnabase_setup',
 	);
 	foreach ( $options as $option ) {

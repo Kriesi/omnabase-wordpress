@@ -4,7 +4,8 @@
  * - The browser opens https://wp.omnabase.test. Playwright's route hands each request to wp-env at http://localhost:8888 with
  *   `X-Forwarded-Host` / `X-Forwarded-Proto: https`, so no certificate, no port 443 and no change to the Mac's network (LocalWP's
  *   router for Omnalingo is untouched). The harness's must-use plugin in wp-env then answers as https at that host.
- * - WordPress (inside Docker) reaches OmnaBase's e2e server at http://host.docker.internal:3011 (`OMNABASE_API_URL` in .wp-env.json).
+ * - WordPress (inside Docker) reaches OmnaBase's e2e server at http://host.docker.internal:3011 (`OMNABASE_API_URL` in .wp-env.json), or at
+ *   the lane's port: the global setup points WordPress at the ports it was given (bin/lane.sh) and its teardown puts .wp-env.json's back.
  * - OmnaBase reaches WordPress through the e2e server's relay (`POST /api/test/relay`), which sends the site's calls to localhost:8888.
  * - Playwright itself talks to OmnaBase's e2e server at http://localhost:3011 for the test hooks.
  */
@@ -19,6 +20,13 @@ export const WP_LOCAL = process.env.WP_LOCAL_URL ?? "http://localhost:8888";
 export const OMNABASE_E2E = process.env.OMNABASE_E2E_URL ?? `http://localhost:${process.env.OMNABASE_E2E_PORT ?? "3011"}`;
 /** OmnaBase's web app (the connect page), as `OMNABASE_APP_URL` in .wp-env.json names it */
 export const OMNABASE_APP = process.env.OMNABASE_APP_URL ?? "http://localhost:4391";
+/**
+ * the address WordPress (inside Docker) calls OmnaBase's e2e server at: the same port as OMNABASE_E2E. The lane switch (bin/lane.sh, run by
+ * the global setup and put back by its teardown) writes it into wp-config.php when the flows run on another lane than .wp-env.json's 3011
+ */
+export const WP_OMNABASE_API = `http://host.docker.internal:${new URL(OMNABASE_E2E).port || "3011"}`;
+/** the lane's two ports as the lane switch takes them */
+export const LANE = { api: new URL(OMNABASE_E2E).port || "3011", web: new URL(OMNABASE_APP).port || "4391" };
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const ADMIN_STATE = resolve(REPO, "tests/e2e/.auth/admin.json");
 

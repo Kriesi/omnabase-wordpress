@@ -1,5 +1,8 @@
 <?php
 /**
+ * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-frontend-design.md`, rule 2) adds a sixth tab, "Appearance", after "Forms and messages", with settings of its own. Here the Appearance tab's card (`ob-wp-settings__appearance`) joins `$cardsPerTab`, so the card test asks it to be a card of its own.
+ *
  * FIXING ROUND "THE VAULT'S KEY FROM A FILE" (2026-10-11), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder removed
  * the "Stored connection" card ("go with the file-based key, remove the block"), so the Connection tab's list of cards loses
  * `ob-wp-settings__advanced`; the connection box and the status block must still each be their own card, and `ConnectionTabTest` now pins
@@ -59,6 +62,7 @@ trait AdminLookShapes {
 		'data'       => array( 'ob-wp-settings__sources', 'ob-wp-settings__user-fields' ),
 		'forums'     => array( 'ob-wp-settings__forum' ),
 		'pages'      => array( 'ob-wp-settings__portal', 'ob-wp-settings__shortcodes' ),
+		'appearance' => array( 'ob-wp-settings__appearance' ),
 		'activity'   => array( 'ob-wp-settings__outbox', 'ob-wp-settings__deliveries' ),
 	);
 
