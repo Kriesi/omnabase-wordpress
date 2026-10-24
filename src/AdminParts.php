@@ -17,6 +17,7 @@ use OmnaBase\WordPress\Admin\BuilderView;
 use OmnaBase\WordPress\Admin\ConnectionView;
 use OmnaBase\WordPress\Admin\DataActions;
 use OmnaBase\WordPress\Admin\FactsView;
+use OmnaBase\WordPress\Admin\FormsView;
 use OmnaBase\WordPress\Admin\Flash;
 use OmnaBase\WordPress\Admin\ForumActions;
 use OmnaBase\WordPress\Admin\ForumView;
@@ -40,6 +41,7 @@ use OmnaBase\WordPress\Connect\Disconnect;
 use OmnaBase\WordPress\Connect\Flow;
 use OmnaBase\WordPress\Connect\SiteCheck;
 use OmnaBase\WordPress\Forms\Display;
+use OmnaBase\WordPress\Forms\FormList;
 use OmnaBase\WordPress\Forms\Projects;
 use OmnaBase\WordPress\Look\Appearance;
 use OmnaBase\WordPress\Rest\DeliveryLog;
@@ -59,9 +61,10 @@ final class AdminParts {
 	/**
 	 * Builds the parts' maker.
 	 *
-	 * @param PluginInfo $info The header fields of omnabase.php.
+	 * @param PluginInfo $info  The header fields of omnabase.php.
+	 * @param FormList   $forms The workspace's forms (shared with the shortcode).
 	 */
-	public function __construct( private PluginInfo $info ) {}
+	public function __construct( private PluginInfo $info, private FormList $forms ) {}
 
 	/**
 	 * Builds the admin parts and registers their hooks.
@@ -91,6 +94,7 @@ final class AdminParts {
 		( new AppearanceActions( new Appearance(), $flash ) )->register();
 		$sections = array(
 			'setup'      => array( $setup, 'build' ),
+			'forms'      => array( new FormsView( $this->forms, new Projects( $info, $vault ), $info ), 'build' ),
 			'builder'    => array( $this->bootBuilder( $vault, $info, $portal, $flash ), 'build' ),
 			'connection' => array( new ConnectionView( $vault, $client, $info, $site ), 'build' ),
 			'health'     => array( $health, 'view' ),
@@ -111,9 +115,9 @@ final class AdminParts {
 	 */
 	private function bootBuilder( Vault $vault, ConnectionInfo $info, Portal $portal, Flash $flash ): BuilderView {
 		$projects = new Projects( $info, $vault );
-		( new BuilderActions( new BuilderChoices( $projects ), new PageMaker( $portal->page ), $flash ) )->register();
+		( new BuilderActions( new BuilderChoices( $projects, $this->forms ), new PageMaker( $portal->page ), $flash ) )->register();
 		( new AdminAssets( $this->info ) )->register();
-		return new BuilderView( $projects, $info, $portal->page, new TaggedPages() );
+		return new BuilderView( $projects, $info, $portal->page, new TaggedPages(), $this->forms );
 	}
 
 	/**

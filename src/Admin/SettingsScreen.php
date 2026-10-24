@@ -29,7 +29,7 @@ final class SettingsScreen {
 		Tabs::CONNECTION => array( 'setup', 'connection', 'health', 'healthNotes' ),
 		Tabs::DATA       => array( 'facts' ),
 		Tabs::FORUMS     => array( 'forum' ),
-		Tabs::PAGES      => array( 'portal', 'shortcodes', 'builder' ),
+		Tabs::PAGES      => array( 'forms', 'portal', 'shortcodes', 'builder' ),
 		Tabs::APPEARANCE => array( 'appearance' ),
 		Tabs::ACTIVITY   => array( 'outbox', 'deliveries' ),
 	);

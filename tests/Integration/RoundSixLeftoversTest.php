@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: ADJUSTED, NOT WEAKENED. What changed and why: the two "Send now" tests made their
+ * waiting outbox row through the Classic contact form, which left with the round (OmnaBase `docs/briefs/plugin-forms-round.md`: no form
+ * message waits in the outbox any more). They now make it the way every other waiting row comes about: OmnaBase asks about a customer, the
+ * plugin queues the customer's link, and the first try finds OmnaBase unreachable. What they check is unchanged: "Send now" sends that waiting
+ * row once, at once, and does nothing without the form's token.
+ *
  * M14 ROUND ONE, THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the outbox moves to the Activity tab and the health lines to the
  * Connection tab's status block (brief `docs/briefs/m14-settings-cleanup.md`, choice 1; review S1). The two "Send now" tests read the outbox
  * from `screen( 'activity' )`; the facts-call test keeps reading `.ob-wp-settings__health` on the Connection tab (where the line now sits
@@ -35,16 +41,28 @@ namespace OmnaBase\WordPress\Tests\Integration;
 
 final class RoundSixLeftoversTest extends RoundSixTestCase {
 
-	/** A form message whose first try met no OmnaBase: one waiting row, its next try a minute away. */
-	private function waitingFormRow(): array {
-		$this->omnabaseAnswersSubmissions( new \WP_Error( 'http_request_failed', 'cURL error 7: Failed to connect to app.omnabase.com' ) );
-		$this->sendFrom( self::VISITOR_IP );
-		$rows = $this->formRows();
-		$this->assertCount( 1, $rows, 'one waiting row about a form' );
+	/** The customer whose link waits in the outbox. */
+	private int $waiting = 0;
+
+	/** A customer's link whose first try met no OmnaBase: one waiting row, its next try ahead; OmnaBase answers again afterwards. */
+	private function waitingRow(): array {
+		$this->waiting = $this->customer( 'wanda.waiting@example.org', 'Wanda Waiting' );
+		$this->switchOn( array( 'profile' ) );
+		$this->askFacts( 'wanda.waiting@example.org' );
+		$this->refusals['sync'] = new \WP_Error( 'http_request_failed', 'cURL error 7: Failed to connect to app.omnabase.com' );
+		$this->makeDue();
+		$this->runOutbox();
+		$rows = $this->outboxRows( 'user_link' );
+		$this->assertCount( 1, $rows, 'one waiting row about the customer' );
 		$this->assertSame( 'waiting', $rows[0]['state'] );
 		$this->assertGreaterThan( time(), self::nextAt( $rows[0] ), 'its next try lies ahead' );
-		$this->omnabaseTakesSubmissions();
+		unset( $this->refusals['sync'] );
 		return $rows[0];
+	}
+
+	/** The plugin's calls linking the waiting customer. */
+	private function linkCalls(): array {
+		return $this->callsFor( $this->waiting, 'PUT', false );
 	}
 
 	/**
@@ -54,7 +72,7 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 	 * Fails when: an owner who just fixed an outage must wait for the next try, or "Send now" sends the message twice.
 	 */
 	public function test_send_now_sends_a_waiting_row_at_once(): void {
-		$this->waitingFormRow();
+		$this->waitingRow();
 		$form = self::formWithButton( self::section( $this->screen( 'activity' ), 'ob-wp-settings__outbox' ), 'Send now' );
 		$this->assertNotNull( $form, '"Send now" for the waiting row' );
 		$this->calls = array();
@@ -62,8 +80,8 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 		$this->postAdmin( $form );
 		$this->runOutbox();
 
-		$this->assertCount( 1, $this->submissionCalls(), 'sent once, now' );
-		$this->assertSame( 'sent', $this->formRows()[0]['state'] ?? null );
+		$this->assertCount( 1, $this->linkCalls(), 'sent once, now' );
+		$this->assertSame( 'sent', $this->outboxRows( 'user_link' )[0]['state'] ?? null );
 	}
 
 	/**
@@ -72,7 +90,7 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 	 * Fails when: another site makes an administrator's browser push the outbox, past OmnaBase's waiting times.
 	 */
 	public function test_send_now_needs_the_forms_token(): void {
-		$this->waitingFormRow();
+		$this->waitingRow();
 		$form = self::formWithButton( self::section( $this->screen( 'activity' ), 'ob-wp-settings__outbox' ), 'Send now' );
 		$this->assertNotNull( $form, '"Send now" for the waiting row' );
 		$this->calls = array();
@@ -80,8 +98,8 @@ final class RoundSixLeftoversTest extends RoundSixTestCase {
 		$this->postAdmin( $form, false );
 		$this->runOutbox();
 
-		$this->assertCount( 0, $this->submissionCalls() );
-		$row = $this->formRows()[0];
+		$this->assertCount( 0, $this->linkCalls() );
+		$row = $this->outboxRows( 'user_link' )[0];
 		$this->assertSame( 'waiting', $row['state'] );
 		$this->assertGreaterThan( time(), self::nextAt( $row ) );
 	}

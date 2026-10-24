@@ -21,8 +21,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The hand-wired container: each part is made here and told to register its own hooks. Everywhere: the two signed receivers, the outbox
- * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form and its two
- * routes (`Forms`). In the admin: the settings screen and its actions (`AdminParts`). Everywhere too: the
+ * and the licence events (`CustomerData`), bbPress's moments and OmnaBase's replies posted back (`Forums`), the shortcode form, drawn by
+ * OmnaBase's embed (`Forms`). In the admin: the settings screen and its actions (`AdminParts`). Everywhere too: the
  * message centre (`Portal`: its shortcode, form posts, no-cache marking, the profile watcher, My Account's link), and the privacy text,
  * exporter and eraser (`Privacy`).
  */
@@ -45,7 +45,8 @@ final class Plugin {
 		$forum = new Forums( $data );
 		$data->registerBackground();
 		$forum->registerBackground();
-		( new Forms( $this->info, $vault, $data ) )->register();
+		$forms = new Forms( $this->info, $vault );
+		$forms->register();
 		( new FirstShown( new Display() ) )->register();
 		$portal = new Portal( $this->info, $vault, $data );
 		$portal->register();
@@ -53,7 +54,7 @@ final class Plugin {
 		( new Events( $door, new ReplayGuard(), $log, $ping ) )->register();
 		( new Customer( $door, $data->responder ) )->register();
 		if ( is_admin() ) {
-			( new AdminParts( $this->info ) )->register( $vault, $log, $ping, $data, $forum, $portal );
+			( new AdminParts( $this->info, $forms->list ) )->register( $vault, $log, $ping, $data, $forum, $portal );
 		}
 	}
 

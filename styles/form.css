@@ -1,4 +1,5 @@
-/* The front end's own rules: the contact form [omnabase_form] and the message centre [omnabase_messages] (the source; bin/build-css.php puts
+/* The front end's own rules: the contact form [omnabase_form] (drawn by OmnaBase's embed, coloured through its variables) and the message
+   centre [omnabase_messages] (the source; bin/build-css.php puts
    OmnaBase's tokens above them into assets/form.css, the light block on .ob-wp, the dark block on .ob-wp[data-theme="dark"] and on
    .ob-wp:not([data-theme="light"]) when the visitor's device is dark, then the accent blocks).
    Every rule sits under .ob-wp, the wrapper of the plugin's output, so the theme's page is never touched. The reused class names are the
@@ -187,137 +188,35 @@
   color: var(--ob-text-secondary);
 }
 
-/* ---------- the contact form: label above, the field, the error under it ---------- */
+/* ---------- the form built in OmnaBase: OmnaBase's embed (forms.js) draws it inside the container and reads these variables. Set
+   here from the tokens, so the light and dark blocks, the visitor's device setting and the owner's colour all reach it; with "Theme styles
+   only" this stylesheet stays away and the embed keeps its own plain look. The font comes from the wrapper (the embed inherits it). ---------- */
 
-.ob-wp .ob-wp-form__error {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
-  color: var(--ob-error);
+.ob-wp {
+  --omnabase-form-accent: var(--ob-btn-primary-bg);
+  --omnabase-form-accent-text: var(--ob-btn-primary-text);
+  --omnabase-form-border: var(--ob-border-strong);
+  --omnabase-form-background: var(--ob-bg-surface);
+  --omnabase-form-field: var(--ob-bg-surface);
+  --omnabase-form-text: var(--ob-text);
+  --omnabase-form-muted: var(--ob-text-secondary);
+  --omnabase-form-error: var(--ob-error);
+  --omnabase-form-focus: var(--ob-focus);
+  --omnabase-form-radius: var(--ob-radius-sm);
+}
+
+/* the site's privacy page, one small line under the form */
+.ob-wp .ob-wp-form__privacy {
+  margin: var(--ob-space-4) 0 0;
+  color: var(--ob-text-secondary);
   font-size: var(--ob-text-sm);
 }
 
-.ob-wp .ob-wp-form__error[hidden] {
-  display: none;
-}
-
-.ob-wp .ob-wp-form__error svg {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-}
-
-.ob-wp .ob-wp-form {
-  display: grid;
-  gap: var(--ob-space-4);
-  margin: 0;
-}
-
-.ob-wp .ob-wp-form[hidden] {
-  display: none;
-}
-
-.ob-wp .ob-wp-form__field {
-  margin: 0;
-}
-
-.ob-wp .ob-wp-form__label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--ob-text);
-  font-size: var(--ob-text-sm);
-  font-weight: 600;
-}
-
+/* the message centre's fields marked wrong */
 .ob-wp .ob-input--invalid,
 .ob-wp .ob-textarea[aria-invalid="true"],
 .ob-wp .ob-select[aria-invalid="true"] {
   border-color: var(--ob-error);
-}
-
-.ob-wp .ob-wp-form__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ob-space-3);
-  margin: 0;
-}
-
-.ob-wp .ob-wp-form__status {
-  margin: 0;
-  color: var(--ob-text-secondary);
-  font-size: var(--ob-text-sm);
-}
-
-.ob-wp .ob-wp-form__status:empty {
-  display: none;
-}
-
-.ob-wp .ob-wp-form__status--error {
-  color: var(--ob-error);
-}
-
-.ob-wp .ob-wp-form__privacy,
-.ob-wp .ob-wp-form__note {
-  margin: 0;
-  color: var(--ob-text-secondary);
-  font-size: var(--ob-text-sm);
-}
-
-/* the honeypot: off screen for people, still a real input for bots (never display: none, which some bots skip) */
-.ob-wp .ob-wp-form__trap {
-  position: absolute;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-/* ---------- the success card: it takes the form's place ---------- */
-
-.ob-wp .ob-wp-form__done {
-  display: grid;
-  justify-items: center;
-  gap: var(--ob-space-2);
-  padding: var(--ob-space-6) 0;
-  text-align: center;
-}
-
-.ob-wp .ob-wp-form__done[hidden] {
-  display: none;
-}
-
-.ob-wp .ob-wp-form__done-icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: var(--ob-space-2);
-  border-radius: var(--ob-radius-full);
-  background: var(--ob-accent);
-  color: var(--ob-on-accent);
-}
-
-.ob-wp .ob-wp-form__done-icon svg {
-  width: 26px;
-  height: 26px;
-}
-
-.ob-wp .ob-wp-form__done-title {
-  margin: 0;
-  color: var(--ob-text);
-  font-size: var(--ob-text-md);
-  font-weight: 600;
-}
-
-.ob-wp .ob-wp-form__done-title:focus {
-  outline: none;
-}
-
-.ob-wp .ob-wp-form__done-line {
-  margin: 0 0 var(--ob-space-2);
-  color: var(--ob-text-secondary);
 }
 
 /* ---------- the kit's notice: a soft box with an icon, in both themes ---------- */
@@ -646,7 +545,7 @@
   border-top: 1px solid var(--ob-border);
 }
 
-/* the New question form's honeypot, as the contact form's */
+/* the New question form's honeypot: off screen for people, still a real input for bots (never display: none, which some bots skip) */
 .ob-wp.ob-wp-messages .ob-wp-form__trap {
   position: absolute;
   left: -10000px;

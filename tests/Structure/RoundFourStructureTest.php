@@ -1,5 +1,15 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-forms-round.md`, "The old routes": "the plugin's time-token and form routes go, with their tests; `Forms.php` keeps only
+ * the shortcode and the block"; outcome 1: "'Classic' is gone") retires round four's form: OmnaBase's round three removed the API those routes
+ * sent to, and the shortcode now prints OmnaBase's embed. Three tests follow: the parts that must exist are now the shortcode and the browser
+ * flow (the time token, the guard and the route class are gone; `FormEmbedStructureTest` refuses them); the registration test still asks for
+ * the shortcode and now asks that neither Classic route is registered; the script test still refuses any secret or Authorization header in a
+ * form script under assets/, and no longer requires such a script to exist (the embed's script is OmnaBase's, loaded from the app host). What
+ * they protected stays protected: the shortcode exists under its name, nothing secret reaches a script, and no route is left without its
+ * check (there is no such route left). The template, stylesheet, uninstall and release-notes tests are unchanged.
+ *
  * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the founder's order of 2026-10-21
  * ("option for light and dark themes … should use the styling of our OmnaBase app") and its brief (OmnaBase
  * `docs/briefs/plugin-frontend-design.md`, rules 1 and 2) reverse two of round four's choices for the form's stylesheet: the dark block is now
@@ -45,18 +55,15 @@ final class RoundFourStructureTest extends TestCase {
 
 	private const ROUND_FOUR_FILES = array(
 		'src/Forms/Shortcode.php',
-		'src/Forms/Token.php',
-		'src/Forms/Guard.php',
-		'src/Rest/Form.php',
 		'tests/e2e/form.spec.ts',
 	);
 
 	private const ESCAPERS = array( 'esc_html', 'esc_attr', 'esc_url', 'esc_textarea', 'wp_kses_post', 'wp_kses', 'esc_html__', 'esc_attr__', 'absint', 'intval', 'wp_json_encode' );
 
 	/**
-	 * What it checks: Round four's parts exist under the brief's names.
-	 * Passes when: the shortcode, the token, the guard (honeypot and limits), the form's REST route class and the browser flow exist.
-	 * Fails when: the form's work is tangled into one class, so a change to the limits risks breaking what the form shows.
+	 * What it checks: The form's parts that outlive the Classic form exist under their names.
+	 * Passes when: the shortcode's class and the browser flow exist (the forms round retired the token, the guard and the route class).
+	 * Fails when: the shortcode documented on the settings screen has no home of its own, or the form has no browser flow proving it works.
 	 */
 	public function test_the_round_four_parts_exist(): void {
 		$missing = array_values( array_filter( self::ROUND_FOUR_FILES, static fn ( string $f ) => ! file_exists( OMNABASE_REPO . '/' . $f ) ) );
@@ -64,16 +71,15 @@ final class RoundFourStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The shortcode and the two addresses the form's script calls are registered under the brief's names.
-	 * Passes when: the code under src/ registers the shortcode omnabase_form and REST routes /form and /form-token in the omnabase/v1
-	 *   namespace.
-	 * Fails when: the shortcode documented on the settings screen does nothing, or the script calls an address that does not exist.
+	 * What it checks: The shortcode is registered under its documented name, and the Classic form's two addresses are not.
+	 * Passes when: the code under src/ registers the shortcode omnabase_form and registers no REST route /form or /form-token.
+	 * Fails when: the shortcode documented on the settings screen does nothing, or a retired address keeps taking messages that go nowhere.
 	 */
 	public function test_the_shortcode_and_the_two_routes_are_registered(): void {
 		$src = $this->codeUnder( 'src' );
 		$this->assertMatchesRegularExpression( '/add_shortcode\s*\(\s*[\'"]omnabase_form[\'"]/', $src );
-		$this->assertMatchesRegularExpression( '#register_rest_route\s*\([^;]*[\'"]/form[\'"]#s', $src, 'the form route' );
-		$this->assertMatchesRegularExpression( '#register_rest_route\s*\([^;]*[\'"]/form-token[\'"]#s', $src, 'the time-token route' );
+		$this->assertDoesNotMatchRegularExpression( '#register_rest_route\s*\([^;]*[\'"]/form[\'"]#s', $src, 'the Classic form route is gone' );
+		$this->assertDoesNotMatchRegularExpression( '#register_rest_route\s*\([^;]*[\'"]/form-token[\'"]#s', $src, 'the Classic time-token route is gone' );
 	}
 
 	/**
@@ -94,20 +100,18 @@ final class RoundFourStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The form's script holds no secret and talks only to the site's own two addresses.
-	 * Passes when: a script under assets/ whose name holds "form" exists, mentions the token, and holds no site key prefix (obw_), no webhook
-	 *   secret prefix (whsec_), no Authorization or Bearer header and no address of OmnaBase.
-	 * Fails when: a key is written into the script every visitor downloads, or the browser calls OmnaBase directly with the site's
-	 *   credentials.
+	 * What it checks: No form script the plugin ships holds a secret or calls OmnaBase with the site's credentials.
+	 * Passes when: every script under assets/ whose name holds "form" (there may be none: the embed's script is OmnaBase's) holds no site key
+	 *   prefix (obw_), no webhook secret prefix (whsec_), no Authorization or Bearer header and no address of OmnaBase.
+	 * Fails when: a key is written into a script every visitor downloads, or the browser calls OmnaBase with the site's credentials.
 	 */
 	public function test_the_form_script_holds_no_secret_and_calls_only_the_site(): void {
 		$scripts = array_values( array_filter( $this->filesUnder( 'assets', 'js' ), static fn ( $f ) => str_contains( basename( $f ), 'form' ) ) );
-		$this->assertNotEmpty( $scripts, 'the form\'s script under assets/' );
 		foreach ( $scripts as $file ) {
 			$js = $this->read( $file );
-			$this->assertMatchesRegularExpression( '/token/i', $js, "{$file}: fetches the time token" );
 			$this->assertDoesNotMatchRegularExpression( '/obw_|whsec_|Authorization|Bearer|omnabase\.com/i', $js, "{$file}: no secret, no OmnaBase address" );
 		}
+		$this->addToAssertionCount( 1 ); // no form script at all is fine: nothing secret can be in it
 	}
 
 	/**

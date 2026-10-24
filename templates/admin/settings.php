@@ -35,7 +35,7 @@ defined( 'ABSPATH' ) || exit;
 	<p class="ob-wp-settings__version">
 		<?php
 		/* translators: %s: the plugin's version. */
-		echo esc_html( sprintf( __( 'OmnaBase for WordPress %s', 'omnabase' ), $view['version'] ) );
+		echo esc_html( sprintf( __( 'OmnaBase Connector %s', 'omnabase' ), $view['version'] ) );
 		?>
 	</p>
 </div>

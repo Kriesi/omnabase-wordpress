@@ -52,7 +52,7 @@ test("the settings screen renders under Settings › OmnaBase", async ({ page })
   await expect(page.locator(".ob-wp-settings__connection")).toHaveAttribute("data-state", "not_connected");
   await expect(page.getByText("This site is not connected to OmnaBase yet.")).toBeVisible();
   await expect(page.getByText(`Development: this site talks to ${WP_OMNABASE_API} instead of app.omnabase.com.`)).toBeVisible();
-  await expect(page.getByText(`OmnaBase for WordPress ${VERSION}`)).toBeVisible();
+  await expect(page.getByText(`OmnaBase Connector ${VERSION}`)).toBeVisible();
   // Builder's adjustment (M14 round one, DECISIONS "2026-10-10 — M14 round one"): while an earlier flow leaves a call needing attention,
   // the menu entry carries WordPress's count bubble after "OmnaBase" ("OmnaBase 2 calls need attention" to a screen reader), so the exact
   // name no longer matched. The link is found by a name that starts with "OmnaBase"; its address is checked as before.

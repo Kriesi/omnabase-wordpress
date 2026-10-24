@@ -23,8 +23,8 @@ final class Client {
 	private const EXCHANGE_TIMEOUT_SECONDS = 10;
 	// `/me/ping` answers once OmnaBase has called the site back (OmnaBase allows the site 5 seconds).
 	private const PING_TIMEOUT_SECONDS = 15;
-	// A visitor waits for the form's answer; a slower OmnaBase hands the message to the outbox.
-	private const FORM_TIMEOUT_SECONDS = 10;
+	// A signed-in visitor's page waits for the prefill token; a slower OmnaBase leaves the form unverified.
+	private const PREFILL_TIMEOUT_SECONDS = 3;
 
 	/**
 	 * Builds the client.
@@ -61,34 +61,24 @@ final class Client {
 	}
 
 	/**
-	 * A project's form settings for the shortcode form: `{ products, askLicense, privacyUrl }` (round four).
+	 * The workspace's published forms for the shortcode and its builder: `{ data: [ { slug, name, defaultFor } ] }` (the plugin's forms
+	 * round; `defaultFor` names the key's projects whose default form it is).
 	 *
-	 * @param string $slug The project's slug.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function formSettings( string $slug ) {
-		return $this->withKey( 'GET', '/forms/' . rawurlencode( $slug ), null, self::TIMEOUT_SECONDS );
+	public function forms() {
+		return $this->withKey( 'GET', '/forms', null, self::TIMEOUT_SECONDS );
 	}
 
 	/**
-	 * Sends a visitor's form message (round four), the answer kept whole: the visitor waits for it, so the timeout is short.
+	 * A prefill token vouching for a signed-in customer's details on one form: `{ token, expiresAt }`. A visitor's page waits for it, so the
+	 * timeout is short; without an answer the form shows unverified.
 	 *
-	 * @param string              $slug The project's slug.
-	 * @param array<string,mixed> $body The fields OmnaBase takes.
-	 * @param string              $key  The Idempotency-Key (from the form's time token).
-	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
+	 * @param array{form:string,project:string,values:array<string,string>} $body The form, the project and the values by mapping.
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function submitForm( string $slug, array $body, string $key ): array {
-		return $this->call( 'POST', self::formPath( $slug ), $body, self::FORM_TIMEOUT_SECONDS, array( 'Idempotency-Key' => $key ) );
-	}
-
-	/**
-	 * Where a project's form messages go.
-	 *
-	 * @param string $slug The project's slug.
-	 */
-	public static function formPath( string $slug ): string {
-		return '/forms/' . rawurlencode( $slug ) . '/submissions';
+	public function prefillToken( array $body ) {
+		return $this->withKey( 'POST', '/forms/prefill', $body, self::PREFILL_TIMEOUT_SECONDS );
 	}
 
 	/**

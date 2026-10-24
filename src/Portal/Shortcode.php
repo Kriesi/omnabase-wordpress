@@ -65,14 +65,16 @@ final class Shortcode {
 	}
 
 	/**
-	 * What a visitor who is not signed in gets.
+	 * What a visitor who is not signed in gets: with `guest="form"` the project's form built in OmnaBase, else (or when no form can be shown,
+	 * for instance a project without a default form) the sign-in link.
 	 *
 	 * @param string $guest   The `guest` attribute.
 	 * @param string $project The `project` attribute.
 	 */
 	private function guest( string $guest, string $project ): string {
-		if ( 'form' === $guest ) {
-			return do_shortcode( '[' . FormShortcode::TAG . ( '' === $project ? '' : ' project="' . esc_attr( sanitize_key( $project ) ) . '"' ) . ']' );
+		$form = 'form' === $guest ? do_shortcode( '[' . FormShortcode::TAG . ( '' === $project ? '' : ' project="' . esc_attr( sanitize_key( $project ) ) . '"' ) . ']' ) : '';
+		if ( '' !== $form ) {
+			return $form;
 		}
 		$this->styles->enqueue();
 		return $this->views->loggedOut( $this->page->url(), $this->styles->marks() );

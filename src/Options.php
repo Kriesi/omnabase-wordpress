@@ -121,9 +121,8 @@ final class Options {
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';
 
 	/**
-	 * Transients: what the shortcode form keeps for a while (round four), all under this prefix: the time tokens (`…t_<hash>`, two hours),
-	 * the counted submissions and token requests per visitor address (`…a_<hash>`, `…ta_<hash>`, an hour) and for the site (`…site`), the
-	 * project's cached form settings (`…s_<slug hash>`, an hour).
+	 * Transients: what the shortcode form keeps for a while, all under this prefix (the plugin's forms round): the workspace's list of forms
+	 * (`…list`, an hour) and the signed-in visitors' prefill tokens (`…p_<hash of the person, form and details>`, an hour).
 	 */
 	public const FORM_TRANSIENT = 'omnabase_form_';
 }

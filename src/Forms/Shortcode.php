@@ -7,18 +7,19 @@
 
 namespace OmnaBase\WordPress\Forms;
 
+use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Look\FrontStyles;
 use OmnaBase\WordPress\PluginInfo;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * `[omnabase_form project="<slug>" subject="…"]` shows name, email, subject and message, the project's product list and licence field when
- * its settings ask for them, and the privacy link (the project's, else the site's privacy page, else none). A signed-in user finds their
- * name and address filled in. The page holds no token and nothing secret: the form's script fetches its token when the page loads, so two
- * views are the same HTML and a page cache may keep it. When the form cannot tell its project, the administrator reads a notice and
- * everyone else nothing. Projects, settings and the script's assets each come from their own class. A real render announces itself
- * (`FirstShown::EVENT`), so the first one on the public site is noted.
+ * `[omnabase_form id="<form slug>" project="<slug>" subject="…"]` shows a form built in OmnaBase (Settings › Forms there), drawn on the
+ * page by OmnaBase's embed: the plugin prints the container inside the look's wrapper and queues the embed's script once. Without `id`, the
+ * project's default form. The project is the shortcode's, else the key's single project; it places the messages. `subject` pre-words the
+ * form's field keyed "subject" (the person may change it). A signed-in visitor's container carries OmnaBase's prefill token, so the details
+ * the site vouches for arrive verified; a visitor's page is the same for everyone. When the form cannot be shown, the administrator reads a
+ * note and everyone else nothing. A real render announces itself (`FirstShown::EVENT`), so the first one on the public site is noted.
  */
 final class Shortcode {
 
@@ -27,12 +28,14 @@ final class Shortcode {
 	/**
 	 * Builds the shortcode.
 	 *
-	 * @param PluginInfo $info     The plugin's folder and version.
-	 * @param Projects   $projects Which project.
-	 * @param Settings    $settings The project's form settings.
-	 * @param FrontStyles $styles   The stylesheets and the wrapper's marks for the chosen look.
+	 * @param PluginInfo     $info       The plugin's folder.
+	 * @param Projects       $projects   Which project.
+	 * @param FormPick       $pick       Which form.
+	 * @param PrefillToken   $prefill    The signed-in visitor's token.
+	 * @param FrontStyles    $styles     The stylesheets and the wrapper's marks for the chosen look.
+	 * @param ConnectionInfo $connection The workspace's slug.
 	 */
-	public function __construct( private PluginInfo $info, private Projects $projects, private Settings $settings, private FrontStyles $styles ) {}
+	public function __construct( private PluginInfo $info, private Projects $projects, private FormPick $pick, private PrefillToken $prefill, private FrontStyles $styles, private ConnectionInfo $connection ) {}
 
 	/** Registers the shortcode. */
 	public function register(): void {
@@ -45,44 +48,39 @@ final class Shortcode {
 	 * @param array<string,string>|string $atts The attributes as written.
 	 */
 	public function render( $atts ): string {
-		$atts    = shortcode_atts( array( 'project' => '', 'subject' => '' ), is_array( $atts ) ? $atts : array(), self::TAG );
-		$project = $this->projects->resolve( trim( (string) $atts['project'] ) );
+		$atts    = shortcode_atts( array( 'id' => '', 'project' => '', 'subject' => '' ), is_array( $atts ) ? $atts : array(), self::TAG );
+		$named   = trim( (string) $atts['project'] );
+		$project = $this->projects->resolve( $named );
 		if ( '' !== $project['problem'] ) {
-			return $this->notice( $project['problem'], trim( (string) $atts['project'] ) );
+			return Notice::project( $project['problem'], $named, $this->projects->slugs() );
 		}
-		$this->enqueue();
+		$id   = strtolower( trim( (string) $atts['id'] ) );
+		$form = $this->pick->pick( $id, $project['slug'] );
+		if ( '' !== $form['problem'] ) {
+			return Notice::form( $form['problem'], $id, $project['slug'] );
+		}
+		( new EmbedScript() )->enqueue();
+		$this->styles->enqueue();
 		do_action( 'omnabase_shown', 'form' ); // FirstShown::EVENT
-		return $this->view( $this->model( $project['slug'], (string) $atts['subject'] ) );
+		return $this->view( $this->model( $form['slug'], $project['slug'], (string) $atts['subject'] ) );
 	}
 
 	/**
 	 * What the template shows.
 	 *
-	 * @param string $slug    The project.
+	 * @param string $form    The form's slug.
+	 * @param string $project The project's slug.
 	 * @param string $subject The pre-worded subject.
-	 * @return array<string,mixed>
+	 * @return array{wrapper:array<string,string>,form:string,project:string,subject:string,token:string,privacyUrl:string}
 	 */
-	private function model( string $slug, string $subject ): array {
-		$settings = $this->settings->of( $slug );
-		$user     = wp_get_current_user();
-		$signed   = $user->exists();
-		$privacy  = '' !== $settings['privacyUrl'] ? $settings['privacyUrl'] : (string) get_privacy_policy_url();
+	private function model( string $form, string $project, string $subject ): array {
 		return array(
-			// the same for every view (a cached page stays right); the form's script renames them if one page shows this form twice
-			'id'         => 'ob-wp-form-' . sanitize_html_class( $slug ),
 			'wrapper'    => $this->styles->marks(),
-			'project'    => $slug,
-			'subject'    => $subject,
-			'name'       => $signed ? (string) $user->display_name : '',
-			'email'      => $signed ? (string) $user->user_email : '',
-			'products'   => $settings['products'],
-			'askLicense' => $settings['askLicense'],
-			'privacyUrl' => $privacy,
-			'tokenUrl'   => rest_url( 'omnabase/v1/form-token' ),
-			'submitUrl'  => rest_url( 'omnabase/v1/form' ),
-			// WordPress's token for signed-in REST calls, only for a signed-in user (a visitor's page stays the same for everyone).
-			'nonce'      => $signed ? wp_create_nonce( 'wp_rest' ) : '',
-			'honeypot'   => Guard::HONEYPOT,
+			'form'       => $this->connection->workspaceSlug() . '/' . $form,
+			'project'    => $project,
+			'subject'    => sanitize_text_field( $subject ),
+			'token'      => $this->prefill->forCurrentVisitor( $form, $project ),
+			'privacyUrl' => (string) get_privacy_policy_url(),
 		);
 	}
 
@@ -95,32 +93,5 @@ final class Shortcode {
 		ob_start();
 		include $this->info->dir() . 'templates/form.php';
 		return (string) ob_get_clean();
-	}
-
-	/** Queues the form's script (in the footer) and the look's stylesheets (they stay away with "theme styles only" or a filter). */
-	private function enqueue(): void {
-		wp_enqueue_script( 'omnabase-form', plugins_url( 'assets/form.js', $this->info->mainFile() ), array(), $this->info->version(), array( 'in_footer' => true, 'strategy' => 'defer' ) );
-		$this->styles->enqueue();
-	}
-
-	/**
-	 * The administrator's notice when the form cannot tell its project; nothing for anyone else.
-	 *
-	 * @param string $problem   Which problem.
-	 * @param string $attribute The project the shortcode named.
-	 */
-	private function notice( string $problem, string $attribute ): string {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return '';
-		}
-		$slugs = implode( ', ', $this->projects->slugs() );
-		$words = match ( $problem ) {
-			/* translators: 1: the project the shortcode named, 2: the site's projects. */
-			Projects::UNKNOWN   => sprintf( __( 'OmnaBase form: the project "%1$s" is not one of this site\'s projects (%2$s).', 'omnabase' ), $attribute, $slugs ),
-			/* translators: %s: the site's projects. */
-			Projects::AMBIGUOUS => sprintf( __( 'OmnaBase form: this site has several projects (%s); name one, as in [omnabase_form project="slug"].', 'omnabase' ), $slugs ),
-			default             => __( 'OmnaBase form: this site is not connected, so the form has no project yet. Connect it under Settings › OmnaBase.', 'omnabase' ),
-		};
-		return '<p class="ob-wp ob-wp-form-notice">' . esc_html( $words . ' ' . __( 'Only administrators see this note.', 'omnabase' ) ) . '</p>';
 	}
 }

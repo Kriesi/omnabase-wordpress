@@ -1,19 +1,22 @@
 <?php
 /**
- * The Forms and messages tab: one save form holding the message centre's card and the Shortcodes card, then the shortcode builder's dialog
- * (outside the save form: it has its own form). Included by settings.php.
+ * The Forms and messages tab: the Forms card (the workspace's forms built in OmnaBase, read only), one save form holding the message centre's
+ * card and the Shortcodes card, then the shortcode builder's dialog (outside the save form: it has its own form). Included by settings.php.
  *
  * @package OmnaBase
  *
- * @var array{portal:array<string,mixed>,shortcodes:array<string,mixed>,builder:array<string,mixed>} $view
+ * @var array{forms:array<string,mixed>,portal:array<string,mixed>,shortcodes:array<string,mixed>,builder:array<string,mixed>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
 
+$omnabase_forms      = $view['forms'];
 $omnabase_portal     = $view['portal'];
 $omnabase_shortcodes = $view['shortcodes'];
 $omnabase_builder    = $view['builder'];
 ?>
+<div class="ob-wp-settings__stack">
+<?php require dirname( __DIR__ ) . '/partials/forms.php'; ?>
 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ob-wp-settings__pages ob-wp-settings__stack">
 	<input type="hidden" name="action" value="omnabase_save_pages">
 	<?php wp_nonce_field( 'omnabase_save_pages' ); ?>
@@ -23,5 +26,6 @@ $omnabase_builder    = $view['builder'];
 	?>
 	<p class="ob-wp-settings__actions"><button type="submit" class="ob-btn ob-btn--primary"><?php esc_html_e( 'Save', 'omnabase' ); ?></button></p>
 </form>
+</div>
 <?php
 require dirname( __DIR__ ) . '/partials/builder.php';

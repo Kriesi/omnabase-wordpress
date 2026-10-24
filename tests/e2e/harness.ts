@@ -110,3 +110,30 @@ export async function publicApi<T = Record<string, unknown>>(key: string, method
   const text = await res.text();
   return { status: res.status, body: (text ? JSON.parse(text) : null) as T };
 }
+
+/** the text of the last mail to an address (the e2e server's capture transport), or "" */
+export async function lastMail(email: string): Promise<string> {
+  const res = await toOmnaBase(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
+  return res.ok ? (((await res.json()) as { text?: string } | null)?.text ?? "") : "";
+}
+
+/**
+ * The six-digit sign-in code in a mail's text, or null. Since OmnaBase's mail templates round the code reads as one word ("Your code:
+ * 231191"); before it was written in two groups ("123 456"). Both are read (the plugin's forms round, 2026-10-25: every flow that signs in
+ * timed out on the one-word code).
+ */
+export function signInCode(text: string): string | null {
+  const hit = /\b(\d{3}) ?(\d{3})\b/.exec(text);
+  return hit ? hit[1]! + hit[2]! : null;
+}
+
+/** the code of a sign-in mail to an address; with `before` (the last mail's text before the code was asked for) only a newer mail counts */
+export async function codeFor(email: string, before: string | null = null): Promise<string> {
+  for (let i = 0; i < 100; i++) {
+    const text = await lastMail(email);
+    const code = before === null || text !== before ? signInCode(text) : null;
+    if (code) return code;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error(`no ${before === null ? "" : "new "}code in the mail to ${email}`);
+}

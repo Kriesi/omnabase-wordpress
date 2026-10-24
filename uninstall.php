@@ -8,7 +8,8 @@
  * outbox's schema version, every user's site id and "known to OmnaBase" mark (user meta), the outbox's two scheduled jobs and its table
  * `{prefix}omnabase_outbox`. Round three: the forum settings, the ticket number on every topic and OmnaBase's message id on every reply the
  * plugin posted (post meta), the subscriber-mail jobs. Round four: what the shortcode form keeps as transients (the time tokens, the counted
- * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. Round five: the message centre's picked page (option), each user's fingerprint and
+ * submissions and token requests, the cached form settings: `omnabase_form_…`); its waiting messages go with the outbox's table. The forms
+ * round: the same prefix now holds the cached list of forms and the signed-in visitors' prefill tokens. Round five: the message centre's picked page (option), each user's fingerprint and
  * confirmation-link times (user meta). Round six: first a best-effort `DELETE /me` that stops the site's key at OmnaBase (only when the vault
  * holds a readable key; whatever OmnaBase answers, the removal goes on), then the front-end switches (option) and the message centre's kept
  * words of a refused question (user meta). M14: the settings screen's dismissed setup line (option). Sites in a subfolder and networks
@@ -91,7 +92,7 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 		)
 	);
 
-	// What the shortcode form keeps for a while (`omnabase_form_…` transients and their timeouts): tokens, counted addresses, cached settings.
+	// What the shortcode form keeps for a while (`omnabase_form_…` transients and their timeouts): the list of forms, the prefill tokens.
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall: transients by prefix, no API for that, nothing to cache.
 		$wpdb->prepare(
 			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",

@@ -15,6 +15,9 @@ export default defineConfig({
   retries: 0,
   reporter: "list",
   globalSetup: "./tests/e2e/global-setup.ts",
-  use: { ...devices["Desktop Chrome"], baseURL: SITE, storageState: ADMIN_STATE, trace: "retain-on-failure" },
+  // The plugin's forms round (2026-10-25): the form's page (https://wp.omnabase.test) loads OmnaBase's embed from the lane's app on
+  // http://localhost and the embed calls OmnaBase's API there. Newer Chromium blocks a public page reaching the local network ("Local Network
+  // Access") unless the person allows it; on a real site both are public addresses, so the check is switched off for the flows alone.
+  use: { ...devices["Desktop Chrome"], baseURL: SITE, storageState: ADMIN_STATE, trace: "retain-on-failure", launchOptions: { args: ["--disable-features=LocalNetworkAccessChecks"] } },
   webServer: { command: "bin/omnabase-e2e.sh", port, reuseExistingServer: true, timeout: 180_000, stdout: "pipe", stderr: "pipe" },
 });

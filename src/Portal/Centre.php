@@ -7,7 +7,6 @@
 
 namespace OmnaBase\WordPress\Portal;
 
-use OmnaBase\WordPress\Forms\Guard;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -82,7 +81,7 @@ final class Centre {
 			'next'     => '' === $next ? '' : $this->page->url( array( 'omnabase_after' => $next ) ),
 			'first'    => '' === $after ? '' : $this->page->url(),
 			'token'    => Requests::token(),
-			'honeypot' => Guard::HONEYPOT,
+			'honeypot' => Trap::FIELD,
 			'draft'    => $this->draft->of( $user_id ),
 		);
 	}

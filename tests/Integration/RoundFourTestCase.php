@@ -1,5 +1,16 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: the Classic form's helpers dropped, as the red team's report asks once the Classic tests
+ * are gone (the time token, the form route, the submissions, the project's form settings, their fake answers); no assertion lived here. The
+ * trap field's name stays for the message centre's test, the visitor's address for the requests.
+ *
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE RED TEAM: ADDED TO, NOTHING WEAKENED. What changed and why: the shortcode now shows a form built in
+ * OmnaBase through the embed (OmnaBase `docs/briefs/plugin-forms-round.md`; report `docs/reviews/plugin-forms-round-red-team-report.md`), so a
+ * render asks OmnaBase for the workspace's forms (`GET /forms`) and, for a signed-in visitor, for a prefill token (`POST /forms/prefill`). The
+ * fake answers both from `set_up()` on (Enfold's default form "support"), before round five's catch-all answers, so every test that renders
+ * `[omnabase_form]` (the first-display mark, the look's marks, the message-centre tests' neighbours) keeps rendering. The Classic answers below
+ * stay until the builder deletes the Classic tests; no assertion of this file changed.
+ *
  * M13 round four, the red team's integration helpers (inside wp-env's tests WordPress, the plain run): a connected site, the shortcode form
  * rendered on the front end as a visitor, a signed-in customer or an administrator sees it, the time-token route and the form route called the
  * way the form's script calls them, OmnaBase faked at the HTTP layer (round one's `pre_http_request` fake) answering the project's form
@@ -29,34 +40,22 @@
 
 namespace OmnaBase\WordPress\Tests\Integration;
 
-use OmnaBase\WordPress\Options;
-
 abstract class RoundFourTestCase extends RoundTwoTestCase {
 
-	protected const TOKEN_ROUTE = '/omnabase/v1/form-token';
-	protected const FORM_ROUTE  = '/omnabase/v1/form';
 	protected const HONEYPOT    = 'omnabase_hp';
 	protected const VISITOR_IP  = '203.0.113.10';
-	protected const PRIVACY     = 'https://kriesi.example/privacy';
-	protected const SETTINGS    = array(
-		'products'   => array( 'Enfold', 'Enfold Pro' ),
-		'askLicense' => true,
-		'privacyUrl' => self::PRIVACY,
-	);
-	protected const FIRST_REFERENCE = 2001;
+	/** The plugin's forms round: the workspace's one live form in the fake list, Enfold's default form (`defaultFor`, finding 6). */
+	protected const SUPPORT_FORM = array( 'slug' => 'support', 'name' => 'Support', 'defaultFor' => array( 'enfold' ) );
 
-	/** the next ticket number the fake hands out */
-	protected int $nextReference = self::FIRST_REFERENCE;
-	/** @var array<string,int> the numbers handed out by Idempotency-Key (OmnaBase's replay) */
-	protected array $replays = array();
+	/** @var array<int,array{slug:string,name:string,defaultFor:string[]}> the forms `GET /forms` answers (the plugin's forms round) */
+	protected array $liveForms = array();
+
 
 	public function set_up(): void {
 		parent::set_up();
 		$this->connectedWith( array( array( 'id' => self::PROJECT, 'slug' => 'enfold', 'name' => 'Enfold' ) ) );
-		$this->nextReference = self::FIRST_REFERENCE;
-		$this->replays       = array();
-		$this->formSettings( self::SETTINGS );
-		$this->omnabaseTakesSubmissions();
+		$this->omnabaseListsForms( array( self::SUPPORT_FORM ) );
+		$this->omnabaseHandsPrefillTokens();
 		$GLOBALS['wp_scripts'] = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride -- a fresh script queue per test
 		$GLOBALS['wp_styles']  = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride
 		$_SERVER['REMOTE_ADDR'] = self::VISITOR_IP;
@@ -94,37 +93,45 @@ abstract class RoundFourTestCase extends RoundTwoTestCase {
 	}
 
 	/**
-	 * OmnaBase answers `GET /forms/{slug}` with these settings (or the given error).
+	 * The plugin's forms round (the red team, 2026-10-25; an addition, no existing assertion changed): OmnaBase answers the plugin's list of
+	 * forms, `GET /forms` with the site key, with these forms (`{ data: [ { slug, name, defaultFor } ] }`; `defaultFor` names the key's projects
+	 * whose default form it is). Set early in `set_up()`, so it comes before round five's catch-all answers; changing it later keeps its place.
 	 *
-	 * @param array<string,mixed>|\WP_Error $settings The answer.
-	 * @param string                       $slug     The project.
+	 * @param array<int,array{slug:string,name:string,defaultFor:string[]}>|\WP_Error|array{status:int} $forms The forms, an error (OmnaBase
+	 *                                                                                                   unreachable) or a fake answer.
 	 */
-	protected function formSettings( $settings, string $slug = 'enfold' ): void {
-		$this->answers[ 'GET /api/public/v1/forms/' . $slug ] = is_wp_error( $settings ) ? $settings : self::answer( 200, $settings );
-	}
-
-	/** OmnaBase files submissions to any project: 201 with the next number, the same number again for a resend with the same key. */
-	protected function omnabaseTakesSubmissions(): void {
-		$this->answers['POST /submissions'] = function ( $args ) {
-			$key = self::headerOf( (array) $args, 'Idempotency-Key' );
-			if ( '' !== $key && isset( $this->replays[ $key ] ) ) {
-				return self::answer( 201, array( 'ok' => true, 'reference' => $this->replays[ $key ] ) );
-			}
-			$n = $this->nextReference++;
-			if ( '' !== $key ) {
-				$this->replays[ $key ] = $n;
-			}
-			return self::answer( 201, array( 'ok' => true, 'reference' => $n ) );
-		};
+	protected function omnabaseListsForms( $forms ): void {
+		if ( is_array( $forms ) && ! isset( $forms['response'] ) ) {
+			$this->liveForms                            = array_values( $forms );
+			$this->answers['GET /api/public/v1/forms'] = fn () => self::answer( 200, array( 'data' => $this->liveForms ) );
+			return;
+		}
+		$this->answers['GET /api/public/v1/forms'] = $forms;
 	}
 
 	/**
-	 * OmnaBase answers every submission with this (a status and body, or a network error).
+	 * The plugin's forms round: OmnaBase hands a prefill token for every `POST /forms/prefill` (201 `{ token, expiresAt }`), one token per
+	 * address it vouches for (`tok-<hash of the address>`), so a test can tell whose token reached a page; or this answer instead.
 	 *
-	 * @param array|\WP_Error $answer The fake answer.
+	 * @param array|\WP_Error|null $answer A fake answer or an error; null for the token per address.
 	 */
-	protected function omnabaseAnswersSubmissions( $answer ): void {
-		$this->answers['POST /submissions'] = $answer;
+	protected function omnabaseHandsPrefillTokens( $answer = null ): void {
+		$this->answers['POST /api/public/v1/forms/prefill'] = $answer ?? fn ( $args ) => self::answer( 201, array( 'token' => self::prefillTokenFor( (string) ( self::bodyOf( array( 'args' => (array) $args ) )['values']['email'] ?? '' ) ), 'expiresAt' => gmdate( 'Y-m-d\TH:i:s\Z', time() + 7200 ) ) );
+	}
+
+	/** The token the fake hands for an address. */
+	protected static function prefillTokenFor( string $email ): string {
+		return 'tok-' . substr( md5( strtolower( $email ) ), 0, 16 ) . '.sig';
+	}
+
+	/** The plugin's calls for its list of forms. */
+	protected function formListCalls(): array {
+		return $this->callsTo( 'GET', '/api/public/v1/forms' );
+	}
+
+	/** The plugin's calls for a prefill token. */
+	protected function prefillCalls(): array {
+		return $this->callsTo( 'POST', '/api/public/v1/forms/prefill' );
 	}
 
 	/** OmnaBase's refusal body. */
@@ -132,16 +139,6 @@ abstract class RoundFourTestCase extends RoundTwoTestCase {
 		$a            = self::answer( $status, array( 'error' => array( 'code' => $code, 'message' => $message ) ) );
 		$a['headers'] = $headers + $a['headers'];
 		return $a;
-	}
-
-	/** The submissions the plugin sent to OmnaBase. */
-	protected function submissionCalls( string $slug = 'enfold' ): array {
-		return $this->callsTo( 'POST', '/api/public/v1/forms/' . $slug . '/submissions' );
-	}
-
-	/** The settings questions the plugin sent to OmnaBase. */
-	protected function settingsCalls( string $slug = 'enfold' ): array {
-		return $this->callsTo( 'GET', '/api/public/v1/forms/' . $slug );
 	}
 
 	/** A request header's value, whatever its case. */
@@ -206,181 +203,5 @@ abstract class RoundFourTestCase extends RoundTwoTestCase {
 			$out[] = trim( (string) $n->textContent );
 		}
 		return $out;
-	}
-
-	/* ---------- the time token ---------- */
-
-	/**
-	 * The time-token route's answer, called as the form's script calls it.
-	 *
-	 * @param string $project The project's slug.
-	 */
-	protected function tokenResponse( string $project = 'enfold' ): \WP_REST_Response {
-		$server = $this->rest();
-		$routes = $server->get_routes();
-		$this->assertArrayHasKey( self::TOKEN_ROUTE, $routes, 'the time-token route omnabase/v1/form-token is registered' );
-		$methods = array();
-		foreach ( $routes[ self::TOKEN_ROUTE ] as $handler ) {
-			$methods = array_merge( $methods, array_keys( array_filter( (array) ( $handler['methods'] ?? array() ) ) ) );
-		}
-		$method  = in_array( 'POST', $methods, true ) ? 'POST' : 'GET';
-		$request = new \WP_REST_Request( $method, self::TOKEN_ROUTE );
-		$request->set_param( 'project', $project );
-		return rest_ensure_response( $server->dispatch( $request ) );
-	}
-
-	/**
-	 * A fresh token for the project; `$aged` moves its time back past the brief's 3 seconds, as a person filling the form would.
-	 *
-	 * @param string $project The project's slug.
-	 * @param bool   $aged    Whether it is old enough to send with.
-	 */
-	protected function token( string $project = 'enfold', bool $aged = true ): string {
-		$r = $this->tokenResponse( $project );
-		$this->assertSame( 200, $r->get_status(), 'the time token: ' . wp_json_encode( $r->get_data() ) );
-		$token = (string) ( ( (array) $r->get_data() )['token'] ?? '' );
-		$this->assertNotSame( '', $token, 'the answer carries the token' );
-		if ( $aged ) {
-			$this->ageFormState( 5 );
-		}
-		return $token;
-	}
-
-	/**
-	 * Moves back every time the plugin keeps for its form (names holding "omnabase", outside round one to three's options): the tokens'
-	 * handed-out times, and the transients' own expiry.
-	 *
-	 * @param int $seconds How far back.
-	 */
-	protected function ageFormState( int $seconds ): void {
-		global $wpdb;
-		$shifted = 0;
-		$names   = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '%omnabase%'" ); // phpcs:ignore WordPress.DB
-		foreach ( $names as $name ) {
-			if ( in_array( $name, Options::ALL, true ) || str_contains( $name, 'omnabase_notice_' ) ) {
-				continue;
-			}
-			$value = get_option( $name );
-			if ( str_contains( $name, '_transient_timeout_' ) ) {
-				update_option( $name, (int) $value - $seconds, false );
-				continue;
-			}
-			$new = self::backInTime( $value, $seconds, $shifted );
-			if ( $new !== $value ) {
-				update_option( $name, $new, false );
-			}
-		}
-		wp_cache_flush();
-		$this->assertGreaterThan( 0, $shifted, 'the time a token was handed out is kept on the site, under a name holding "omnabase" (a transient or an option)' );
-	}
-
-	/**
-	 * Every number within a day of now, moved back.
-	 *
-	 * @param mixed $value   A stored value.
-	 * @param int   $seconds How far back.
-	 * @param int   $count   How many were moved.
-	 * @return mixed
-	 */
-	private static function backInTime( $value, int $seconds, int &$count ) {
-		if ( is_array( $value ) ) {
-			foreach ( $value as $k => $v ) {
-				$value[ $k ] = self::backInTime( $v, $seconds, $count );
-			}
-			return $value;
-		}
-		$numeric = is_int( $value ) || is_float( $value ) || ( is_string( $value ) && preg_match( '/^\d{10}(\.\d+)?$/', $value ) );
-		if ( $numeric && abs( (float) $value - time() ) < DAY_IN_SECONDS ) {
-			++$count;
-			if ( is_string( $value ) ) {
-				return (string) ( (float) $value - $seconds );
-			}
-			return $value - $seconds;
-		}
-		return $value;
-	}
-
-	/* ---------- the submission ---------- */
-
-	/**
-	 * The fields a visitor sends (the honeypot empty, as a real form sends it).
-	 *
-	 * @param string              $token The time token.
-	 * @param array<string,mixed> $more  Fields to add or replace.
-	 */
-	protected static function fields( string $token, array $more = array() ): array {
-		return array_merge(
-			array(
-				'project'      => 'enfold',
-				'token'        => $token,
-				'name'         => 'Vera Visitor',
-				'email'        => 'vera@example.org',
-				'subject'      => 'The slider stopped',
-				'message'      => 'Since the update the slider on my front page is gone.',
-				self::HONEYPOT => '',
-			),
-			$more
-		);
-	}
-
-	/**
-	 * A POST to the form route as the form's script sends it (JSON), from a network address.
-	 *
-	 * @param array<string,mixed>  $fields  The fields.
-	 * @param string               $ip      The visitor's address (REMOTE_ADDR).
-	 * @param array<string,string> $headers Extra headers.
-	 */
-	protected function submit( array $fields, string $ip = self::VISITOR_IP, array $headers = array() ): \WP_REST_Response {
-		$_SERVER['REMOTE_ADDR'] = $ip;
-		$request                = new \WP_REST_Request( 'POST', self::FORM_ROUTE );
-		$request->set_header( 'content-type', 'application/json' );
-		foreach ( $headers as $name => $value ) {
-			$request->set_header( $name, $value );
-		}
-		$request->set_body( (string) wp_json_encode( $fields ) );
-		return rest_ensure_response( $this->rest()->dispatch( $request ) );
-	}
-
-	/** A token fetched from an address, aged, and a submission from the same address with it. */
-	protected function sendFrom( string $ip, array $more = array() ): \WP_REST_Response {
-		$_SERVER['REMOTE_ADDR'] = $ip;
-		return $this->submit( self::fields( $this->token(), $more ), $ip );
-	}
-
-	/** The sentence the visitor reads. */
-	protected static function said( \WP_REST_Response $r ): string {
-		$data = (array) $r->get_data();
-		return (string) ( $data['message'] ?? '' );
-	}
-
-	/** Whether the answer is a success (2xx). */
-	protected static function ok( \WP_REST_Response $r ): bool {
-		return $r->get_status() >= 200 && $r->get_status() < 300;
-	}
-
-	/**
-	 * A field's own error, wherever the answer puts it (a key named like the field holding a sentence), or ''.
-	 *
-	 * @param mixed  $data  The answer's data.
-	 * @param string $field The field's name.
-	 */
-	protected static function fieldError( $data, string $field ): string {
-		foreach ( (array) $data as $k => $v ) {
-			if ( $field === $k && is_string( $v ) && '' !== trim( $v ) ) {
-				return $v;
-			}
-			if ( is_array( $v ) || is_object( $v ) ) {
-				$hit = self::fieldError( (array) $v, $field );
-				if ( '' !== $hit ) {
-					return $hit;
-				}
-			}
-		}
-		return '';
-	}
-
-	/** The outbox rows about form submissions. */
-	protected function formRows(): array {
-		return array_values( array_filter( $this->outboxRows(), static fn ( $r ) => str_contains( (string) $r['kind'], 'form' ) ) );
 	}
 }

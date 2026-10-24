@@ -251,3 +251,8 @@
 .ob-wp-settings .ob-wp-settings__choice { display: inline-flex; align-items: center; gap: var(--ob-space-2); font-size: var(--ob-text-sm); color: var(--ob-text); cursor: pointer; }
 .ob-wp-settings .ob-wp-settings__choice-line { display: inline-flex; align-items: center; gap: var(--ob-space-3); }
 .ob-wp-settings .ob-wp-settings__colour { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--ob-border-strong); border-radius: var(--ob-radius-sm); background: var(--ob-bg-surface); cursor: pointer; }
+
+/* the Forms card (the plugin's forms round): the forms built in OmnaBase with their shortcodes, and the link there */
+.ob-wp-settings .ob-wp-settings__forms .ob-wp-settings__actions { margin-top: var(--ob-space-3); }
+.ob-wp-settings .ob-wp-settings__form-list strong { color: var(--ob-text); font-weight: 600; }
+.ob-wp-settings .ob-wp-settings__form-default { margin-left: 4px; color: var(--ob-text-secondary); }

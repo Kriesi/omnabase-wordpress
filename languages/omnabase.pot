@@ -2,28 +2,21 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: OmnaBase 0.2.0\n"
+"Project-Id-Version: OmnaBase Connector 0.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omnabase\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-22T00:16:18+00:00\n"
+"POT-Creation-Date: 2026-10-24T23:03:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
 
 #. Plugin Name of the plugin
 #: omnabase.php
-#: src/Admin/SettingsScreen.php:72
-#: src/Admin/SettingsScreen.php:73
-#: src/Privacy/Eraser.php:40
-#: src/Privacy/Exporter.php:38
-#: src/Privacy/Exporter.php:133
-#: src/Privacy/PolicyText.php:29
-#: templates/admin/settings.php:17
-msgid "OmnaBase"
+msgid "OmnaBase Connector"
 msgstr ""
 
 #. Plugin URI of the plugin
@@ -81,12 +74,16 @@ msgid "Edit the page"
 msgstr ""
 
 #. translators: %s: the site's projects, such as "enfold, omnalingo".
-#: src/Admin/BuilderChoices.php:70
+#: src/Admin/BuilderChoices.php:75
 #, php-format
 msgid "This site has several projects (%s): choose one in the builder."
 msgstr ""
 
-#: src/Admin/BuilderChoices.php:88
+#: src/Admin/BuilderChoices.php:91
+msgid "OmnaBase could not be asked for your forms: try again in a moment."
+msgstr ""
+
+#: src/Admin/BuilderChoices.php:109
 msgid "The builder sent something this site does not know: try again."
 msgstr ""
 
@@ -256,6 +253,16 @@ msgstr ""
 msgid "The stored connection can no longer be read, so OmnaBase's replies are not arriving."
 msgstr ""
 
+#: src/Admin/SettingsScreen.php:72
+#: src/Admin/SettingsScreen.php:73
+#: src/Privacy/Eraser.php:40
+#: src/Privacy/Exporter.php:38
+#: src/Privacy/Exporter.php:133
+#: src/Privacy/PolicyText.php:29
+#: templates/admin/settings.php:17
+msgid "OmnaBase"
+msgstr ""
+
 #. translators: %d: how many calls to OmnaBase need the administrator.
 #: src/Admin/SettingsScreen.php:124
 #, php-format
@@ -341,33 +348,33 @@ msgstr ""
 msgid "Activity"
 msgstr ""
 
-#: src/Api/Client.php:124
+#: src/Api/Client.php:114
 msgid "The stored connection can no longer be read: connect the site again."
 msgstr ""
 
-#: src/Api/Client.php:125
+#: src/Api/Client.php:115
 #: templates/admin/partials/connection.php:77
 msgid "This site is not connected to OmnaBase yet."
 msgstr ""
 
-#: src/Api/Client.php:139
+#: src/Api/Client.php:129
 #: templates/admin/partials/connection.php:57
 msgid "Someone disconnected this site in OmnaBase. Click Connect to connect it again."
 msgstr ""
 
-#: src/Api/Client.php:156
+#: src/Api/Client.php:146
 msgid "This site is not connected to OmnaBase."
 msgstr ""
 
 #. translators: %s: the network error.
-#: src/Api/Client.php:237
+#: src/Api/Client.php:227
 #: src/Outbox/Policy.php:132
 #, php-format
 msgid "OmnaBase could not be reached: %s"
 msgstr ""
 
 #. translators: 1: the HTTP status, 2: OmnaBase's message.
-#: src/Api/Client.php:245
+#: src/Api/Client.php:235
 #, php-format
 msgid "OmnaBase answered %1$d. %2$s"
 msgstr ""
@@ -469,104 +476,40 @@ msgstr ""
 msgid "WooCommerce Subscriptions"
 msgstr ""
 
-#. translators: %d: the ticket's number.
-#: src/Forms/Answer.php:36
-#, php-format
-msgid "Thanks. Your reference is #%d; we answer by email."
-msgstr ""
-
-#: src/Forms/Answer.php:41
-msgid "Thanks, your message is on its way. We answer by email."
-msgstr ""
-
-#: src/Forms/Answer.php:46
-msgid "Thanks. Your message was sent; we answer by email."
-msgstr ""
-
-#: src/Forms/Answer.php:51
-msgid "Please try again in an hour."
-msgstr ""
-
-#: src/Forms/Answer.php:56
-msgid "This form is not available right now."
-msgstr ""
-
-#. translators: %s: an email address.
-#: src/Forms/Answer.php:66
-#, php-format
-msgid "Your message could not be sent. Please write to us at %s."
-msgstr ""
-
-#: src/Forms/Answer.php:75
-msgid "Please check the fields marked."
-msgstr ""
-
-#: src/Forms/Answer.php:80
-msgid "This form has expired. Please reload the page and send again (the form needs JavaScript)."
-msgstr ""
-
-#: src/Forms/Answer.php:85
-msgid "That was quick. Please wait a moment and send again."
-msgstr ""
-
-#: src/Forms/Answer.php:90
-msgid "This form was sent already. Please reload the page to send another message."
-msgstr ""
-
-#: src/Forms/Fields.php:68
-msgid "Please enter your name (at most 120 characters)."
-msgstr ""
-
-#: src/Forms/Fields.php:69
-msgid "Please enter a valid email address."
-msgstr ""
-
-#: src/Forms/Fields.php:70
-msgid "Please enter a subject (at most 200 characters)."
-msgstr ""
-
-#: src/Forms/Fields.php:71
-msgid "Please enter your message (at most 20,000 characters)."
-msgstr ""
-
-#: src/Forms/Fields.php:72
-msgid "Please pick a product from the list."
-msgstr ""
-
-#: src/Forms/Fields.php:73
-msgid "Please enter the licence key as you received it."
-msgstr ""
-
-#: src/Forms/FormJob.php:34
-msgid "Form message"
-msgstr ""
-
-#: src/Forms/FormJob.php:40
-msgid "(sent or discarded)"
-msgstr ""
-
-#: src/Forms/FormJob.php:49
-msgid "Not sent: the message is no longer stored on the site."
-msgstr ""
-
 #. translators: 1: the project the shortcode named, 2: the site's projects.
-#: src/Forms/Shortcode.php:119
+#: src/Forms/Notice.php:29
 #, php-format
 msgid "OmnaBase form: the project \"%1$s\" is not one of this site's projects (%2$s)."
 msgstr ""
 
 #. translators: %s: the site's projects.
-#: src/Forms/Shortcode.php:121
+#: src/Forms/Notice.php:31
 #, php-format
 msgid "OmnaBase form: this site has several projects (%s); name one, as in [omnabase_form project=\"slug\"]."
 msgstr ""
 
-#: src/Forms/Shortcode.php:122
+#: src/Forms/Notice.php:32
 msgid "OmnaBase form: this site is not connected, so the form has no project yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
-#: src/Forms/Shortcode.php:124
-#: src/Portal/Views.php:63
+#. translators: %s: the form the shortcode named.
+#: src/Forms/Notice.php:47
+#, php-format
+msgid "OmnaBase form: your workspace has no published form \"%s\". Check its address under Settings › Forms in OmnaBase."
+msgstr ""
+
+#. translators: %s: the project's slug.
+#: src/Forms/Notice.php:49
+#, php-format
+msgid "OmnaBase form: the project \"%s\" has no default form. Name a form, as in [omnabase_form id=\"contact\"], or choose one in OmnaBase."
+msgstr ""
+
+#: src/Forms/Notice.php:50
+msgid "OmnaBase form: OmnaBase could not be asked for the project's default form. Name a form, as in [omnabase_form id=\"contact\"]."
+msgstr ""
+
+#: src/Forms/Notice.php:64
+#: src/Portal/Views.php:66
 msgid "Only administrators see this note."
 msgstr ""
 
@@ -744,7 +687,7 @@ msgid "Please write your answer."
 msgstr ""
 
 #: src/Portal/Notices.php:55
-#: templates/messages.php:47
+#: templates/messages.php:50
 msgid "This conversation was not found."
 msgstr ""
 
@@ -753,7 +696,7 @@ msgid "This form has expired. Please send it again."
 msgstr ""
 
 #: src/Portal/Notices.php:57
-#: src/Portal/Notices.php:72
+#: src/Portal/Notices.php:73
 msgid "Your messages cannot be shown right now. Please try again later."
 msgstr ""
 
@@ -765,6 +708,10 @@ msgstr ""
 msgid "Your support history was deleted at your request. Write to us to start again."
 msgstr ""
 
+#: src/Portal/Notices.php:72
+msgid "You are on this site's support team, so this page has no conversations for you. Customers' messages are in the OmnaBase inbox."
+msgstr ""
+
 #: src/Portal/Shortcode.php:53
 msgid "OmnaBase message centre: it works only on the page picked under Settings › OmnaBase, which is kept out of caches."
 msgstr ""
@@ -773,24 +720,24 @@ msgstr ""
 msgid "OmnaBase message centre: this site is not connected yet. Connect it under Settings › OmnaBase."
 msgstr ""
 
-#: src/Portal/Views.php:94
+#: src/Portal/Views.php:103
 msgid "Answered"
 msgstr ""
 
-#: src/Portal/Views.php:95
+#: src/Portal/Views.php:104
 msgid "Resolved"
 msgstr ""
 
-#: src/Portal/Views.php:96
+#: src/Portal/Views.php:105
 msgid "Closed"
 msgstr ""
 
-#: src/Portal/Views.php:97
+#: src/Portal/Views.php:106
 msgid "Open"
 msgstr ""
 
 #. translators: the date format of a ticket's last change in the message centre (PHP date format; keep the year).
-#: src/Portal/Views.php:109
+#: src/Portal/Views.php:118
 msgid "j M Y"
 msgstr ""
 
@@ -851,7 +798,7 @@ msgid "When you post in our support forum, your forum topics and replies are sen
 msgstr ""
 
 #: src/Privacy/PolicyText.php:38
-msgid "When you write to us through our contact form, your form messages (name, email address, subject, message and, where asked, product and licence) are sent to OmnaBase."
+msgid "When you write to us through our contact form, your browser loads the form from OmnaBase and sends what you enter there; when you are signed in, this site also tells OmnaBase your email address, name, newest order number and licence key so they show as checked."
 msgstr ""
 
 #: src/Privacy/PolicyText.php:39
@@ -948,55 +895,63 @@ msgid "Choose a project"
 msgstr ""
 
 #: templates/admin/partials/builder.php:55
+msgid "Form"
+msgstr ""
+
+#: templates/admin/partials/builder.php:57
+msgid "The project's default form"
+msgstr ""
+
+#: templates/admin/partials/builder.php:65
 msgid "Subject starts with"
 msgstr ""
 
-#: templates/admin/partials/builder.php:60
+#: templates/admin/partials/builder.php:70
 msgid "Visitors who are not signed in"
 msgstr ""
 
-#: templates/admin/partials/builder.php:61
+#: templates/admin/partials/builder.php:71
 msgid "see a sign-in link"
 msgstr ""
 
-#: templates/admin/partials/builder.php:62
+#: templates/admin/partials/builder.php:72
 msgid "see the contact form instead"
 msgstr ""
 
-#: templates/admin/partials/builder.php:66
+#: templates/admin/partials/builder.php:76
 msgid "none yet"
 msgstr ""
 
-#: templates/admin/partials/builder.php:70
+#: templates/admin/partials/builder.php:80
 msgid "Your shortcode"
 msgstr ""
 
-#: templates/admin/partials/builder.php:74
+#: templates/admin/partials/builder.php:84
 msgid "Copy"
 msgstr ""
 
-#: templates/admin/partials/builder.php:75
+#: templates/admin/partials/builder.php:85
 msgid "Copied."
 msgstr ""
 
-#: templates/admin/partials/builder.php:77
+#: templates/admin/partials/builder.php:87
 msgid "Paste it into any page or post."
 msgstr ""
 
-#: templates/admin/partials/builder.php:85
-#: templates/admin/partials/builder.php:87
+#: templates/admin/partials/builder.php:95
+#: templates/admin/partials/builder.php:97
 msgid "Use this page"
 msgstr ""
 
-#: templates/admin/partials/builder.php:96
+#: templates/admin/partials/builder.php:106
 msgid "Create a new page anyway"
 msgstr ""
 
-#: templates/admin/partials/builder.php:96
+#: templates/admin/partials/builder.php:106
 msgid "Create the page for me"
 msgstr ""
 
-#: templates/admin/partials/builder.php:98
+#: templates/admin/partials/builder.php:108
 msgid "Close"
 msgstr ""
 
@@ -1183,12 +1138,40 @@ msgstr ""
 #: templates/admin/partials/facts.php:78
 #: templates/admin/partials/forum.php:35
 #: templates/admin/tabs/appearance.php:78
-#: templates/admin/tabs/pages.php:24
+#: templates/admin/tabs/pages.php:27
 msgid "Save"
 msgstr ""
 
 #: templates/admin/partials/forget.php:16
 msgid "Forget this connection"
+msgstr ""
+
+#: templates/admin/partials/forms.php:14
+msgid "Forms"
+msgstr ""
+
+#: templates/admin/partials/forms.php:15
+msgid "Your forms are built in OmnaBase. Paste a form's shortcode into any page to show it there."
+msgstr ""
+
+#: templates/admin/partials/forms.php:17
+msgid "Connect this site to list your forms here."
+msgstr ""
+
+#: templates/admin/partials/forms.php:19
+msgid "OmnaBase could not be asked for your forms just now. Open this tab again in a moment."
+msgstr ""
+
+#: templates/admin/partials/forms.php:21
+msgid "Your workspace has no forms yet. Build one in OmnaBase and publish it."
+msgstr ""
+
+#: templates/admin/partials/forms.php:29
+msgid "the project's default form"
+msgstr ""
+
+#: templates/admin/partials/forms.php:36
+msgid "Build forms in OmnaBase"
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:14
@@ -1483,7 +1466,7 @@ msgid "Put a shortcode on a page to show the contact form or the message centre 
 msgstr ""
 
 #: templates/admin/partials/shortcodes.php:21
-msgid "the contact form, on any page: visitors' messages become tickets."
+msgid "a form built in OmnaBase, on any page: visitors' messages become tickets. id=\"slug\" picks the form; without it, the project's default form shows."
 msgstr ""
 
 #: templates/admin/partials/shortcodes.php:22
@@ -1491,7 +1474,7 @@ msgid "which of this site's projects gets the messages; needed when the site has
 msgstr ""
 
 #: templates/admin/partials/shortcodes.php:23
-msgid "the words the subject field starts with."
+msgid "the words the form's subject field starts with, when it has one."
 msgstr ""
 
 #: templates/admin/partials/shortcodes.php:24
@@ -1525,7 +1508,7 @@ msgstr ""
 #. translators: %s: the plugin's version.
 #: templates/admin/settings.php:38
 #, php-format
-msgid "OmnaBase for WordPress %s"
+msgid "OmnaBase Connector %s"
 msgstr ""
 
 #: templates/admin/tabs/appearance.php:24
@@ -1600,78 +1583,8 @@ msgstr ""
 msgid "The form and the message centre load no OmnaBase stylesheet or font: your theme styles them alone."
 msgstr ""
 
-#. translators: %d: the ticket's number (the success card shows it in the form's place).
-#: templates/form.php:26
-#, php-format
-msgid "Thanks. Your reference is #%d"
-msgstr ""
-
-#: templates/form.php:42
-msgid "Name"
-msgstr ""
-
-#: templates/form.php:47
-msgid "Email"
-msgstr ""
-
-#: templates/form.php:53
-msgid "Product"
-msgstr ""
-
-#: templates/form.php:55
-msgid "Choose a product (optional)"
-msgstr ""
-
-#: templates/form.php:65
-msgid "Licence key (optional)"
-msgstr ""
-
-#: templates/form.php:71
-#: templates/messages.php:144
-msgid "Subject"
-msgstr ""
-
-#: templates/form.php:76
-#: templates/messages.php:148
-msgid "Message"
-msgstr ""
-
-#: templates/form.php:83
-#: templates/messages.php:153
-msgid "Leave this field empty"
-msgstr ""
-
-#: templates/form.php:89
-msgid "This form needs JavaScript to send. Please turn it on in your browser and reload the page."
-msgstr ""
-
-#: templates/form.php:94
-#: templates/messages.php:157
-msgid "Send"
-msgstr ""
-
-#: templates/form.php:99
-msgid "We use your details only to answer your message."
-msgstr ""
-
-#: templates/form.php:100
+#: templates/form.php:19
 msgid "Privacy policy"
-msgstr ""
-
-#: templates/form.php:107
-msgid "Thanks, your message is on its way."
-msgstr ""
-
-#: templates/form.php:108
-msgid "Thanks. Your message was sent."
-msgstr ""
-
-#: templates/form.php:112
-msgid "We answer by email."
-msgstr ""
-
-#: templates/form.php:113
-msgid "Send another"
 msgstr ""
 
 #: templates/messages.php:39
@@ -1682,57 +1595,69 @@ msgstr ""
 msgid "to read and answer your support conversations."
 msgstr ""
 
-#: templates/messages.php:48
-#: templates/messages.php:52
+#: templates/messages.php:46
+msgid "Open the OmnaBase inbox"
+msgstr ""
+
+#: templates/messages.php:51
+#: templates/messages.php:55
 msgid "← All conversations"
 msgstr ""
 
-#: templates/messages.php:75
+#: templates/messages.php:78
 msgid "Your answer"
 msgstr ""
 
-#: templates/messages.php:79
+#: templates/messages.php:82
 msgid "Send answer"
 msgstr ""
 
-#: templates/messages.php:89
+#: templates/messages.php:92
 msgid "Confirm your email to see your earlier conversations"
 msgstr ""
 
 #. translators: %s: the visitor's address, partly hidden.
-#: templates/messages.php:93
+#: templates/messages.php:96
 #, php-format
 msgid "Your earlier email conversations and forum topics show here once you confirm %s. The tickets you wrote here show already."
 msgstr ""
 
-#: templates/messages.php:100
+#: templates/messages.php:103
 msgid "Show my email conversations"
 msgstr ""
 
-#: templates/messages.php:106
+#: templates/messages.php:109
 msgid "Your conversations"
 msgstr ""
 
-#: templates/messages.php:108
+#: templates/messages.php:111
 msgid "No conversations yet."
 msgstr ""
 
-#: templates/messages.php:125
+#: templates/messages.php:128
 msgid "← Newest"
 msgstr ""
 
-#: templates/messages.php:128
+#: templates/messages.php:131
 msgid "Older conversations →"
 msgstr ""
 
-#: templates/messages.php:135
+#: templates/messages.php:138
 msgid "New question"
 msgstr ""
 
-#: src/Portal/Notices.php:72
-msgid "You are on this site's support team, so this page has no conversations for you. Customers' messages are in the OmnaBase inbox."
+#: templates/messages.php:147
+msgid "Subject"
 msgstr ""
 
-#: templates/messages.php:46
-msgid "Open the OmnaBase inbox"
+#: templates/messages.php:151
+msgid "Message"
+msgstr ""
+
+#: templates/messages.php:156
+msgid "Leave this field empty"
+msgstr ""
+
+#: templates/messages.php:160
+msgid "Send"
 msgstr ""

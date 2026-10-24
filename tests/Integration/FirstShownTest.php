@@ -1,5 +1,10 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: ADJUSTED, NOT WEAKENED. What changed and why: the shortcode no longer prints a `<form>`
+ * of its own; it prints the container OmnaBase's embed draws the form in (`data-omnabase-form`, OmnaBase `docs/briefs/plugin-forms-round.md`).
+ * The checks "the form shows" and "no form while not connected" now look for that container instead of `<form`; the rest is
+ * unchanged.
+ *
  * M14 round two, the red team's failing tests: the first-display marks, the time each of the two tags first showed on the public site (inside
  * wp-env's tests WordPress, the plain run).
  *
@@ -75,7 +80,7 @@ final class FirstShownTest extends RoundSixTestCase {
 		update_option( self::OPTION, array( 'theme_only' => true ), false );
 		$this->asVisitor();
 		$before = time();
-		$this->assertStringContainsString( '<form', $this->render(), 'the form shows' );
+		$this->assertStringContainsString( 'data-omnabase-form', $this->render(), 'the form shows' );
 		$marks = self::marks();
 		$this->assertArrayHasKey( 'form', $marks, 'the form\'s mark' );
 		$this->assertIsInt( $marks['form'] );
@@ -135,7 +140,7 @@ final class FirstShownTest extends RoundSixTestCase {
 		( new \OmnaBase\WordPress\Security\Vault() )->clear();
 		delete_option( 'omnabase_site' );
 		$this->asUserOnTheFront( $this->admin );
-		$this->assertStringNotContainsString( '<form', $this->render(), 'no form while not connected' );
+		$this->assertStringNotContainsString( 'data-omnabase-form', $this->render(), 'no form while not connected' );
 		$this->assertSame( array(), self::marks(), 'the form while not connected' );
 	}
 

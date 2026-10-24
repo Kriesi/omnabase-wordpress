@@ -4,8 +4,8 @@
  * "Build a shortcode" opens the browser's own dialog; the tag follows the choices as the owner clicks; Copy puts it on the clipboard (or
  * selects the field for the keyboard's copy); "Use this page" picks an existing message centre page through the tab's own save form.
  * Escape or Close shuts the dialog and the keyboard is back on the button. The tag's rules are the server's (ShortcodeTag): the subject
- * loses `"`, `[` and `]` as it is typed; `project` only when one is chosen; `subject` only for the form, `guest` only for the message
- * centre. Every word the owner reads comes from the page (translated there); text is only ever set as text, never as markup.
+ * loses `"`, `[` and `]` as it is typed; `project` and the form's `id` only when one is chosen; `id` and `subject` only for the form, `guest`
+ * only for the message centre. Every word the owner reads comes from the page (translated there); text is only ever set as text, never as markup.
  */
 (function () {
 	'use strict';
@@ -28,6 +28,7 @@
 			tag: dialog.querySelector('.ob-wp-builder__tag'),
 			subject: form.querySelector('[name="omnabase_builder[subject]"]'),
 			project: form.querySelector('[name="omnabase_builder[project]"]'),
+			formPick: form.querySelector('[name="omnabase_builder[form]"]'),
 			create: dialog.querySelector('[data-ob-create]'),
 			status: dialog.querySelector('.ob-wp-builder__copied')
 		};
@@ -73,8 +74,9 @@
 	function build(parts) {
 		var kind = chosen(parts.form, 'kind');
 		var project = parts.project ? parts.project.value : '';
+		var formSlug = parts.formPick ? parts.formPick.value : '';
 		var subject = parts.subject.value.replace(UNSAFE_ALL, '').replace(/\s+/g, ' ').trim();
-		var atts = 'form' === kind ? [['project', project], ['subject', subject]] : [['guest', chosen(parts.form, 'guest')], ['project', project]];
+		var atts = 'form' === kind ? [['id', formSlug], ['project', project], ['subject', subject]] : [['guest', chosen(parts.form, 'guest')], ['project', project]];
 		var text = '[' + ('form' === kind ? 'omnabase_form' : 'omnabase_messages');
 		atts.forEach(function (att) {
 			if ('' !== att[1]) {

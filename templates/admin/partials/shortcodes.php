@@ -18,9 +18,9 @@ defined( 'ABSPATH' ) || exit;
 	</p>
 	<noscript>
 		<ul class="ob-help-list ob-wp-settings__shortcode-list">
-			<li class="ob-help-list__item"><code>[omnabase_form]</code> <?php esc_html_e( 'the contact form, on any page: visitors\' messages become tickets.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>[omnabase_form]</code> <?php esc_html_e( 'a form built in OmnaBase, on any page: visitors\' messages become tickets. id="slug" picks the form; without it, the project\'s default form shows.', 'omnabase' ); ?></li>
 			<li class="ob-help-list__item"><code>project="slug"</code> <?php esc_html_e( 'which of this site\'s projects gets the messages; needed when the site has several.', 'omnabase' ); ?></li>
-			<li class="ob-help-list__item"><code>subject="…"</code> <?php esc_html_e( 'the words the subject field starts with.', 'omnabase' ); ?></li>
+			<li class="ob-help-list__item"><code>subject="…"</code> <?php esc_html_e( 'the words the form\'s subject field starts with, when it has one.', 'omnabase' ); ?></li>
 			<li class="ob-help-list__item"><code>[omnabase_messages]</code> <?php esc_html_e( 'the message centre for signed-in customers; it works only on the message centre page picked above.', 'omnabase' ); ?></li>
 			<li class="ob-help-list__item"><code>guest="form"</code> <?php esc_html_e( 'visitors who are not signed in get the contact form instead of a login link.', 'omnabase' ); ?></li>
 			<li class="ob-help-list__item"><code>project="slug"</code> <?php esc_html_e( 'in the message centre: the project new questions go to.', 'omnabase' ); ?></li>

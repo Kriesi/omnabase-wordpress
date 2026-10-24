@@ -1080,3 +1080,59 @@ member of the workspace. The plugin knew only `address_taken` and `forgotten`, s
 site's administrator, read "Your messages cannot be shown right now. Please try again later." (an outage that never clears). Chosen: a third
 refusal with its own sentence (the person is on the support team, the customers' messages are in the OmnaBase inbox) and a primary button to
 the workspace's inbox in the app (`<app>/<workspace slug>/inbox`, the slug from Connect); no portal call is made, as for the other two.
+
+## 2026-10-25 — The plugin's forms round: the shortcode shows a form built in OmnaBase, through the embed
+
+Brief: OmnaBase's `docs/briefs/plugin-forms-round.md` (its last section "After the red team's review", final); report:
+`docs/reviews/plugin-forms-round-red-team-report.md`. The Classic form, its two site routes (`omnabase/v1/form`, `omnabase/v1/form-token`), its
+settings read (`GET /forms/{project}`: products, licence field, privacy link), its outbox job and its tests are gone; OmnaBase's round three
+had already retired the API it sent to.
+
+- **The shortcode** `[omnabase_form id="<form slug>" project="<slug>" subject="…"]` prints the look's wrapper (`.ob-wp.ob-wp-form-wrap`, the
+  Appearance marks) around one container `data-omnabase-form="<workspace>/<slug>" data-project="<project>"` and queues OmnaBase's embed once,
+  `ApiUrl::app()` + `/forms.js`, no version query (OmnaBase caches it an hour), in the footer, deferred. The workspace's slug comes from
+  Connect. Without `id`: the project's default form, from the list's `defaultFor`. The template stays `templates/form.php` (now the container).
+- **Which form** (`Forms\FormPick`): a named form the list lacks, or a slug of the wrong shape, is the administrator's note ("Only
+  administrators see this note.", `manage_options`, as every other note; the brief said "editors") and nothing for visitors. OmnaBase
+  unreachable: a named form still shows (the embed asks OmnaBase itself); a bare shortcode cannot know its form and stays empty for visitors.
+- **The list** (`Forms\FormList`, `GET /forms`): kept an hour under `omnabase_form_list`, a failure five minutes. A form or default the kept
+  list lacks asks again once the list is over a minute old, so a form published a moment ago shows without waiting an hour. The settings tab
+  always asks afresh. A new connection (`omnabase_connected`) forgets it.
+- **The prefill token** (`Forms\PrefillToken`, `Forms\Vouched`): only for a signed-in visitor; the server asks `POST /forms/prefill` with
+  `{ form, project, values }` (by mapping: `email`, the display name as `name`, the newest WooCommerce order's number with the WooCommerce
+  switch on, a licence key only when the user holds exactly one among License Manager and EDD Software Licensing with that shop's switch on;
+  no EDD orders this round). Kept an hour per person, form, project and values (`omnabase_form_p_<hash>`; OmnaBase's token lives two hours
+  and may be used again), a refusal or outage five minutes; a 3-second timeout. A signed-in view defines `DONOTCACHEPAGE` and sends
+  LiteSpeed's no-cache action; a visitor's page carries no token and is the same for everyone. The container carries it as
+  `data-prefill-token` (the red team's name; the brief's `data-omnabase-prefill` was not used).
+- **`subject`** becomes `data-prefill-subject`: it pre-words the form's field keyed "subject" when the form has one, unverified.
+- **The privacy line**: the site's privacy page (`get_privacy_policy_url()`), when there is one, as a "Privacy policy" link under the container.
+- **The look**: `styles/form.css` sets the embed's variables under `.ob-wp` from the kit's tokens (accent and its text from the primary
+  button, border, background, field, text, muted, error, focus from `--ob-focus`, radius), so light, dark, the device's setting and the owner's
+  colour reach the embed with no new mechanism. "Theme styles only" keeps the stylesheet away: the embed shows its own plain look. The
+  Classic form's rules went; `FrontendDesignStructureTest`'s error-colour check now reads the token behind `--omnabase-form-error` when no
+  `.ob-wp-form__error` rule is left (an adjustment, the 4.5-to-1 check unchanged).
+- **The embed's words stay English** ("Send", "Thanks, we have your message."): OmnaBase's `forms.js` has no translated words yet (question 6;
+  recorded in OmnaBase's DECISIONS too). A German shop shows English buttons on the form until the embed reads words from the container.
+- **The settings screen**: the Forms and messages tab opens with a Forms card (the forms with their shortcodes, "the project's default form"
+  beside a default, a "Build forms in OmnaBase" link to `<app>/<workspace>/settings/forms`; "no forms yet", "could not be asked" and "not
+  connected" each said in one line). "Build a shortcode" offers the forms (`omnabase_builder[form]`, "The project's default form" first);
+  the server accepts only a form the list names and refuses any while OmnaBase cannot be asked. No block (question 1).
+- **Waiting messages of the old form** (outbox kind `form_submission`): the worker no longer knows the kind, so a row queued before the update
+  shows as needing attention and leaves with the usual clean-up (question 8); until then the personal-data tools still find it by its address.
+- **The message centre's guest form** (`[omnabase_messages guest="form"]`) is the project's default form through the same shortcode; when
+  no form can be shown (no default form, OmnaBase unreachable for a bare shortcode) the visitor gets the sign-in link instead of an empty page.
+- **The message centre's trap field** moved from the retired `Forms\Guard` into `Portal\Trap` (same field name `omnabase_hp`). The filter
+  `omnabase_visitor_address` left with the form's per-address limits (OmnaBase limits the embed's submissions per network address itself).
+- **Not this round**: a block with a form picker, EDD orders in the prefill, the message centre link for a signed-in customer's form ticket
+  (question 10), translated embed words.
+- **Tests**: the red team's eight new files moved in and its three adjusted files kept. Deleted with the Classic form, as the report's list
+  names them: `FormTokenTest`, `FormSubmitTest`, `FormShortcodeTest`, the Classic `form.spec.ts` (replaced), three Classic tests of
+  `FrontendLookTest` and the seven form flows of `frontend-look.spec.ts` with the form half of its phone flow. The flows' sign-in code reader
+  is one helper in `tests/e2e/harness.ts` accepting "231191" and "123 456". Adjusted, none weakened, each with its reason beside it:
+  `RoundSixLeftoversTest` (its "Send now" row is now a customer's link, not a form message), `FirstShownTest`, `ShortcodesSectionTest` and
+  `MessageCentreViewTest` (the form shows as the embed's container, not a `<form>`), `FrontendDesignStructureTest` (the error colour read
+  from the embed's variable), `forum.spec.ts` (the app's ticket page holds its site pill twice), `shortcode-builder.spec.ts` (the guest view
+  is the sign-in link while the seed's Enfold has no default form); the Chromium flag for Local Network Access went into
+  `playwright.config.ts`. The two structure checks that pinned the name "OmnaBase" follow
+  the founder's rename to "OmnaBase Connector" (the `.pot` header's name now read from the plugin header).

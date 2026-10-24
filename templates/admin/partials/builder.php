@@ -6,7 +6,7 @@
  *
  * @package OmnaBase
  *
- * @var array{projects:array<int,array{slug:string,name:string}>,picked:string,offers:array<string,?array{id:int,title:string,url:string}>,tag:string,canPublish:bool} $omnabase_builder
+ * @var array{forms:array<int,array{slug:string,name:string}>,projects:array<int,array{slug:string,name:string}>,picked:string,offers:array<string,?array{id:int,title:string,url:string}>,tag:string,canPublish:bool} $omnabase_builder
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -52,8 +52,18 @@ $omnabase_offer_words = array(
 			<?php endif; ?>
 
 			<p class="ob-wp-builder__row" data-for="form">
+				<label for="ob-wp-builder-form"><?php esc_html_e( 'Form', 'omnabase' ); ?></label>
+				<select id="ob-wp-builder-form" class="ob-dialog__input" name="omnabase_builder[form]">
+					<option value=""><?php esc_html_e( 'The project\'s default form', 'omnabase' ); ?></option>
+					<?php foreach ( $omnabase_builder['forms'] as $omnabase_form_choice ) : ?>
+						<option value="<?php echo esc_attr( $omnabase_form_choice['slug'] ); ?>"><?php echo esc_html( $omnabase_form_choice['name'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</p>
+
+			<p class="ob-wp-builder__row" data-for="form">
 				<label for="ob-wp-builder-subject"><?php esc_html_e( 'Subject starts with', 'omnabase' ); ?></label>
-				<input type="text" id="ob-wp-builder-subject" name="omnabase_builder[subject]" class="ob-dialog__input" maxlength="150" autocomplete="off">
+				<input type="text" id="ob-wp-builder-subject" name="omnabase_builder[subject]" value="" class="ob-dialog__input" maxlength="150" autocomplete="off">
 			</p>
 
 			<fieldset class="ob-wp-builder__row" data-for="messages" hidden>

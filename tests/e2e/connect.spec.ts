@@ -37,7 +37,7 @@
  */
 import { request as playwrightRequest, type APIRequestContext, type Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, omnabaseHook, wp } from "./harness";
+import { OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, codeFor, omnabaseHook, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const APP = process.env.OMNABASE_APP_URL ?? "http://localhost:4391";
@@ -54,17 +54,6 @@ test.describe.configure({ mode: "serial" });
 let founder: APIRequestContext;
 let firstLast4 = "";
 
-/** the last code mailed to an address (the e2e server's capture transport) */
-async function codeFor(email: string): Promise<string> {
-  for (let i = 0; i < 50; i++) {
-    const res = await fetch(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
-    const m = res.ok ? ((await res.json()) as { text?: string } | null) : null;
-    const hit = m?.text ? /(\d{3}) (\d{3})/.exec(m.text) : null;
-    if (hit) return hit[1]! + hit[2]!;
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error(`no code in the mail to ${email}`);
-}
 /** the founder's live sites in Team Kriesi with this host, as OmnaBase lists them */
 async function liveSites(): Promise<SiteRow[]> {
   const res = await founder.get("/api/v1/w/kriesi/sites");

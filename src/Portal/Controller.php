@@ -7,7 +7,6 @@
 
 namespace OmnaBase\WordPress\Portal;
 
-use OmnaBase\WordPress\Forms\Guard;
 use OmnaBase\WordPress\Forms\Projects;
 
 defined( 'ABSPATH' ) || exit;
@@ -15,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The forms post back to the picked page and are handled at `template_redirect` (before the page is built), then the browser is sent back
  * with a notice code: a reload never sends twice. Each post needs a signed-in user and the form's nonce (a short-lived form token against
- * forged requests); the New ticket form also carries round four's trap field (`omnabase_hp`: filled, nothing goes). The identity is always
+ * forged requests); the New ticket form also carries the trap field (`omnabase_hp`: filled, nothing goes). The identity is always
  * the current user's site id (`Visitor`), never a posted field: a changed ticket number only ever reaches the visitor's own tickets.
  */
 final class Controller {
@@ -37,10 +36,10 @@ final class Controller {
 	 * @param Visitor    $visitor  Who the user is to OmnaBase.
 	 * @param Requests   $requests The writes.
 	 * @param Projects   $projects The key's projects.
-	 * @param Guard      $guard    Round four's trap field.
+	 * @param Trap       $trap     The trap field.
 	 * @param Draft      $draft    The kept words of a refused New ticket.
 	 */
-	public function __construct( private PickedPage $page, private Visitor $visitor, private Requests $requests, private Projects $projects, private Guard $guard, private Draft $draft ) {}
+	public function __construct( private PickedPage $page, private Visitor $visitor, private Requests $requests, private Projects $projects, private Trap $trap, private Draft $draft ) {}
 
 	/** Registers the hook. */
 	public function register(): void {
@@ -90,7 +89,7 @@ final class Controller {
 		if ( ! wp_verify_nonce( self::posted( self::NONCE_FIELD ), self::NONCE ) ) {
 			return array( 'notice' => Notices::EXPIRED, 'ticket' => self::REPLY === $action ? $ticket : null );
 		}
-		if ( self::NEW_TICKET === $action && $this->guard->trapped( array( Guard::HONEYPOT => self::posted( Guard::HONEYPOT ) ) ) ) {
+		if ( self::NEW_TICKET === $action && $this->trap->sprung( self::posted( Trap::FIELD ) ) ) {
 			return array( 'notice' => '', 'ticket' => null );
 		}
 		$state = $this->visitor->ensure( $user );

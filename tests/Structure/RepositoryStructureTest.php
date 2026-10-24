@@ -81,7 +81,8 @@ final class RepositoryStructureTest extends TestCase {
 
 	/**
 	 * What it checks: the plugin header promises what the brief decided: the name, the slug as text domain, PHP 8.1, WordPress 6.8,
-	 *   the GPL licence and a plain version number.
+	 *   the GPL licence and a plain version number. Builder's adjustment (the plugin's forms round, 2026-10-25): the decided name is
+	 *   "OmnaBase Connector" since the founder's rename of 2026-10-24 (the slug and text domain stay `omnabase`).
 	 * Passes when: each header field holds its decided value.
 	 * Fails when: a field drifts, so WordPress would let the plugin activate on a PHP it does not support, or translations and
 	 *   WordPress.org's review would not find the plugin's text domain.
@@ -89,7 +90,7 @@ final class RepositoryStructureTest extends TestCase {
 	public function test_the_header_fields_hold_the_decided_values(): void {
 		$info = PluginInfo::fromFile( OMNABASE_REPO . '/omnabase.php' );
 
-		$this->assertSame( 'OmnaBase', $info->field( 'name' ) );
+		$this->assertSame( 'OmnaBase Connector', $info->field( 'name' ) );
 		$this->assertSame( 'omnabase', $info->textDomain() );
 		$this->assertSame( '/languages', $info->field( 'domainPath' ) );
 		$this->assertSame( '8.1', $info->requiresPhp() );

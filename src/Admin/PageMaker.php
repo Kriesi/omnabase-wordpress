@@ -28,7 +28,7 @@ final class PageMaker {
 	/**
 	 * Makes the page; its id, or WordPress's reason it could not.
 	 *
-	 * @param array{kind:string,project:string,subject:string,guest:string} $choices The checked choices.
+	 * @param array{kind:string,form:string,project:string,subject:string,guest:string} $choices The checked choices.
 	 * @return int|\WP_Error
 	 */
 	public function make( array $choices ) {

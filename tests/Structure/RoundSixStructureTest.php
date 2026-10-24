@@ -206,9 +206,12 @@ final class RoundSixStructureTest extends TestCase {
 		$pot = $this->read( 'languages/omnabase.pot' );
 		$this->assertNotSame( '', $pot, 'languages/omnabase.pot' );
 		// Builder's adjustment (the front-end design round, 2026-10-22, DECISIONS): the .pot names the plugin header's version, read from
-		// omnabase.php, instead of a written 0.1.0 that the bump to 0.2.0 broke; the check stays exact.
+		// omnabase.php, instead of a written 0.1.0 that the bump to 0.2.0 broke; the check stays exact. The plugin's forms round (2026-10-25):
+		// the name is read from the header too, since the founder's rename to "OmnaBase Connector" (2026-10-24); still exact.
 		preg_match( '/^[\s*]*Version:\s*(\S+)/m', $this->read( 'omnabase.php' ), $version );
-		$this->assertMatchesRegularExpression( '/^"Project-Id-Version: OmnaBase ' . preg_quote( (string) ( $version[1] ?? '' ), '/' ) . '\\\\n"$/m', $pot );
+		preg_match( '/^[\s*]*Plugin Name:\s*(.+?)\s*$/m', $this->read( 'omnabase.php' ), $name );
+		$this->assertStringStartsWith( 'OmnaBase', (string) ( $name[1] ?? '' ), 'the header names OmnaBase' );
+		$this->assertMatchesRegularExpression( '/^"Project-Id-Version: ' . preg_quote( (string) ( $name[1] ?? '' ), '/' ) . ' ' . preg_quote( (string) ( $version[1] ?? '' ), '/' ) . '\\\\n"$/m', $pot );
 		$this->assertMatchesRegularExpression( '/^"X-Domain: omnabase\\\\n"$/m', $pot );
 		$ids = $this->msgids( $pot );
 		foreach ( self::POT_SAMPLE as $sentence ) {

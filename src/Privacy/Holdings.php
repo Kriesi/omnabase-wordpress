@@ -7,7 +7,6 @@
 
 namespace OmnaBase\WordPress\Privacy;
 
-use OmnaBase\WordPress\Forms\FormJob;
 use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Outbox\Table;
 use OmnaBase\WordPress\Sync\LicenceRefresh;
@@ -19,8 +18,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Read for WordPress's "Export Personal Data" and "Erase Personal Data" tools: the user with that address and what the plugin keeps for them
  * (the site id OmnaBase knows them by, shared by a network's sites, and this site's own notes: the "known to OmnaBase" mark, the message
- * centre's fingerprint, link times and kept words), the outbox's open rows about them (their account's calls, form messages sent from that
- * address), and the ticket numbers of their forum topics. Nothing here asks OmnaBase: what OmnaBase holds is the workspace's to export or
+ * centre's fingerprint, link times and kept words), the outbox's open rows about them (their account's calls, contact form messages from that
+ * address still waiting from before the plugin's forms round), and the ticket numbers of their forum topics. Nothing here asks OmnaBase: what OmnaBase holds is the workspace's to export or
  * delete.
  */
 final class Holdings {
@@ -36,6 +35,12 @@ final class Holdings {
 		Options::PORTAL_LINKS_META,
 		Options::PORTAL_DRAFT_META,
 	);
+
+	/**
+	 * The retired contact form's waiting messages (the outbox kind of round four): rows queued before the plugin's forms round wait as
+	 * "needing attention" until the usual clean-up, holding the visitor's message, so the personal-data tools still find them.
+	 */
+	private const OLD_FORM_KIND = 'form_submission';
 
 	/** The outbox kinds whose subject is a user. */
 	private const USER_KINDS = array( UserLink::KIND, LicenceRefresh::KIND );
@@ -113,7 +118,7 @@ final class Holdings {
 		foreach ( $user_id > 0 ? self::USER_KINDS : array() as $kind ) {
 			$rows = array_merge( $rows, $this->table->openOf( $kind, $user_id ) );
 		}
-		foreach ( $this->table->openOf( FormJob::KIND, 0 ) as $row ) {
+		foreach ( $this->table->openOf( self::OLD_FORM_KIND, 0 ) as $row ) {
 			if ( 0 === strcasecmp( (string) ( self::payloadBody( $row )['email'] ?? '' ), $email ) ) {
 				$rows[] = $row;
 			}

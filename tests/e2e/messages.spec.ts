@@ -43,7 +43,7 @@
  */
 import type { Browser, BrowserContext, Page, Response } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, routeSite, wp } from "./harness";
+import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, codeFor, lastMail, omnabaseHook, publicApi, routeSite, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const FOUNDER = "kriesi@example.test";
@@ -70,19 +70,6 @@ const contexts: BrowserContext[] = [];
 const php = (code: string): string => wp("eval", code).trim();
 const AS_ADMIN = "wp_set_current_user( (int) ( get_users( array( 'role' => 'administrator', 'number' => 1, 'fields' => 'ID' ) )[0] ?? 1 ) ); ";
 
-async function lastMail(email: string): Promise<string> {
-  const res = await fetch(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
-  return res.ok ? (((await res.json()) as { text?: string } | null)?.text ?? "") : "";
-}
-async function codeFor(email: string, before: string): Promise<string> {
-  for (let i = 0; i < 100; i++) {
-    const text = await lastMail(email);
-    const hit = text !== before ? /(\d{3}) (\d{3})/.exec(text) : null;
-    if (hit) return hit[1]! + hit[2]!;
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error(`no new code in the mail to ${email}`);
-}
 /** the confirmation link of a mail to `email` newer than `before`, or "" after a few seconds */
 async function confirmLink(email: string, before: string): Promise<string> {
   for (let i = 0; i < 50; i++) {

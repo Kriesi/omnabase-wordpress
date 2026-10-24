@@ -97,7 +97,7 @@ case "${1:-up}" in
 	browser) ensure_stack; exec node bin/local-browser.ts "${2:-}" ;;
 	connect) ensure_wp; ensure_stack; exec node bin/local-browser.ts --connect ;;
 	check) ensure_wp; ensure_stack; node bin/local-browser.ts --check build/local-check.png ;;
-	code) curl -s "$API/api/test/mail?to=$(printf %s "${2:-kriesi@example.test}" | sed 's/@/%40/')" | grep -oE '[0-9]{3} [0-9]{3}' | head -1 || echo "no code yet" ;;
+	code) curl -s "$API/api/test/mail?to=$(printf %s "${2:-kriesi@example.test}" | sed 's/@/%40/')" | grep -oE '[0-9]{3} ?[0-9]{3}' | head -1 || echo "no code yet" ;;
 	mail) curl -s "$API/api/test/mail?to=$(printf %s "${2:-kriesi@example.test}" | sed 's/@/%40/')" | python3 -c 'import json,sys; m=json.load(sys.stdin); print(m["subject"]+"\n\n"+m["text"]) if m else print("no mail yet")' ;;
 	status)
 		answers "$WP" && echo "wp-env: up ($WP)" || echo "wp-env: down"

@@ -1,5 +1,14 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER (beside the red team's adjustment below): ADJUSTED, NOT WEAKENED. What changed and
+ * why: the shortcode no longer prints a `<form>` of its own; it prints the container OmnaBase's embed draws the form in (`data-omnabase-form`,
+ * OmnaBase `docs/briefs/plugin-forms-round.md`). The check "the form still renders" now looks for that container; the rest is unchanged.
+ *
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
+ * `docs/briefs/plugin-forms-round.md`, outcome 1) gives the form's shortcode an `id` attribute, the form built in OmnaBase to show
+ * (`[omnabase_form id="<form slug>"]`). The Shortcodes section's test now also asks that `id` is explained beside guest, project and subject;
+ * nothing it asked before was removed (`subject` stays: report question 7's default keeps it as the subject field's pre-wording).
+ *
  * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the brief (OmnaBase
  * `docs/briefs/plugin-frontend-design.md`, rule 2) moves "Theme styles only" to the new Appearance tab ("the moved switch … the plugin's
  * stylesheet off entirely"). The three switch tests now read and flip it on the Appearance tab (`screen( 'appearance' )`, `flip( …, 'appearance' )`)
@@ -37,8 +46,8 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 
 	/**
 	 * What it checks: Settings › OmnaBase has a "Shortcodes" section that names both shortcodes and every attribute in plain words.
-	 * Passes when: a section with the heading "Shortcodes" names [omnabase_form] and [omnabase_messages] and the attributes guest, project and
-	 *   subject, and every line in it has 30 words or fewer.
+	 * Passes when: a section with the heading "Shortcodes" names [omnabase_form] and [omnabase_messages] and the attributes id (the form built
+	 *   in OmnaBase), guest, project and subject, and every line in it has 30 words or fewer.
 	 * Fails when: a site owner has to guess the shortcodes or what an attribute does, or the help grows into paragraphs nobody reads.
 	 */
 	public function test_the_shortcodes_section_names_both_shortcodes_and_their_attributes(): void {
@@ -49,7 +58,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 		foreach ( array( '[omnabase_form', '[omnabase_messages' ) as $tag ) {
 			$this->assertStringContainsString( $tag, $text );
 		}
-		foreach ( array( 'guest', 'project', 'subject' ) as $attribute ) {
+		foreach ( array( 'id', 'guest', 'project', 'subject' ) as $attribute ) {
 			$this->assertMatchesRegularExpression( '/\b' . $attribute . '\b/', $text, "the attribute {$attribute} is explained" );
 		}
 		foreach ( self::lines( $section ) as $line ) {
@@ -97,7 +106,7 @@ final class ShortcodesSectionTest extends RoundSixTestCase {
 
 		self::freshQueue();
 		$this->asVisitor();
-		$this->assertStringContainsString( '<form', $this->render(), 'the form still renders' );
+		$this->assertStringContainsString( 'data-omnabase-form', $this->render(), 'the form still renders' );
 		$this->assertFalse( $this->formCssQueued(), 'no stylesheet for the form' );
 		self::freshQueue();
 		$this->view( $this->ada );

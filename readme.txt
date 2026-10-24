@@ -1,4 +1,4 @@
-=== OmnaBase ===
+=== OmnaBase Connector ===
 Contributors: kriesi
 Tags: support, helpdesk, tickets, woocommerce, bbpress
 Requires at least: 6.8
@@ -16,7 +16,7 @@ OmnaBase is a shared support inbox for small teams. This plugin connects your Wo
 
 * **Customer data on every ticket.** When a customer writes in, your team sees what they bought on your site: their account, WooCommerce and Easy Digital Downloads orders, subscriptions and licences (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing, License Manager for WooCommerce). Every source stays off until you turn it on, and licence keys are always masked.
 * **bbPress forums.** Topics in the forums you tick become tickets; your team's answers appear as forum replies under one support user, with a closing line you can word. Moderators' replies reach the ticket too.
-* **A contact form.** Put `[omnabase_form]` on any page: messages become tickets, with your project's product list, licence field and privacy link. Bots and double clicks file nothing.
+* **Your forms from OmnaBase.** Build forms in OmnaBase and put `[omnabase_form id="…"]` on any page: messages become tickets. Signed-in customers find their details filled in, and your team sees them as verified.
 * **A message centre.** Put `[omnabase_messages]` on a page you pick: signed-in customers read and answer their tickets there, and see their earlier email conversations and forum topics once they confirm their address. A "Support" link in WooCommerce's My Account leads there if you want one.
 * **Nothing gets lost.** What the site sends to OmnaBase waits on your site when OmnaBase cannot be reached and goes out once it is back; the Activity tab of Settings › OmnaBase shows what waits, with Send now, Retry and Discard.
 * **Light or dark, in your colour.** The form and the message centre look like the OmnaBase app, light, dark or following the visitor's device, in OmnaBase's blue or your own colour, in your theme's font or OmnaBase's; one switch leaves them to your theme alone.
@@ -27,7 +27,7 @@ The plugin needs an OmnaBase workspace and a site with a public https address.
 = Shortcodes =
 
 * The easy way: click "Build a shortcode" on the Forms and messages tab of Settings › OmnaBase, choose what to show, and copy the shortcode, or click "Create the page for me" and the page is published for you.
-* `[omnabase_form]` the contact form. `project="slug"` names one of your site's projects (needed when it has several); `subject="…"` fills in the subject.
+* `[omnabase_form]` a contact form built in OmnaBase. `id="slug"` names the form (without it, the project's default form); `project="slug"` names one of your site's projects (needed when it has several); `subject="…"` fills in the form's subject field.
 * `[omnabase_messages]` the message centre, on the page picked on the Forms and messages tab of Settings › OmnaBase. `guest="form"` shows the contact form to visitors who are not signed in; `project="slug"` names the project new questions go to.
 
 == Installation ==
@@ -59,7 +59,7 @@ Only the sources you tick on the Customer data tab of Settings › OmnaBase: the
 
 = What happens when OmnaBase cannot be reached? =
 
-Topics, replies, licence changes and form messages wait on your site and are sent once OmnaBase answers again; the Activity tab shows them. Nothing is dropped without you.
+Topics, replies and licence changes wait on your site and are sent once OmnaBase answers again; the Activity tab shows them. Nothing is dropped without you. Forms are sent by the visitor's browser straight to OmnaBase.
 
 = My host turned WordPress's timer (WP-Cron) off. Does the plugin still work? =
 
@@ -95,7 +95,7 @@ This plugin connects to **OmnaBase** (https://app.omnabase.com), a support inbox
 
 * **Connect and health:** the site's address and name when you connect; Check connection asks OmnaBase who the key is and to call the site back.
 * **Forum:** forum topics and replies in the forums you mark (title, text, the author's name and email address), when they are published.
-* **Contact form:** form messages (name, email address, subject, message, and the product and licence when asked) when a visitor sends the form.
+* **Contact form:** a page with `[omnabase_form]` loads OmnaBase's form script from app.omnabase.com in the visitor's browser, which sends the visitor's form messages straight to OmnaBase. For a signed-in customer the site asks OmnaBase for a short-lived note vouching for their email address, name, newest WooCommerce order number and licence key (when they hold exactly one).
 * **Message centre:** the signed-in customer's name, email address and an id for their account, each time they open the message centre; their new questions and answers when they send them.
 * **Customer data:** when OmnaBase asks about a customer, their account, orders, subscriptions and licences from the sources you switch on; licence changes when they happen.
 

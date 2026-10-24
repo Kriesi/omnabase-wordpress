@@ -40,7 +40,7 @@
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, routeSite, wp } from "./harness";
+import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, codeFor, lastMail, omnabaseHook, publicApi, routeSite, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const FOUNDER = "kriesi@example.test";
@@ -58,21 +58,6 @@ let founderContext: BrowserContext;
 /** PHP run inside wp-env's development WordPress; what it echoes */
 const php = (code: string): string => wp("eval", code).trim();
 
-/** the text of the last mail to an address (the e2e server's capture transport), or "" */
-async function lastMail(email: string): Promise<string> {
-  const res = await fetch(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
-  return res.ok ? (((await res.json()) as { text?: string } | null)?.text ?? "") : "";
-}
-/** the six-digit code of a sign-in mail newer than `before` (the text of the last mail before the code was asked for) */
-async function codeFor(email: string, before: string): Promise<string> {
-  for (let i = 0; i < 100; i++) {
-    const text = await lastMail(email);
-    const hit = text !== before ? /(\d{3}) (\d{3})/.exec(text) : null;
-    if (hit) return hit[1]! + hit[2]!;
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error(`no new code in the mail to ${email}`);
-}
 
 /** Connect from the settings screen: OmnaBase's page, the founder signs in by code, approves Team Kriesi › Enfold, back connected */
 async function connect(browser: Browser): Promise<void> {

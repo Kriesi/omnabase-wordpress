@@ -31,7 +31,7 @@
  */
 import type { Browser, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, routeSite, wp } from "./harness";
+import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, codeFor, lastMail, omnabaseHook, publicApi, routeSite, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const PAGES_TAB = `${SETTINGS}&tab=pages`;
@@ -50,19 +50,6 @@ const made: string[] = [];
 const php = (code: string): string => wp("eval", code).trim();
 const toSite = (url: string) => url.replace(/^https?:\/\/[^/]+/, SITE);
 
-async function lastMail(email: string): Promise<string> {
-  const res = await fetch(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
-  return res.ok ? (((await res.json()) as { text?: string } | null)?.text ?? "") : "";
-}
-async function codeFor(email: string, before: string): Promise<string> {
-  for (let i = 0; i < 100; i++) {
-    const text = await lastMail(email);
-    const hit = text !== before ? /(\d{3}) (\d{3})/.exec(text) : null;
-    if (hit) return hit[1]! + hit[2]!;
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error(`no new code in the mail to ${email}`);
-}
 
 /** Connect from the settings screen (form.spec.ts's way): the founder approves Team Kriesi › Enfold, so the key has one project */
 async function connect(browser: Browser): Promise<void> {
@@ -180,8 +167,9 @@ test("the message centre with the form for guests: the tag follows, Copy, Create
 
 /**
  * What it checks: A visitor's first view of the new message centre page notes that the message centre is live.
- * Passes when: after a visitor (nobody signed in) opens the page made above and sees the contact form in place of the tag, the stored
- *   first-display mark for the message centre holds a time.
+ * Passes when: after a visitor (nobody signed in) opens the page made above and sees the message centre's guest view in place of the tag
+ *   (the project's form, or the sign-in link while the project has no default form), the stored first-display mark for the message centre
+ *   holds a time.
  * Fails when: the setup line and OmnaBase's site report never learn that the message centre is live on the site.
  */
 test("a visitor's first view of the new page sets the message centre's first-display mark", async ({ browser }) => {
@@ -192,7 +180,9 @@ test("a visitor's first view of the new page sets the message centre's first-dis
     const page = await visitor.newPage();
     await page.goto(toSite(php(`echo get_permalink( ${Number(made[0])} );`)));
     await expect(page.getByText("[omnabase_messages")).toHaveCount(0);
-    await expect(page.locator("form").filter({ has: page.locator("textarea") })).toHaveCount(1);
+    // adjusted 2026-10-25 (the plugin's forms round), not weakened: the guest form is now the project's form built in OmnaBase, and the seed's
+    // Enfold has no default form, so the visitor gets the sign-in link instead (DECISIONS); the plugin's output still takes the tag's place
+    await expect(page.locator(".ob-wp"), "the message centre's guest view in place of the tag").toHaveCount(1);
   } finally {
     await visitor.close();
   }

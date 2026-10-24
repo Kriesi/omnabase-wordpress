@@ -8,14 +8,15 @@
 namespace OmnaBase\WordPress\Admin;
 
 use OmnaBase\WordPress\Connect\ConnectionInfo;
+use OmnaBase\WordPress\Forms\FormList;
 use OmnaBase\WordPress\Forms\Projects;
 use OmnaBase\WordPress\Portal\PickedPage;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The dialog's facts: the key's projects (only when it has several, which only a hand-made key can), the picked message centre page's
- * title, a published page per kind that already carries the tag and the person may edit, the tag before any click, and whether the person
+ * The dialog's facts: the workspace's forms to choose from (the kept list, which the tab's Forms card has just asked afresh), the key's
+ * projects (only when it has several, which only a hand-made key can), the picked message centre page's title, a published page per kind that already carries the tag and the person may edit, the tag before any click, and whether the person
  * may publish pages (else "Create the page for me" is left out).
  */
 final class BuilderView {
@@ -27,17 +28,19 @@ final class BuilderView {
 	 * @param ConnectionInfo $connection The projects' names.
 	 * @param PickedPage     $picked     The message centre's page.
 	 * @param TaggedPages    $pages      Pages that carry a tag already.
+	 * @param FormList       $forms      The workspace's forms.
 	 */
-	public function __construct( private Projects $projects, private ConnectionInfo $connection, private PickedPage $picked, private TaggedPages $pages ) {}
+	public function __construct( private Projects $projects, private ConnectionInfo $connection, private PickedPage $picked, private TaggedPages $pages, private FormList $forms ) {}
 
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{projects:array<int,array{slug:string,name:string}>,picked:string,offers:array<string,?array{id:int,title:string,url:string}>,tag:string,canPublish:bool}
+	 * @return array{forms:array<int,array{slug:string,name:string}>,projects:array<int,array{slug:string,name:string}>,picked:string,offers:array<string,?array{id:int,title:string,url:string}>,tag:string,canPublish:bool}
 	 */
 	public function build(): array {
 		$picked = $this->picked->id();
 		return array(
+			'forms'      => $this->forms(),
 			'projects'   => $this->projects(),
 			'picked'     => $picked > 0 && get_post( $picked ) ? get_the_title( $picked ) : '',
 			'offers'     => array(
@@ -47,6 +50,16 @@ final class BuilderView {
 			'tag'        => ShortcodeTag::build( array( 'kind' => ShortcodeTag::FORM, 'project' => '', 'subject' => '', 'guest' => '' ) ),
 			'canPublish' => current_user_can( 'publish_pages' ),
 		);
+	}
+
+	/**
+	 * The forms to choose from (none when the site is not connected or OmnaBase cannot be asked).
+	 *
+	 * @return array<int,array{slug:string,name:string}>
+	 */
+	private function forms(): array {
+		$forms = $this->projects->connected() ? $this->forms->all() : null;
+		return array_map( static fn ( array $f ) => array( 'slug' => $f['slug'], 'name' => $f['name'] ), $forms ?? array() );
 	}
 
 	/**

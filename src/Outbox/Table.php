@@ -20,7 +20,8 @@ defined( 'ABSPATH' ) || exit;
  * `waiting`, `sent`, `attention` (needs the administrator) or `discarded`. Times are unix seconds. The body is built from the user or post
  * when the row is sent, so the table holds no customer data, with one exception (version 3, round four): a form message has nothing to be
  * rebuilt from, so a `form_submission` row carries its body in `payload` while it waits, and the payload is emptied the moment the row is
- * sent or discarded. Made or changed on load when the schema version (`omnabase_db_version`) is missing or older; dropped by uninstall.php.
+ * sent or discarded. The plugin's forms round retired that form: such rows queued before the update show as needing attention ("no longer
+ * knows this kind of call") and leave with the usual clean-up; no new one is made. Made or changed on load when the schema version (`omnabase_db_version`) is missing or older; dropped by uninstall.php.
  * Every query is prepared.
  */
 final class Table {

@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: ADJUSTED, NOT WEAKENED. What changed and why: the Classic contact form and its rules
+ * left with the round (OmnaBase `docs/briefs/plugin-forms-round.md`; the red team's report names this adjustment); the error under a field is
+ * now drawn by OmnaBase's embed in the colour of the variable `--omnabase-form-error`, which the stylesheet sets from a token under the
+ * wrapper. The contrast test still asks that the error's colour reads at 4.5 to 1 on the surface in both themes; it now finds that colour in
+ * the embed's variable when no `.ob-wp-form__error` rule is left (DECISIONS "2026-10-25 — The plugin's forms round").
+ *
  * The front-end design round (light and dark, the form, the message centre), the red team's failing tests: file-level guards over the
  * stylesheet the form and the message centre load, the font files, the build script, the release notes and the version.
  *
@@ -219,7 +225,7 @@ final class FrontendDesignStructureTest extends TestCase {
 	 * Passes when: resolving the built stylesheet's light block and its dark block (the dark one over the light one), the text and the
 	 *   secondary text on the surface reach 4.5 to 1, the primary button's text on its colour reaches 4.5 to 1 (with OmnaBase's blue), the focus
 	 *   ring reaches 3 to 1 on the surface, and the colour the error under a field is written in (the first variable of its colour rule in
-	 *   styles/form.css) reaches 4.5 to 1 on the surface, each in light and in dark.
+	 *   styles/form.css, or the token the embed's error variable is set from) reaches 4.5 to 1 on the surface, each in light and in dark.
 	 * Fails when: a customer with weaker eyesight cannot read the error that tells them what to fix (today's red reads at 4.2 to 1 on white),
 	 *   the help text fades into a night background, or a keyboard user cannot see where they are.
 	 */
@@ -450,11 +456,19 @@ final class FrontendDesignStructureTest extends TestCase {
 		return (string) preg_replace( '/\s*([:()])\s*/', '$1', $s );
 	}
 
-	/** The variable the error under a field is written in (the first `var()` of the colour rule of `.ob-wp-form__error`), or ''. */
+	/**
+	 * The variable the error under a field is written in (the first `var()` of the colour rule of `.ob-wp-form__error`, else the token the
+	 * embed's `--omnabase-form-error` is set from under the wrapper), or ''.
+	 */
 	private function errorColour(): string {
 		$blocks = $this->blocks( $this->withoutComments( $this->read( self::SOURCE ) ) );
 		foreach ( $blocks as $b ) {
 			if ( str_contains( $b['selector'], 'ob-wp-form__error' ) && ! str_contains( $b['selector'], '[hidden]' ) && preg_match( '/(?<![a-z-])color\s*:\s*var\(\s*(--ob-[a-z0-9-]+)/i', $b['body'], $m ) ) {
+				return $m[1];
+			}
+		}
+		foreach ( $blocks as $b ) {
+			if ( str_starts_with( trim( $b['selector'] ), '.ob-wp' ) && preg_match( '/--omnabase-form-error\s*:\s*var\(\s*(--ob-[a-z0-9-]+)/i', $b['body'], $m ) ) {
 				return $m[1];
 			}
 		}

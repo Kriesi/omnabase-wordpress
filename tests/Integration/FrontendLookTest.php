@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: THREE CLASSIC TESTS DELETED, AS THE RED TEAM'S REPORT LISTS THEM. What changed and why:
+ * the Classic contact form (its success card, its fields with their error lines, its kit controls) left with the round (OmnaBase
+ * `docs/briefs/plugin-forms-round.md`); the form is now drawn by OmnaBase's embed, whose look `form-look.spec.ts` checks in a real browser. The
+ * three tests of that markup went with the feature; the four look tests (the wrapper's marks, the accent, "Theme styles only", the font) and
+ * the message centre's tests stay unchanged.
+ *
  * The front-end design round (2026-10-22), the red team's failing tests: what the contact form and the message centre print after each
  * Appearance choice, and the markup of the new pieces (the success card, the field errors' wiring, the status pills, the thread's authors, the
  * kit's controls) (the plain run).
@@ -145,79 +151,6 @@ final class FrontendLookTest extends AppearanceTestCase {
 		$this->asAdminOnTheScreen( $this->admin );
 		do_action( 'admin_enqueue_scripts', 'settings_page_omnabase' );
 		$this->assertSame( array(), $this->fontStyles(), 'the settings screen keeps WordPress\'s font' );
-	}
-
-	/**
-	 * What it checks: The form's success card is part of the form's markup from the start: hidden, outside the form, read out when it shows,
-	 *   with the brief's words, the kit's check icon and a way to send another message; and the form keeps everything the bot guard and the
-	 *   browser flows rely on.
-	 * Passes when: inside the form's wrapper and outside its `<form>` there is one hidden element with `role="status"` or `aria-live`, holding
-	 *   "We answer by email.", a decorative picture (an svg hidden from screen readers) and a button or link reading "Send another"; the form
-	 *   still has its fields named project, token, name, email, subject and message (with the product and licence fields the project asks for),
-	 *   and the honeypot `omnabase_hp` is a text input in a part hidden from screen readers, out of the tab order, not `type="hidden"`.
-	 * Fails when: the card's words come only from the script (never translated for a German shop), a screen-reader user never learns the message
-	 *   went, there is no way back to the form, or the redesign renames a field or hides the honeypot so that bots skip it.
-	 */
-	public function test_the_success_card_is_in_the_markup_and_the_form_keeps_its_fields(): void {
-		$html    = $this->formAsVisitor();
-		$wrapper = self::wrapperOf( $html );
-		$this->assertNotNull( $wrapper );
-		$xpath = new \DOMXPath( $wrapper->ownerDocument );
-		$cards = $xpath->query( ".//*[(@role='status' or @aria-live) and contains(normalize-space(.), 'We answer by email.')][not(ancestor::form)]", $wrapper );
-		$this->assertSame( 1, $cards->length, 'one success card outside the form, read out when it shows' );
-		$card = $cards->item( 0 );
-		$hidden = false;
-		for ( $n = $card; $n instanceof \DOMElement; $n = $n->parentNode ) {
-			$hidden = $hidden || $n->hasAttribute( 'hidden' );
-		}
-		$this->assertTrue( $hidden, 'hidden until a message went' );
-		$this->assertGreaterThan( 0, $xpath->query( ".//*[local-name()='svg'][@aria-hidden='true']", $card )->length, 'the kit\'s check icon, hidden from screen readers' );
-		$this->assertSame( 1, $xpath->query( ".//button[normalize-space(.)='Send another'] | .//a[normalize-space(.)='Send another']", $card )->length, '"Send another"' );
-
-		foreach ( array( 'project', 'token', 'name', 'email', 'subject', 'message', 'product', 'licence' ) as $name ) {
-			$this->assertSame( 1, self::nodes( $html, "//form[" . self::hasClass( 'ob-wp-form' ) . "]//*[@name='{$name}']" )->length, "the field {$name} keeps its name" );
-		}
-		$trap = self::nodes( $html, "//form//input[@name='" . self::HONEYPOT . "']" )->item( 0 );
-		$this->assertInstanceOf( \DOMElement::class, $trap, 'the honeypot' );
-		$this->assertSame( 'text', $trap->getAttribute( 'type' ), 'a real text input' );
-		$this->assertSame( '-1', $trap->getAttribute( 'tabindex' ), 'out of the tab order' );
-		$this->assertGreaterThan( 0, ( new \DOMXPath( $trap->ownerDocument ) )->query( "ancestor::*[@aria-hidden='true']", $trap )->length, 'in a part screen readers skip' );
-	}
-
-	/**
-	 * What it checks: Every field the visitor fills in is tied to its error line, so a screen reader reads the error with the field.
-	 * Passes when: for name, email, subject, message, product and licence, the field's `aria-describedby` names the id of an element that is the
-	 *   field's error line (the element the form's script fills, `data-for` the field's name) and that id exists once in the page.
-	 * Fails when: a blind customer hears "Please check the fields marked." but not which field or why, because the error sits beside the field
-	 *   with nothing linking the two.
-	 */
-	public function test_each_field_names_its_error_line(): void {
-		$html = $this->formAsVisitor();
-		foreach ( array( 'name', 'email', 'subject', 'message', 'product', 'licence' ) as $name ) {
-			$field = self::nodes( $html, "//form//*[@name='{$name}']" )->item( 0 );
-			$this->assertInstanceOf( \DOMElement::class, $field, $name );
-			$ids = preg_split( '/\s+/', trim( (string) $field->getAttribute( 'aria-describedby' ) ) );
-			$errors = array_filter( $ids, static fn ( $id ) => '' !== $id && 1 === self::nodes( $html, "//*[@id='{$id}'][@data-for='{$name}']" )->length );
-			$this->assertCount( 1, $errors, "{$name}: aria-describedby names its error line" );
-			$this->assertSame( 1, self::nodes( $html, "//*[@id='" . reset( $errors ) . "']" )->length, "{$name}: the error's id is unique" );
-		}
-	}
-
-	/**
-	 * What it checks: The form's controls are the kit's: text fields, the message box, the product choice and the Send button.
-	 * Passes when: name, email, subject and licence each carry the kit's `ob-input` (or sit in an element that does), the message box the kit's
-	 *   `ob-textarea`, the product choice the kit's `ob-select`, and Send the kit's `ob-btn` and `ob-btn--primary`.
-	 * Fails when: the form keeps its own hand-made controls, so it does not look like OmnaBase's and every later kit change must be copied by
-	 *   hand (the brief: "the kit's `.ob-input`, `.ob-textarea`, `.ob-select` and `.ob-btn--primary`").
-	 */
-	public function test_the_form_wears_the_kits_controls(): void {
-		$html = $this->formAsVisitor();
-		foreach ( array( 'name', 'email', 'subject', 'licence' ) as $name ) {
-			$this->assertSame( 1, self::nodes( $html, "//form//input[@name='{$name}'][ancestor-or-self::*[" . self::hasClass( 'ob-input' ) . ']]' )->length, "{$name}: the kit's input" );
-		}
-		$this->assertSame( 1, self::nodes( $html, "//form//textarea[@name='message'][" . self::hasClass( 'ob-textarea' ) . ']' )->length, 'the message box: the kit\'s textarea' );
-		$this->assertSame( 1, self::nodes( $html, "//form//select[@name='product'][" . self::hasClass( 'ob-select' ) . ']' )->length, 'the product: the kit\'s select' );
-		$this->assertSame( 1, self::nodes( $html, "//form//button[@type='submit'][" . self::hasClass( 'ob-btn' ) . ' and ' . self::hasClass( 'ob-btn--primary' ) . ']' )->length, 'Send: the kit\'s primary button' );
 	}
 
 	/**

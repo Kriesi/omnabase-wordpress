@@ -14,8 +14,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Pure rules, the same as `assets/admin.js` follows in the browser: the two kinds, the subject without `"`, `[` and `]` (so it can never
- * close the tag early), the attributes in a fixed order (`subject` only for the form, `guest` only for the message centre, `project` only
- * when one is chosen), and the page's content: the tag alone, in the block editor's shortcode block.
+ * close the tag early), the attributes in a fixed order (`id` and `subject` only for the form, `guest` only for the message centre,
+ * `project` and `id` only when one is chosen), and the page's content: the tag alone, in the block editor's shortcode block. The form's `id`
+ * is a form slug the workspace's list offered (checked by `BuilderChoices`).
  */
 final class ShortcodeTag {
 
@@ -39,11 +40,11 @@ final class ShortcodeTag {
 	/**
 	 * The tag for checked choices.
 	 *
-	 * @param array{kind:string,project:string,subject:string,guest:string} $choices The choices, already checked.
+	 * @param array{kind:string,form?:string,project:string,subject:string,guest:string} $choices The choices, already checked.
 	 */
 	public static function build( array $choices ): string {
 		$atts = self::FORM === $choices['kind']
-			? array( 'project' => $choices['project'], 'subject' => $choices['subject'] )
+			? array( 'id' => $choices['form'] ?? '', 'project' => $choices['project'], 'subject' => $choices['subject'] )
 			: array( 'guest' => $choices['guest'], 'project' => $choices['project'] );
 		$name = self::nameOf( $choices['kind'] );
 		$tag  = '[' . $name;

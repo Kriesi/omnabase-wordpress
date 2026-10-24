@@ -40,7 +40,7 @@
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, omnabaseHook, publicApi, routeSite, wp } from "./harness";
+import { ADMIN_STATE, OMNABASE_APP, OMNABASE_E2E, SITE, SITE_HOST, WP_LOCAL, codeFor, lastMail, omnabaseHook, publicApi, routeSite, wp } from "./harness";
 
 const SETTINGS = "/wp-admin/options-general.php?page=omnabase";
 const FOUNDER = "kriesi@example.test";
@@ -67,21 +67,6 @@ const php = (code: string): string => wp("eval", code).trim();
 /** the same as the administrator (bbPress hides private and hidden forums, and their topics, from a query made as nobody) */
 const AS_ADMIN = "wp_set_current_user( (int) ( get_users( array( 'role' => 'administrator', 'number' => 1, 'fields' => 'ID' ) )[0] ?? 1 ) ); ";
 
-/** the text of the last mail to an address (the e2e server's capture transport), or "" */
-async function lastMail(email: string): Promise<string> {
-  const res = await fetch(`${OMNABASE_E2E}/api/test/mail?to=${encodeURIComponent(email)}`);
-  return res.ok ? (((await res.json()) as { text?: string } | null)?.text ?? "") : "";
-}
-/** the six-digit code of a sign-in mail newer than `before` */
-async function codeFor(email: string, before: string): Promise<string> {
-  for (let i = 0; i < 100; i++) {
-    const text = await lastMail(email);
-    const hit = text !== before ? /(\d{3}) (\d{3})/.exec(text) : null;
-    if (hit) return hit[1]! + hit[2]!;
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  throw new Error(`no new code in the mail to ${email}`);
-}
 
 /** Connect from the settings screen (facts.spec.ts's way): OmnaBase's page, the founder signs in by code, approves Team Kriesi › Enfold */
 async function connect(browser: Browser): Promise<void> {
@@ -243,7 +228,7 @@ test("a visitor's topic becomes a public ticket with the customer facts card bes
   expect(read.status, JSON.stringify(read.body)).toBe(200);
   expect(read.body).toMatchObject({ public: true, replyVia: "site", external: { id: `topic-${topicId}` } });
   await founderPage.goto(`${OMNABASE_APP}/kriesi/inbox/all-open/${ticket}?info=1`);
-  await expect(founderPage.locator(".ob-site-mark")).toContainText(`Public on ${SITE_HOST}`);
+  await expect(founderPage.locator(".ob-site-mark").first()).toContainText(`Public on ${SITE_HOST}`); // adjusted 2026-10-25, not weakened: the app's ticket page now holds the same site pill twice, both "Public on <host>", so the strict locator found two
   await expect(founderPage.locator(".ob-site-data")).toHaveCount(1, { timeout: 15_000 }); // adjusted 2026-10-22, not weakened: the app shows the facts to the team on a public topic since its ruling of 2026-10-11 (DECISIONS, M14 round five)
 });
 

@@ -1,5 +1,11 @@
 <?php
 /**
+ * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: ADJUSTED, NOT WEAKENED. What changed and why: with `guest="form"` the visitor now gets the
+ * project's form built in OmnaBase, drawn in the browser by OmnaBase's embed inside the container the plugin prints (OmnaBase
+ * `docs/briefs/plugin-forms-round.md`); the message box and the email field are the embed's, so the page holds the container instead. The
+ * guest-form test looks for that container (and still for no portal call); `form.spec.ts` sees the embed draw the fields. A new test beside
+ * it: with no form to show, the visitor gets the login link.
+ *
  * M13 round five, the red team's failing tests: what the message centre shows and whom it asks about (inside wp-env's tests WordPress, the
  * plain run).
  *
@@ -48,16 +54,30 @@ final class MessageCentreViewTest extends RoundFiveTestCase {
 
 	/**
 	 * What it checks: With `guest="form"`, a logged-out visitor gets the contact form instead of the login link.
-	 * Passes when: `[omnabase_messages guest="form"]` for nobody signed in shows round four's form (a message box and an email field) and no
-	 *   portal call is made.
+	 * Passes when: `[omnabase_messages guest="form"]` for nobody signed in shows the contact form's container (the box OmnaBase's form is drawn
+	 *   in, naming the project's default form) and no portal call is made.
 	 * Fails when: a shop without customer accounts cannot let visitors write from the message centre's page.
 	 */
 	public function test_with_guest_form_a_logged_out_visitor_gets_the_contact_form(): void {
 		wp_update_post( array( 'ID' => $this->picked, 'post_content' => '[omnabase_messages guest="form"]' ) );
 		$html = $this->view( 0 );
-		$this->assertSame( 1, self::nodes( $html, "//form//textarea[@name='message']" )->length, 'the contact form\'s message box' );
-		$this->assertSame( 1, self::nodes( $html, "//form//input[@name='email']" )->length, 'the contact form\'s email field' );
+		$this->assertSame( 1, self::nodes( $html, "//*[@data-omnabase-form='kriesi/support']" )->length, 'the contact form\'s container, the project\'s default form' );
 		$this->assertSame( array(), $this->portalCalls() );
+	}
+
+	/**
+	 * What it checks: With `guest="form"` but no form to show (the project has no default form in OmnaBase), a logged-out visitor still gets a
+	 *   way in: the sign-in link, never an empty page (the plugin's forms round, 2026-10-25).
+	 * Passes when: with OmnaBase's list naming no default form for Enfold, the message centre page holds no form container and a link to
+	 *   WordPress's login page.
+	 * Fails when: a shop that pointed visitors at the message centre leaves them on a blank page because the form it relied on is gone.
+	 */
+	public function test_with_guest_form_and_no_form_to_show_a_visitor_gets_the_login_link(): void {
+		$this->omnabaseListsForms( array( array( 'slug' => 'support', 'name' => 'Support', 'defaultFor' => array() ) ) );
+		wp_update_post( array( 'ID' => $this->picked, 'post_content' => '[omnabase_messages guest="form"]' ) );
+		$html = $this->view( 0 );
+		$this->assertSame( 0, self::nodes( $html, '//*[@data-omnabase-form]' )->length, 'no form container' );
+		$this->assertNotSame( 0, self::nodes( $html, "//a[contains(@href,'wp-login.php')]" )->length, 'the login link' );
 	}
 
 	/**

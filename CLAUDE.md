@@ -8,7 +8,9 @@ size budgets, non-interactive shell flags, the customer changelog). This file ad
 
 The WordPress plugin `omnabase` (M13 of OmnaBase; the brief lives in the OmnaBase repository, `docs/briefs/m13-wordpress-plugin.md`). It
 connects a WordPress site to an OmnaBase workspace and carries five needs: Connect from the WordPress admin, customer data (users,
-WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode form, a message centre for logged-in customers.
+WooCommerce, EDD, licences), bbPress forums to tickets and back, a shortcode form (since the forms round, 2026-10-25: a form built in
+OmnaBase, drawn by OmnaBase's embed `forms.js` from the app host, with a prefill token for signed-in visitors), a message centre for
+logged-in customers.
 
 - It **talks to OmnaBase's public API alone** (`/api/public/v1`, the contract: OmnaBase's `docs/public-api.md`). It shares no code with
   OmnaBase's TypeScript apps or with Omnalingo; Omnalingo is a pattern to look at, never a source to copy from.
@@ -73,7 +75,7 @@ first public release on, a site's stored data is migrated and nothing a site hol
   prefix with `$wpdb->get_blog_prefix()` elsewhere runs no query and is allowed).
 - **Security** (WPCS's sniffs check it): escape on output (`esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`), sanitise and unslash input,
   a nonce and `current_user_can( 'manage_options' )` on every admin action, a real `permission_callback` on every REST route (the named
-  exceptions: the two signed receivers, the form and its time-token route, each with its own check). The key and the secrets are read only
+  exceptions: the two signed receivers, each with its own check; the Classic form's two routes left with the plugin's forms round). The key and the secrets are read only
   by the vault (from round one) and never reach HTML, JS or a log.
 - **The vault's key (2026-10-11)**: chosen once per save and recorded beside the encrypted values (`source` `constant`|`file`|`salts`, a
   16-character fingerprint `kid`): `OMNABASE_ENCRYPTION_KEY` when defined, else a random key the plugin makes once in a guarded key file
