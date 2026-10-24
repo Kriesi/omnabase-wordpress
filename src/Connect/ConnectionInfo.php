@@ -60,6 +60,11 @@ final class ConnectionInfo {
 		return (string) ( $this->read()['workspace']['name'] ?? '' );
 	}
 
+	/** The workspace's slug (its address in the OmnaBase app), or an empty string. */
+	public function workspaceSlug(): string {
+		return (string) ( $this->read()['workspace']['slug'] ?? '' );
+	}
+
 	/** Forgets it (Disconnect). */
 	public function clear(): void {
 		delete_option( Options::SITE );

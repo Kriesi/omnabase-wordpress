@@ -1072,3 +1072,11 @@ reason sits beside each change):
   0.1.0 and 3011 broke with the bump and the lane switch).
 - **`tests/Unit/PluginInfoTest.php`** and **`tests/Structure/RoundSixStructureTest.php`** (the `.pot`'s header): the version read from
   package.json and from the plugin header instead of a written 0.1.0; both checks stay exact.
+
+## 2026-10-24 — The message centre names OmnaBase's third refusal, `team_member`
+
+Since OmnaBase's "members never customers" round (2026-10-23) the customer sync answers `409 team_member` for an address that belongs to a
+member of the workspace. The plugin knew only `address_taken` and `forgotten`, so the founder, testing his own page on omnalingo.com as the
+site's administrator, read "Your messages cannot be shown right now. Please try again later." (an outage that never clears). Chosen: a third
+refusal with its own sentence (the person is on the support team, the customers' messages are in the OmnaBase inbox) and a primary button to
+the workspace's inbox in the app (`<app>/<workspace slug>/inbox`, the slug from Connect); no portal call is made, as for the other two.

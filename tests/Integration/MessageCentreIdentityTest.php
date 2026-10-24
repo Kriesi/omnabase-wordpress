@@ -58,6 +58,23 @@ final class MessageCentreIdentityTest extends RoundFiveTestCase {
 	}
 
 	/**
+	 * What it checks: A member of the support team who opens the site's message centre is told why it is empty and where their work is.
+	 * Passes when: with the customer sync answering 409 `team_member`, the page says they are on the support team, links to the
+	 *   workspace's inbox in the OmnaBase app, makes no portal call and shows none of "409", "conflict" or "try again later".
+	 * Fails when: the site owner testing their own page reads "cannot be shown right now, try again later", which looks like an outage
+	 *   that never clears.
+	 */
+	public function test_a_team_member_is_sent_to_the_inbox(): void {
+		$this->refusals['sync'] = self::conflict( 'team_member', 'ada@example.com belongs to a team member of this workspace, so it cannot be a customer' );
+		$html = $this->view( $this->ada );
+		$text = self::text( $html );
+		$this->assertMatchesRegularExpression( '/support team/i', $text );
+		$this->assertMatchesRegularExpression( '#href="https?://[^"]+/kriesi/inbox"#', $html );
+		$this->assertSame( array(), $this->portalCalls() );
+		$this->assertDoesNotMatchRegularExpression( '/\b409\b|conflict|try again later|cannot be a customer/i', $text );
+	}
+
+	/**
 	 * What it checks: A customer who changes their email in WordPress has the new address sent to OmnaBase, and the message centre asks them to
 	 *   confirm again (Q5).
 	 * Passes when: a confirmed Ada who used the message centre changes her address in her profile; once the outbox has run, OmnaBase has

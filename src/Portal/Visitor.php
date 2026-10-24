@@ -18,13 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * The identity is always the current WordPress user's site id (`<user id>-<8 characters>`, round two), never anything from the request.
  * Each view first tells OmnaBase the user's current address and name (`PUT /customers/by-external/<site id>`) unless a stored fingerprint
  * says OmnaBase already holds exactly these and called the address confirmed: while OmnaBase says unconfirmed every view asks again (it
- * never tells the site when the link is opened). OmnaBase's two refusals come back as `address_taken` and `forgotten`, anything else that
- * went wrong as `unavailable`. A user OmnaBase accepted counts as known (their later address changes go through the outbox).
+ * never tells the site when the link is opened). OmnaBase's refusals come back as `address_taken`, `forgotten` and `team_member` (the address
+ * is a member of the workspace, never a customer), anything else that went wrong as `unavailable`. A user OmnaBase accepted counts as known (their later address changes go through the outbox).
  */
 final class Visitor {
 
 	public const ADDRESS_TAKEN = 'address_taken';
 	public const FORGOTTEN     = 'forgotten';
+	public const TEAM_MEMBER   = 'team_member';
 	public const UNAVAILABLE   = 'unavailable';
 
 	/**
@@ -84,7 +85,7 @@ final class Visitor {
 		}
 		$reason = 409 === $status ? (string) ( $answer['body']['error']['details']['reason'] ?? '' ) : '';
 		$this->forget( $user_id );
-		return self::state( $site_id, false, in_array( $reason, array( self::ADDRESS_TAKEN, self::FORGOTTEN ), true ) ? $reason : self::UNAVAILABLE );
+		return self::state( $site_id, false, in_array( $reason, array( self::ADDRESS_TAKEN, self::FORGOTTEN, self::TEAM_MEMBER ), true ) ? $reason : self::UNAVAILABLE );
 	}
 
 	/**

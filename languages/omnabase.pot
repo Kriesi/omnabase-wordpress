@@ -1728,3 +1728,11 @@ msgstr ""
 #: templates/messages.php:135
 msgid "New question"
 msgstr ""
+
+#: src/Portal/Notices.php:72
+msgid "You are on this site's support team, so this page has no conversations for you. Customers' messages are in the OmnaBase inbox."
+msgstr ""
+
+#: templates/messages.php:46
+msgid "Open the OmnaBase inbox"
+msgstr ""

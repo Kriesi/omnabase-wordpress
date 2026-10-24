@@ -7,6 +7,8 @@
 
 namespace OmnaBase\WordPress\Portal;
 
+use OmnaBase\WordPress\Api\ApiUrl;
+use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\PluginInfo;
 
 defined( 'ABSPATH' ) || exit;
@@ -31,9 +33,10 @@ final class Views {
 	 * @param array<string,mixed> $model What `Centre` made.
 	 */
 	public function centre( array $model ): string {
-		$model['notice']  = Notices::of( (string) $model['notice'], (string) $model['masked'] );
-		$model['refusal'] = Notices::refusal( (string) ( $model['problem'] ?? '' ) ); // shown by the "refused" and "down" views
-		$model['rows']    = array_map( array( self::class, 'worded' ), (array) ( $model['rows'] ?? array() ) );
+		$model['notice']   = Notices::of( (string) $model['notice'], (string) $model['masked'] );
+		$model['refusal']  = Notices::refusal( (string) ( $model['problem'] ?? '' ) ); // shown by the "refused" and "down" views
+		$model['inboxUrl'] = Visitor::TEAM_MEMBER === ( $model['problem'] ?? '' ) ? self::inboxUrl() : '';
+		$model['rows']     = array_map( array( self::class, 'worded' ), (array) ( $model['rows'] ?? array() ) );
 		if ( isset( $model['ticket'] ) ) {
 			$model['ticket']   = self::worded( $model['ticket'] );
 			$model['messages'] = array_map( static fn ( array $m ) => $m + array( 'when' => self::date( $m['createdAt'] ) ), $model['messages'] );
@@ -61,6 +64,12 @@ final class Views {
 			return '';
 		}
 		return '<p class="ob-wp ob-wp-messages-notice">' . esc_html( $words . ' ' . __( 'Only administrators see this note.', 'omnabase' ) ) . '</p>';
+	}
+
+	/** The workspace's inbox in the OmnaBase app, for a team member who opened the page; '' before Connect named the workspace. */
+	private static function inboxUrl(): string {
+		$slug = ( new ConnectionInfo() )->workspaceSlug();
+		return '' === $slug ? '' : ApiUrl::app() . '/' . rawurlencode( $slug ) . '/inbox';
 	}
 
 	/**

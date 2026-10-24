@@ -61,7 +61,7 @@ final class Notices {
 	}
 
 	/**
-	 * Instead of the tickets: OmnaBase refused the user (the brief's two sentences), or could not be asked.
+	 * Instead of the tickets: OmnaBase refused the user (the brief's two sentences, and the team member's), or could not be asked.
 	 *
 	 * @param string $problem One of `Visitor`'s constants.
 	 */
@@ -69,6 +69,7 @@ final class Notices {
 		return match ( $problem ) {
 			Visitor::ADDRESS_TAKEN => __( 'This email address belongs to another account in our support. Please write to us by email.', 'omnabase' ),
 			Visitor::FORGOTTEN     => __( 'Your support history was deleted at your request. Write to us to start again.', 'omnabase' ),
+			Visitor::TEAM_MEMBER   => __( 'You are on this site\'s support team, so this page has no conversations for you. Customers\' messages are in the OmnaBase inbox.', 'omnabase' ),
 			default                => __( 'Your messages cannot be shown right now. Please try again later.', 'omnabase' ),
 		};
 	}

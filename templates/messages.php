@@ -42,6 +42,9 @@ $omnabase_pill = static function ( array $ticket ): void {
 
 	<?php elseif ( 'refused' === $omnabase_view || 'down' === $omnabase_view ) : ?>
 		<p class="ob-wp-messages__refusal"><?php echo esc_html( $omnabase_messages['refusal'] ); ?></p>
+		<?php if ( '' !== ( $omnabase_messages['inboxUrl'] ?? '' ) ) : ?>
+			<p class="ob-wp-messages__back"><a class="ob-btn ob-btn--primary" href="<?php echo esc_url( $omnabase_messages['inboxUrl'] ); ?>"><?php esc_html_e( 'Open the OmnaBase inbox', 'omnabase' ); ?></a></p>
+		<?php endif; ?>
 
 	<?php elseif ( 'missing' === $omnabase_view ) : ?>
 		<p class="ob-wp-messages__refusal"><?php esc_html_e( 'This conversation was not found.', 'omnabase' ); ?></p>

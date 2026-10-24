@@ -5,6 +5,7 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.0 — unreleased =
 
+* Fixed: A member of your support team who opens the message centre page no longer reads "cannot be shown right now"; it says why the page is empty and links to the OmnaBase inbox.
 * Added: An Appearance tab under Settings › OmnaBase: the contact form and the message centre in light, dark or following the visitor's device, in OmnaBase's blue or your own colour, in your theme's font or OmnaBase's.
 * Changed: The contact form has a new look, the OmnaBase app's fields and buttons; an error shows under the field it belongs to, and after sending a card with your reference number takes the form's place, with "Send another".
 * Changed: The message centre has a new look, the OmnaBase app's inbox: each conversation with its status in words and its date, your messages told apart from the team's, the answer box as in the app.
