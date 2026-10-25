@@ -41,6 +41,19 @@ final class MessageCentreConfirmTest extends RoundFiveTestCase {
 	}
 
 	/**
+	 * What it checks: A customer who never wrote by email (nothing waits behind the link) is not asked to confirm their address.
+	 * Passes when: OmnaBase says no hidden conversations exist for unconfirmed Ada, and her page has no confirm button but still her list.
+	 * Fails when: every customer is asked to confirm their email although confirming would show nothing new, which reads like a needless
+	 *   chore or a broken page.
+	 */
+	public function test_no_prompt_when_nothing_waits_behind_the_link(): void {
+		$this->hiddenHistory = false;
+		$html = $this->view( $this->ada );
+		$this->assertFalse( self::hasPrompt( $html ), 'no prompt without hidden conversations' );
+		$this->assertMatchesRegularExpression( '/Your conversations/i', self::text( $html ) );
+	}
+
+	/**
 	 * What it checks: Pressing the button asks OmnaBase once to mail the link, and the customer reads where it went, with the address partly
 	 *   hidden.
 	 * Passes when: sending the prompt's form makes exactly one `POST /portal/confirm` naming Ada by her site id, redirects back to the message

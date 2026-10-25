@@ -61,7 +61,7 @@ final class Centre {
 	 *
 	 * @param int    $user_id The user.
 	 * @param string $site_id Their site id.
-	 * @param bool   $prompt  Whether the address still needs confirming.
+	 * @param bool   $prompt  Whether the address still needs confirming (the prompt shows only when OmnaBase also says confirming shows more).
 	 * @return array<string,mixed>
 	 */
 	private function listing( int $user_id, string $site_id, bool $prompt ): array {
@@ -76,7 +76,7 @@ final class Centre {
 		$next = self::cursor( (string) ( $answer['body']['next'] ?? '' ) );
 		return array(
 			'view'     => 'list',
-			'prompt'   => $prompt,
+			'prompt'   => $prompt && true === ( $answer['body']['hiddenConversations'] ?? null ), // only when confirming would show more
 			'rows'     => array_map( fn ( $row ) => $this->row( (array) $row ), array_values( array_filter( (array) ( $answer['body']['data'] ?? array() ), 'is_array' ) ) ),
 			'next'     => '' === $next ? '' : $this->page->url( array( 'omnabase_after' => $next ) ),
 			'first'    => '' === $after ? '' : $this->page->url(),

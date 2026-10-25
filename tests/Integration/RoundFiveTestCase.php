@@ -54,6 +54,8 @@ abstract class RoundFiveTestCase extends RoundFourTestCase {
 	protected array $refusals = array();
 	/** the most rows OmnaBase answers on one page of the list (its own limit is 100) */
 	protected int $pageSize = 50;
+	/** whether OmnaBase holds conversations an unconfirmed visitor's address would add (its list's `hiddenConversations`, 2026-10-25) */
+	protected bool $hiddenHistory = true;
 	protected int $nextNumber = 3001;
 	/** @var array<string,int> new tickets by Idempotency-Key (OmnaBase's replay) */
 	protected array $portalReplays = array();
@@ -66,6 +68,7 @@ abstract class RoundFiveTestCase extends RoundFourTestCase {
 		$this->tickets       = array();
 		$this->refusals      = array();
 		$this->pageSize      = 50;
+		$this->hiddenHistory = true;
 		$this->nextNumber    = 3001;
 		$this->portalReplays = array();
 		$this->picked        = $this->page( 'Support messages', '[omnabase_messages]' );
@@ -194,7 +197,7 @@ abstract class RoundFiveTestCase extends RoundFourTestCase {
 	private function portal( string $method, string $route, string $visitor, array $query, array $body, array $args ): array {
 		$mine = $this->tickets[ $visitor ] ?? array();
 		if ( 'GET' === $method && '/portal/tickets' === $route ) {
-			return $this->refusals['list'] ?? $this->listFor( $mine, $query );
+			return $this->refusals['list'] ?? $this->listFor( $mine, $query, $this->hiddenHistory && ! ( $this->visitors[ $visitor ]['confirmed'] ?? false ) );
 		}
 		if ( 'GET' === $method && preg_match( '#^/portal/tickets/(\d+)$#', $route, $m ) ) {
 			return $this->refusals['read'] ?? ( isset( $mine[ (int) $m[1] ] ) ? self::answer( 200, $mine[ (int) $m[1] ] ) : self::refusal( 404, 'not_found', 'No such ticket' ) );
@@ -211,8 +214,8 @@ abstract class RoundFiveTestCase extends RoundFourTestCase {
 		return self::refusal( 404, 'not_found', 'No such route' );
 	}
 
-	/** `GET /portal/tickets?after=&limit=`: strict query, newest change first, a page at a time. */
-	private function listFor( array $mine, array $query ): array {
+	/** `GET /portal/tickets?after=&limit=`: strict query, newest change first, a page at a time, and whether confirming would show more. */
+	private function listFor( array $mine, array $query, bool $hidden ): array {
 		$limit = (int) ( $query['limit'] ?? 50 );
 		if ( array_diff( array_keys( $query ), array( 'after', 'limit' ) ) || $limit < 1 || $limit > 100 ) {
 			return self::refusal( 400, 'bad_request', 'The request did not match its schema' );
@@ -223,7 +226,7 @@ abstract class RoundFiveTestCase extends RoundFourTestCase {
 		$size = min( $limit, $this->pageSize );
 		$page = array_slice( $rows, $from, $size );
 		$next = count( $rows ) > $from + $size ? base64_encode( (string) ( $from + $size ) ) : null; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
-		return self::answer( 200, array( 'data' => $page, 'next' => $next ) );
+		return self::answer( 200, array( 'data' => $page, 'next' => $next, 'hiddenConversations' => $hidden ) );
 	}
 
 	/** `POST /portal/tickets`: strict body; 201 with the new ticket; the same Idempotency-Key answers the same ticket. */
