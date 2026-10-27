@@ -5,6 +5,7 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.0 — unreleased =
 
+* Added: A screenshot your team pasted into a reply now shows in the message centre inside the reply, where they put it; forum replies say "[Picture: name]" in its place.
 * The plugin is now called "OmnaBase Connector" in the plugins list and on its settings page; nothing else changes, an installed copy updates in place.
 
 * Changed: The message centre asks a customer to confirm their email only when earlier conversations by email or in the forum wait behind it, and says so in plain words.

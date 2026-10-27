@@ -136,7 +136,7 @@ final class Centre {
 	 * @return array{kind:string,name:string,html:string,createdAt:string}
 	 */
 	private static function message( array $m ): array {
-		$html = MessageHtml::of( is_string( $m['bodyHtml'] ?? null ) ? $m['bodyHtml'] : null, (string) ( $m['bodyText'] ?? '' ) );
+		$html = MessageHtml::of( is_string( $m['bodyHtml'] ?? null ) ? $m['bodyHtml'] : null, (string) ( $m['bodyText'] ?? '' ), true ); // the pictures-in-the-text round: the portal's own pictures stay
 		return array( 'kind' => (string) $m['kind'], 'name' => (string) ( $m['name'] ?? '' ), 'html' => $html, 'createdAt' => (string) ( $m['createdAt'] ?? '' ) );
 	}
 

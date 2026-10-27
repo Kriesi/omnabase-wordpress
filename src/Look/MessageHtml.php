@@ -19,7 +19,12 @@ defined( 'ABSPATH' ) || exit;
  * - one pass over the links: an http(s) link opens a new tab without handing over the page, a mail link opens none, any other link keeps
  *   its words and loses its address;
  * - nothing with words left (a message that was only a picture): the text as paragraphs.
- * The one place in the plugin that names the allow-list; the template echoes through `wp_kses( …, MessageHtml::allowed() )`.
+ * The pictures-in-the-text round (OmnaBase, 2026-10-29): in the message centre (`$pictures` true) a team reply's own picture stays where the
+ * team put it, but only when its address starts with exactly OmnaBase's signed portal path (`ApiUrl::publicApi( '/portal/files/' )`)
+ * followed by one token; it keeps `src`, `alt` and a whole-number `width`, nothing else. Every other picture still goes: another host, another
+ * path, a look-alike host, a climbing path, an embedded picture. The forum's reply never takes a picture: a portal address is made for one
+ * signed-in visitor and must not reach a public page.
+ * The one place in the plugin that names the allow-list; the template echoes through `wp_kses( …, MessageHtml::allowed( true ) )`.
  */
 final class MessageHtml {
 
@@ -30,25 +35,37 @@ final class MessageHtml {
 	/**
 	 * The tags and attributes a message may keep, in `wp_kses`'s shape (no `h1`/`h2`: they arrive as `h3`).
 	 *
+	 * @param bool $pictures Whether the portal's own pictures may stay (the message centre, never the forum).
 	 * @return array<string,array<string,bool>>
 	 */
-	public static function allowed(): array {
+	public static function allowed( bool $pictures = false ): array {
 		$allowed       = array_fill_keys( self::BARE_TAGS, array() );
 		$allowed['a']  = array( 'href' => true, 'title' => true, 'target' => true, 'rel' => true );
 		$allowed['td'] = array( 'colspan' => true );
 		$allowed['th'] = array( 'colspan' => true );
+		if ( $pictures ) {
+			$allowed['img'] = array( 'src' => true, 'alt' => true, 'width' => true );
+		}
 		return $allowed;
 	}
 
 	/**
 	 * The HTML to print for a message.
 	 *
-	 * @param string|null $html OmnaBase's HTML (null or '' when there is none).
-	 * @param string      $text OmnaBase's plain text, the fallback.
+	 * @param string|null $html     OmnaBase's HTML (null or '' when there is none).
+	 * @param string      $text     OmnaBase's plain text, the fallback.
+	 * @param bool        $pictures Whether the portal's own pictures may stay (the message centre, never the forum).
 	 */
-	public static function of( ?string $html, string $text ): string {
-		$clean = self::fenceLinks( wp_kses( self::lowerHeadings( self::withoutBlocks( (string) $html ) ), self::allowed(), self::PROTOCOLS ) );
-		return self::hasWords( $clean ) ? $clean : wpautop( esc_html( $text ) );
+	public static function of( ?string $html, string $text, bool $pictures = false ): string {
+		$source = self::lowerHeadings( self::withoutBlocks( (string) $html ) );
+		if ( $pictures ) {
+			$source = PortalPictures::onlyPortal( $source );
+		}
+		$clean = self::fenceLinks( wp_kses( $source, self::allowed( $pictures ), self::PROTOCOLS ) );
+		if ( $pictures ) {
+			$clean = PortalPictures::settle( $clean );
+		}
+		return self::hasWords( $clean ) || ( $pictures && str_contains( $clean, '<img' ) ) ? $clean : wpautop( esc_html( $text ) );
 	}
 
 	/**

@@ -67,7 +67,7 @@ $omnabase_pill = static function ( array $ticket ): void {
 						<strong><?php echo esc_html( $omnabase_message['name'] ); ?></strong>
 						<span class="ob-wp-messages__when"><?php echo esc_html( $omnabase_message['when'] ); ?></span>
 					</p>
-					<div class="ob-wp-messages__body"><?php echo wp_kses( $omnabase_message['html'], \OmnaBase\WordPress\Look\MessageHtml::allowed() ); ?></div>
+					<div class="ob-wp-messages__body"><?php echo wp_kses( $omnabase_message['html'], \OmnaBase\WordPress\Look\MessageHtml::allowed( true ) ); ?></div>
 				</li>
 			<?php endforeach; ?>
 		</ol>

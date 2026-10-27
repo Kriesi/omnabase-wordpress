@@ -1176,3 +1176,24 @@ display shape with no pictures) is in OmnaBase's DECISIONS of the same day. No v
   message is the web icon alone with "Public on <host>" / "Via <host>" as its accessible name, so the public topic's check reads the name
   instead of the text, and the hidden topic's "no public mark" check first waits for the "Via <host>" mark and then counts names (the old
   class count would have passed on any page). No `.pot` change: no translated sentence was added or changed.
+
+## 2026-10-29 — The pictures-in-the-text round: the message centre shows the team's own portal pictures, the forum none
+
+OmnaBase's pictures-in-the-text round (OmnaBase's `docs/briefs/pictures-in-the-text-round.md`, rule 4, and its red team's findings 7 and 8):
+a screenshot the team pasted into a reply reaches the message centre as `<img src="<API>/api/public/v1/portal/files/<token>" alt width>`, a
+signed address OmnaBase made for this visitor and this picture (a web address carrying its own proof, valid about a day and checked again by
+OmnaBase at every load). The visitor's browser loads it from OmnaBase directly: no new WordPress route, no bytes through the site's server,
+none of the visitor's minute allowance spent.
+
+- **The fence**: `MessageHtml::of( $html, $text, $pictures )` and `MessageHtml::allowed( $pictures )`; the message centre passes `true`, the
+  forum poster nothing. With pictures on, `PortalPictures::onlyPortal()` removes, before `wp_kses`, every `img` whose `src` is not exactly
+  `ApiUrl::publicApi( '/portal/files/' )` followed by one token of letters, digits and `._~-` (so another host, another path on OmnaBase's
+  host, a look-alike host such as `<host>.evil.example`, a climbing `..` and a `data:` picture all leave); `wp_kses` then keeps `src`, `alt`
+  and `width` only (no handler, style or class); `PortalPictures::settle()` checks the address once more and drops a `width` that is not a
+  whole number of 1 to 4 digits. A message whose only content is such a picture shows it (it is not "without words").
+- **The forum** never shows a picture, not even a portal one: the address is made for one signed-in visitor and a forum is public.
+  OmnaBase's webhook says "[Picture: name]" there anyway.
+- **The look**: `.ob-wp .ob-wp-messages__body img` is a block, at most the bubble's width, its height following (`styles/form.css`, rebuilt
+  into `assets/form.css`).
+- **Not this round**: a customer's own mailed pictures (OmnaBase still sends none to the message centre); no version change (0.2.0 stays
+  unreleased).

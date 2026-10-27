@@ -661,6 +661,14 @@
   overflow-wrap: anywhere;
 }
 
+/* the pictures-in-the-text round (OmnaBase, 2026-10-29): a team reply's pasted screenshot stands in the text, never wider than the bubble */
+.ob-wp .ob-wp-messages__body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 var(--ob-space-3);
+}
+
 .ob-wp .ob-wp-messages__body > :first-child {
   margin-top: 0;
 }
