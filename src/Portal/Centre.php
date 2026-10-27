@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Portal;
 
+use OmnaBase\WordPress\Look\MessageHtml;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -129,17 +130,14 @@ final class Centre {
 	}
 
 	/**
-	 * A message as the page shows it: its words as text (an HTML-only message loses its markup).
+	 * A message as the page shows it: its HTML through the plugin's fence (the plugin's message-centre HTML round), its text when it has none.
 	 *
 	 * @param array<string,mixed> $m OmnaBase's message.
-	 * @return array{kind:string,name:string,text:string,createdAt:string}
+	 * @return array{kind:string,name:string,html:string,createdAt:string}
 	 */
 	private static function message( array $m ): array {
-		$text = (string) ( $m['bodyText'] ?? '' );
-		if ( '' === trim( $text ) && is_string( $m['bodyHtml'] ?? null ) ) {
-			$text = wp_strip_all_tags( $m['bodyHtml'] );
-		}
-		return array( 'kind' => (string) $m['kind'], 'name' => (string) ( $m['name'] ?? '' ), 'text' => $text, 'createdAt' => (string) ( $m['createdAt'] ?? '' ) );
+		$html = MessageHtml::of( is_string( $m['bodyHtml'] ?? null ) ? $m['bodyHtml'] : null, (string) ( $m['bodyText'] ?? '' ) );
+		return array( 'kind' => (string) $m['kind'], 'name' => (string) ( $m['name'] ?? '' ), 'html' => $html, 'createdAt' => (string) ( $m['createdAt'] ?? '' ) );
 	}
 
 	/**

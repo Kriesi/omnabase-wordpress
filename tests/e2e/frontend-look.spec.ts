@@ -1,4 +1,12 @@
 /**
+ * THE PLUGIN'S MESSAGE-CENTRE HTML ROUND (2026-10-28), THE RED TEAM: ADJUSTED, NOT WEAKENED. What changed and why: the message centre now prints
+ * a message's HTML (OmnaBase `docs/briefs/plugin-message-centre-html-round.md`: "`frontend-look.spec.ts`'s thread pictures include such a
+ * reply", a reply with a link and a list). The team's answer this file sends is now written with the composer's HTML (its sentence, a list
+ * of two steps and a link), so the thread pictures and the phone layout check include a shaped reply. Every check is unchanged: the answer's
+ * sentence is still found by its words, read for contrast and kept on the surface; the shapes themselves are checked by messages-html.spec.ts.
+ * Found at the same run: the message-centre flow had failed since 253e596 (the confirm prompt now shows only when earlier conversations wait,
+ * and Lia had none), so it stopped before the thread; Lia now gets an earlier mail conversation first, the prompt's checks unchanged.
+ *
  * THE PLUGIN'S FORMS ROUND (2026-10-25), THE BUILDER: THE CLASSIC FORM'S FLOWS DELETED, AS THE RED TEAM'S REPORT LISTS THEM. What changed and
  * why: the Classic contact form left with the round (OmnaBase `docs/briefs/plugin-forms-round.md`); a form built in OmnaBase and drawn by its
  * embed replaces it, and form-look.spec.ts checks that form's look (light, dark, the device's setting, errors, the owner's colour, "Theme
@@ -53,6 +61,7 @@ const run = Date.now().toString(36);
 const LIA = { login: `lia${run}`, email: `lia.${run}@example.com`, name: "Lia Look" };
 const SUBJECT = `Looks ${run}`;
 const ANSWER = `Team answer ${run}: try the new version.`;
+const ANSWER_HTML = `<p>${ANSWER}</p><ul><li>Clear the cache</li><li>Reload the page</li></ul><p>More in <a href="https://example.com/docs">the docs</a>.</p>`; // 2026-10-28: a shaped reply for the pictures
 
 type Theme = "light" | "dark";
 type Rgb = [number, number, number];
@@ -288,6 +297,16 @@ test.beforeAll(async ({ browser }) => {
   const me = await publicApi<{ projects: { id: string }[] }>(key, "GET", "/me");
   enfold = me.body.projects[0]!;
   await founderSignsIn(browser);
+  // 2026-10-28 (the message-centre HTML round's red team): since 253e596 the confirm prompt shows only when OmnaBase says earlier
+  // conversations wait behind it, and Lia had none, so this flow stopped at "the kit's confirm card" before any thread picture was taken.
+  // An earlier mail conversation of Lia's (as messages.spec.ts makes Mia's) brings the prompt back; every check stays as it was.
+  const ws = (await (await founderContext.request.get(W)).json()) as { projects: { name: string; mailLocal?: string }[] };
+  const mailLocal = ws.projects.find((x) => x.name === "Enfold")?.mailLocal ?? "";
+  expect(mailLocal, "Enfold's mail address").not.toBe("");
+  const to = `${mailLocal}@kriesi.omnabase.com`;
+  const raw = [`From: ${LIA.name} <${LIA.email}>`, `To: ${to}`, `Subject: Earlier ${run}`, `Date: ${new Date().toUTCString()}`, `Message-ID: <fl-${run}@example.com>`, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "", "An earlier question, by mail.", ""].join("\r\n");
+  const PASS = { spam: "PASS", virus: "PASS", spf: "PASS", dkim: "PASS", dmarc: "PASS" };
+  expect((await founderContext.request.post(`${OMNABASE_E2E}/api/test/inbound`, { data: { raw, recipients: [to], verdicts: PASS } })).ok(), "Lia's earlier mail arrives").toBe(true);
   centreId = php(`echo wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Messages look ${run}', 'post_content' => '[omnabase_messages]' ) );`);
   php(`update_option( 'omnabase_portal', array( 'page' => ${centreId} ) );`);
   centreUrl = toSite(php(`echo get_permalink( ${centreId} );`));
@@ -310,7 +329,7 @@ test.beforeAll(async ({ browser }) => {
   expect(ticket, "Lia's question is a ticket").toBeGreaterThan(0);
   await omnabaseHook("/api/test/limits", { workspace: "kriesi", flag: { mail_out: true } });
   try {
-    expect((await founderContext.request.post(`${W}/tickets/${ticket}/messages`, { data: { kind: "reply", body: ANSWER } })).ok(), "the team's answer").toBe(true);
+    expect((await founderContext.request.post(`${W}/tickets/${ticket}/messages`, { data: { kind: "reply", body: ANSWER, html: ANSWER_HTML } })).ok(), "the team's answer").toBe(true);
     await omnabaseHook("/api/test/tick", { job: "sender", now: new Date(Date.now() + 15_000).toISOString() });
   } finally {
     await omnabaseHook("/api/test/limits", { workspace: "kriesi", flag: { mail_out: false } });

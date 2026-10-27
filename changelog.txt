@@ -18,6 +18,8 @@ section is never changed again. At release the top section is copied into readme
 * Changed: The message centre has a new look, the OmnaBase app's inbox: each conversation with its status in words and its date, your messages told apart from the team's, the answer box as in the app.
 * Changed: The "Theme styles only" switch moved to the Appearance tab; it now also keeps OmnaBase's font away.
 * Fixed: Error messages, notices and help text on the form and the message centre are easier to read, and keyboard users see a clear focus ring in both light and dark.
+* Changed: The message centre shows each message as your team wrote it, with paragraphs, bold words, lists, tables, quotes, code and clickable links, never pictures or scripts.
+* Changed: Team answers posted on the forum are cleaned more tightly: pictures, inline styles and class names from the message no longer reach the forum post.
 
 = 0.1.0 — 2026-10-13 =
 

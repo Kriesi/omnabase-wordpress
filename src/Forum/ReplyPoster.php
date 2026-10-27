@@ -8,6 +8,7 @@
 namespace OmnaBase\WordPress\Forum;
 
 use OmnaBase\WordPress\Connect\ConnectionInfo;
+use OmnaBase\WordPress\Look\MessageHtml;
 use OmnaBase\WordPress\Rest\Refusal;
 
 defined( 'ABSPATH' ) || exit;
@@ -17,8 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * site reference is one of this site's topics (`topic-<id>`). Anything else is answered 200 and posts nothing (a customer's message, a
  * ticket that is not one of our topics, a message the site itself sent). The reply goes through `bbp_insert_reply` (so the topic's
  * freshness, reply count and last reply follow, as bbPress's own form does) by the support user, always `publish` (on a closed topic
- * bbPress would otherwise store it "closed" and hide it), its HTML through `wp_kses_post`, the agent's name in the closing line, marked with
- * OmnaBase's message id: one message is one reply, however often it is delivered. The receiver says 2xx only once the reply exists:
+ * bbPress would otherwise store it "closed" and hide it), its HTML through the plugin's fence (`MessageHtml`), the agent's name in the
+ * closing line, marked with OmnaBase's message id: one message is one reply, however often it is delivered. The receiver says 2xx only once the reply exists:
  * - the topic trashed, deleted or unpublished → 409 (OmnaBase retries, then mails; never the answer that switches the address off);
  * - no support user chosen → 503 (OmnaBase retries while the administrator picks one);
  * - WordPress refused to save the reply → 500.
@@ -104,14 +105,14 @@ final class ReplyPoster {
 	}
 
 	/**
-	 * The reply's HTML: OmnaBase's HTML cleaned by WordPress (or its text), then the closing line.
+	 * The reply's HTML: OmnaBase's HTML through the plugin's fence (no pictures, inline styles or classes; its text when it has none), then
+	 * the closing line.
 	 *
 	 * @param array<string,mixed> $message   OmnaBase's message.
 	 * @param string              $workspace The workspace's name.
 	 */
 	private function content( array $message, string $workspace ): string {
-		$html  = is_string( $message['bodyHtml'] ?? null ) ? trim( $message['bodyHtml'] ) : '';
-		$body  = '' !== $html ? wp_kses_post( $html ) : wpautop( esc_html( (string) ( $message['bodyText'] ?? '' ) ) );
+		$body  = MessageHtml::of( is_string( $message['bodyHtml'] ?? null ) ? $message['bodyHtml'] : null, (string) ( $message['bodyText'] ?? '' ) );
 		$agent = is_string( $message['author']['name'] ?? null ) && '' !== trim( $message['author']['name'] ) ? trim( $message['author']['name'] ) : __( 'the team', 'omnabase' );
 		$line  = strtr( $this->settings->closingLine(), array( '{agent}' => $agent, '{workspace}' => $workspace ) );
 		return $body . "\n\n<p>" . esc_html( $line ) . '</p>';

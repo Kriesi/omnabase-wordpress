@@ -29,6 +29,7 @@
   --ob-text-xs: 13px;
   --ob-text-sm: 14px;
   --ob-text-base: 15px;
+  --ob-text-md: 17px;
   --ob-text-lg: 18px;
   --ob-radius-sm: 6px;
   --ob-radius-md: 6px;
@@ -614,6 +615,7 @@
 }
 
 .ob-wp .ob-wp-messages__message {
+  min-width: 0; /* a wide table scrolls inside the box instead of widening the thread */
   margin: 0;
   padding: var(--ob-space-3) var(--ob-space-4);
   border: 1px solid var(--ob-border);
@@ -645,10 +647,153 @@
   font-weight: 600;
 }
 
+/* a message's own HTML (the message-centre HTML round, 2026-10-28): the plugin's fence prints it, so these rules reach every tag through
+   the box (the fence adds no class), under the wrapper so a theme's quote marks, full-width tables and missing list markers stay out. A wide
+   table or code block scrolls inside the box; the box's few pixels of inline padding, taken back by its margin, keep a link's focus ring
+   from being clipped at its left edge. Links keep the wrapper's rule: the text colour, underlined (the contrast rule of 2026-10-22). */
 .ob-wp .ob-wp-messages__body {
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: calc(-1 * var(--ob-space-1));
+  padding-inline: var(--ob-space-1);
+  overflow-x: auto;
   color: var(--ob-text);
-  white-space: pre-line;
   overflow-wrap: anywhere;
+}
+
+.ob-wp .ob-wp-messages__body > :first-child {
+  margin-top: 0;
+}
+
+.ob-wp .ob-wp-messages__body > :last-child {
+  margin-bottom: 0;
+}
+
+.ob-wp .ob-wp-messages__body p,
+.ob-wp .ob-wp-messages__body ul,
+.ob-wp .ob-wp-messages__body ol,
+.ob-wp .ob-wp-messages__body blockquote,
+.ob-wp .ob-wp-messages__body pre,
+.ob-wp .ob-wp-messages__body table,
+.ob-wp .ob-wp-messages__body hr {
+  margin: 0 0 var(--ob-space-3);
+}
+
+.ob-wp .ob-wp-messages__body ul,
+.ob-wp .ob-wp-messages__body ol {
+  padding-inline-start: var(--ob-space-6);
+  list-style-position: outside;
+}
+
+.ob-wp .ob-wp-messages__body ul {
+  list-style-type: disc;
+}
+
+.ob-wp .ob-wp-messages__body ol {
+  list-style-type: decimal;
+}
+
+.ob-wp .ob-wp-messages__body li {
+  margin: 0 0 var(--ob-space-1);
+  padding: 0;
+}
+
+.ob-wp .ob-wp-messages__body li > ul,
+.ob-wp .ob-wp-messages__body li > ol {
+  margin: var(--ob-space-1) 0 0;
+}
+
+.ob-wp .ob-wp-messages__body blockquote {
+  padding: 0 0 0 var(--ob-space-3);
+  border: 0;
+  border-left: 3px solid var(--ob-border-strong);
+  background: transparent;
+  color: var(--ob-text-secondary);
+  font-size: inherit;
+  font-style: normal;
+  font-weight: inherit;
+  quotes: none;
+}
+
+.ob-wp .ob-wp-messages__body blockquote::before,
+.ob-wp .ob-wp-messages__body blockquote::after {
+  content: none;
+}
+
+.ob-wp .ob-wp-messages__body code,
+.ob-wp .ob-wp-messages__body pre {
+  border-radius: var(--ob-radius-sm);
+  background: var(--ob-bg-muted);
+  color: var(--ob-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+.ob-wp .ob-wp-messages__body code {
+  padding: 0.1em 0.3em;
+}
+
+.ob-wp .ob-wp-messages__body pre {
+  padding: var(--ob-space-2) var(--ob-space-3);
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.ob-wp .ob-wp-messages__body pre code {
+  padding: 0;
+  background: transparent;
+  font-size: inherit;
+}
+
+.ob-wp .ob-wp-messages__body table {
+  width: auto;
+  border: 0;
+  border-collapse: collapse;
+  font-size: var(--ob-text-sm);
+}
+
+.ob-wp .ob-wp-messages__body th,
+.ob-wp .ob-wp-messages__body td {
+  padding: var(--ob-space-1) var(--ob-space-2);
+  border: 1px solid var(--ob-border);
+  background: transparent;
+  color: var(--ob-text);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: normal;
+}
+
+.ob-wp .ob-wp-messages__body th {
+  background: var(--ob-bg-muted);
+  font-weight: 600;
+}
+
+.ob-wp .ob-wp-messages__body hr {
+  height: 0;
+  border: 0;
+  border-top: 1px solid var(--ob-border);
+  background: transparent;
+}
+
+.ob-wp .ob-wp-messages__body h3,
+.ob-wp .ob-wp-messages__body h4 {
+  margin: var(--ob-space-4) 0 var(--ob-space-2);
+  padding: 0;
+  color: var(--ob-text);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.ob-wp .ob-wp-messages__body h3 {
+  font-size: var(--ob-text-md);
+}
+
+.ob-wp .ob-wp-messages__body h4 {
+  font-size: var(--ob-text-base);
 }
 
 /* the reply box: the app's composer, the box and its foot with the send button */

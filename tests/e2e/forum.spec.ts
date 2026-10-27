@@ -228,7 +228,10 @@ test("a visitor's topic becomes a public ticket with the customer facts card bes
   expect(read.status, JSON.stringify(read.body)).toBe(200);
   expect(read.body).toMatchObject({ public: true, replyVia: "site", external: { id: `topic-${topicId}` } });
   await founderPage.goto(`${OMNABASE_APP}/kriesi/inbox/all-open/${ticket}?info=1`);
-  await expect(founderPage.locator(".ob-site-mark").first()).toContainText(`Public on ${SITE_HOST}`); // adjusted 2026-10-25, not weakened: the app's ticket page now holds the same site pill twice, both "Public on <host>", so the strict locator found two
+  // adjusted 2026-10-28, not weakened (the plugin message-centre HTML round's builder): since the app's ticket style clean-up (2026-10-26/27)
+  // the site's mark on the first message is the web icon alone, named "Public on <host>" for screen readers and in its tooltip, so the words
+  // are read from its name instead of its text; the 2026-10-25 note (the pill shown twice) is why the first match is taken
+  await expect(founderPage.locator(".ob-site-mark, .ob-site-mark--icon").first()).toHaveAccessibleName(`Public on ${SITE_HOST}`);
   await expect(founderPage.locator(".ob-site-data")).toHaveCount(1, { timeout: 15_000 }); // adjusted 2026-10-22, not weakened: the app shows the facts to the team on a public topic since its ruling of 2026-10-11 (DECISIONS, M14 round five)
 });
 
@@ -309,7 +312,10 @@ test("a hidden forum's topic creates a non-public ticket", async () => {
   const read = await readTicket(n);
   expect(read.body.public).toBe(false);
   await founderPage.goto(`${OMNABASE_APP}/kriesi/inbox/all-open/${n}`);
-  await expect(founderPage.locator(".ob-site-mark")).toHaveCount(0);
+  // adjusted 2026-10-28, not weakened (as above): the icon-only mark carries the words in its name; the page waits for the site's mark
+  // ("Via <host>") first, so a page that has not drawn yet cannot pass for one without the public mark
+  await expect(founderPage.locator(".ob-site-mark, .ob-site-mark--icon").first()).toHaveAccessibleName(`Via ${SITE_HOST}`);
+  await expect(founderPage.getByLabel(`Public on ${SITE_HOST}`)).toHaveCount(0);
 });
 
 /**

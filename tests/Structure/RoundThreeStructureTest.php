@@ -1,5 +1,12 @@
 <?php
 /**
+ * THE PLUGIN'S MESSAGE-CENTRE HTML ROUND (2026-10-28), THE RED TEAM: ADJUSTED, NOT WEAKENED (the forum hooks test's cleaner only). What
+ * changed and why: the brief (OmnaBase `docs/briefs/plugin-message-centre-html-round.md`, rule 2) moves the forum reply's cleaning from
+ * WordPress's broad `wp_kses_post` (which keeps pictures, inline styles and classes) to the plugin's own allow-list in one helper
+ * (`MessageHtml`, the brief's suggested name), the same the message centre prints through; its rule names this pin. The test still asks
+ * that answers go through bbPress (`bbp_insert_reply`) and through a cleaner; the cleaner it asks for is now the plugin's helper, and
+ * `wp_kses_post` must no longer be the poster's. Every hook it asks for is unchanged.
+ *
  * THE FRONT-END DESIGN ROUND (2026-10-22), THE RED TEAM: ADJUSTED, NOT WEAKENED (the release notes' reading only). What changed and why:
  * 0.1.0 was released and dated on 2026-10-13 (commit "Release 0.1.0 (beta)"), and the founder's changelog rule freezes a dated section: new
  * work goes into a new "unreleased" section above it (this round's `FrontendDesignStructureTest` asks for one). This file's release-notes
@@ -56,11 +63,13 @@ final class RoundThreeStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The forum code listens at every moment bbPress publishes a post (review S3), and posts answers through bbPress and
-	 *   WordPress's HTML cleaner.
+	 * What it checks: The forum code listens at every moment bbPress publishes a post (review S3), and posts answers through bbPress and the
+	 *   plugin's own HTML cleaner (adjusted 2026-10-28 for the message-centre HTML round: the cleaner was WordPress's `wp_kses_post`).
 	 * Passes when: the code under src/Forum/ registers each of bbp_new_topic, bbp_new_reply, bbp_approved_topic, bbp_approved_reply,
-	 *   bbp_unspammed_topic, bbp_unspammed_reply and transition_post_status, calls bbp_insert_reply and wp_kses_post.
-	 * Fails when: topics made in wp-admin, approved or rescued from spam are silently missed, or a reply's HTML reaches the forum uncleaned.
+	 *   bbp_unspammed_topic, bbp_unspammed_reply and transition_post_status, calls bbp_insert_reply and the plugin's message cleaner
+	 *   (`MessageHtml::`), and no longer calls wp_kses_post.
+	 * Fails when: topics made in wp-admin, approved or rescued from spam are silently missed, or a reply's HTML reaches the forum uncleaned or
+	 *   cleaned by WordPress's broad cleaner, which lets pictures and inline styles through.
 	 */
 	public function test_the_forum_hooks_are_named_and_answers_go_through_bbpress(): void {
 		$code = $this->forumCode();
@@ -68,7 +77,8 @@ final class RoundThreeStructureTest extends TestCase {
 			$this->assertMatchesRegularExpression( '/add_action\s*\(\s*[\'"]' . preg_quote( $hook, '/' ) . '[\'"]/', $code, $hook );
 		}
 		$this->assertMatchesRegularExpression( '/\bbbp_insert_reply\s*\(/', $code );
-		$this->assertMatchesRegularExpression( '/\bwp_kses_post\s*\(/', $code );
+		$this->assertMatchesRegularExpression( '/\bMessageHtml::/', $code, 'the plugin\'s own cleaner (adjusted 2026-10-28)' );
+		$this->assertDoesNotMatchRegularExpression( '/\bwp_kses_post\s*\(/', $code, 'no longer WordPress\'s broad cleaner (adjusted 2026-10-28)' );
 	}
 
 	/**

@@ -1136,3 +1136,43 @@ had already retired the API it sent to.
   is the sign-in link while the seed's Enfold has no default form); the Chromium flag for Local Network Access went into
   `playwright.config.ts`. The two structure checks that pinned the name "OmnaBase" follow
   the founder's rename to "OmnaBase Connector" (the `.pot` header's name now read from the plugin header).
+
+## 2026-10-28 — The message-centre HTML round: the thread and the forum post print a message's HTML through the plugin's fence
+
+Brief: OmnaBase's `docs/briefs/plugin-message-centre-html-round.md` (its last section "After the red team's review", final); reports:
+OmnaBase's `docs/reviews/plugin-message-centre-html-round-{red-team-report,builder-report}.md`. The app side (the portal's `bodyHtml` in the
+display shape with no pictures) is in OmnaBase's DECISIONS of the same day. No version change (0.2.0 stays unreleased).
+
+- **One helper, a fence, not a second display rule** (`Look\MessageHtml`): `of( $html, $text )` removes script and style blocks with their
+  content (an unclosed one to the end), prints `h1`/`h2` as `h3` (nothing inside a message outranks the thread's subject, an `h2`; question
+  4), cleans with `wp_kses` and its allow-list under the protocols http, https and mailto, then one pass with `WP_HTML_Tag_Processor`: an
+  http(s) link gets `target="_blank"` and `rel="noopener noreferrer"` whatever was sent, a mailto link loses both, any other link loses its
+  address and keeps its words. When nothing with words is left (no HTML, or a message that was only pictures) it answers the text as
+  paragraphs (`wpautop` of the escaped text). `allowed()` is the list: p, br, b, strong, i, em, u, s, a (href, title, target, rel), ul, ol,
+  li, blockquote, pre, code, h3, h4, table, thead, tbody, tr, td and th (colspan), hr, span, div; no class, id or style anywhere. It is the
+  only file in `src/` that names the list (a structure guard). No quoted-history logic and no picture handling beyond "none": OmnaBase's
+  rule decides those.
+- **The thread**: `Centre::message()` carries `html` (the helper's result) instead of `text`; the template echoes it through
+  `wp_kses( $omnabase_message['html'], MessageHtml::allowed() )` (every echo begins with an escaping function; cleaning twice changes
+  nothing).
+- **The forum poster** uses the same helper instead of `wp_kses_post`: a team answer on a public forum loses pictures, inline styles and
+  classes; the closing line stays last (question 5). The webhook carries OmnaBase's stored HTML, so this fence is the only cleaning before
+  bbPress's and WordPress's own filters.
+- **The stylesheet**: `.ob-wp-messages__body` lost `white-space: pre-line` (the HTML carries its breaks) and every message tag is reached
+  through `.ob-wp .ob-wp-messages__body <tag>` (the fence adds no class): paragraphs spaced, none after the last; lists with their markers
+  set back (the thread's own `ol` has none, and themes remove them) and inline padding; quotes as a left rule in the strong border colour
+  with a theme's `::before`/`::after` quote marks reset; code and pre on the muted background in the system's monospace family (the kit has
+  no monospace token; a typeface list, not a colour), pre scrolling sideways; tables `width: auto`, collapsed borders, cells padded and not
+  broken mid-word; rules; h3 and h4 at the kit's md and base sizes. The box scrolls sideways for a wide table, with 4 px of inline padding
+  taken back by its margin so a link's focus ring is not clipped; the message `li` got `min-width: 0` so the thread's grid does not widen
+  with the table. Links keep the wrapper's rule, the text colour underlined (the 2026-10-22 contrast rule; question 3), not the accent.
+- **"Theme styles only"**: the plugin's stylesheet is absent, so the theme styles the message's HTML (its quote marks, table widths, list
+  markers). The owner's choice; nothing done about it.
+- **Not this round** (questions 1 and 2): no signature and no files in the message centre, not even a "this message had files" line.
+- **Older rows**: messages typed into the message centre before OmnaBase's df1552dc were stored as HTML without links, so their addresses
+  stay unlinked; WordPress's own `:)` character swap stays (development stage).
+- **Tests**: the red team's four new files moved in, its two adjusted files kept (`RoundThreeStructureTest`, `frontend-look.spec.ts`). The
+  builder adjusted `forum.spec.ts` twice, not weakened: since the app's ticket style clean-up (2026-10-26/27) a site's mark on the first
+  message is the web icon alone with "Public on <host>" / "Via <host>" as its accessible name, so the public topic's check reads the name
+  instead of the text, and the hidden topic's "no public mark" check first waits for the "Via <host>" mark and then counts names (the old
+  class count would have passed on any page). No `.pot` change: no translated sentence was added or changed.
