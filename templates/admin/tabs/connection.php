@@ -4,7 +4,7 @@
  *
  * @package OmnaBase
  *
- * @var array{setup:array,connection:array<string,mixed>,health:array<string,mixed>,healthNotes:array{factsAt:int,cronOff:bool}} $view
+ * @var array{setup:array,connection:array<string,mixed>,health:array<string,mixed>,healthNotes:array{factsAt:int,cronOff:bool,cronLate:bool}} $view
  */
 
 defined( 'ABSPATH' ) || exit;

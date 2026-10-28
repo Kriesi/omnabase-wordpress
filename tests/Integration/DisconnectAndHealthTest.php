@@ -165,6 +165,55 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 	}
 
 	/**
+	 * What it checks: When Cloudflare's security rules stop OmnaBase's call to the site, "Check connection" says so and names the addresses
+	 *   to let through, instead of a bare "the site answered 403" (kriesi.at, 2026-10-28).
+	 * Passes when: with OmnaBase answering that Cloudflare challenged the ping, the OmnaBase → site row is not working and its text names
+	 *   Cloudflare, a skip rule and this site's own path for the plugin's addresses, and no "403".
+	 * Fails when: a site owner behind Cloudflare reads only a status number and looks for the fault in WordPress.
+	 */
+	public function test_a_cloudflare_challenge_is_named_with_the_path_to_let_through(): void {
+		$this->connectFully();
+		$this->asAdminOnTheScreen( $this->admin );
+		$this->answers = array(
+			'GET /api/public/v1/me'       => self::answer( 200, self::meAnswer() ),
+			'POST /api/public/v1/me/ping' => self::answer( 200, array( 'ok' => false, 'status' => 403, 'delivery' => 'd1', 'message' => 'Cloudflare challenged the call', 'firewall' => 'cloudflare' ) ),
+		);
+		$location = $this->adminPost( 'omnabase_check' );
+		if ( null !== $location ) {
+			$this->followQuery( $location );
+		}
+		$this->asAdminOnTheScreen( $this->admin );
+		$html = $this->renderScreen();
+		$this->assertNotSame( 'ok', self::attr( $html, '//*[@data-check="ping"]', 'data-result' ) );
+		$row  = self::textAt( $html, '//*[@data-check="ping"]' );
+		$path = (string) wp_parse_url( rest_url( 'omnabase/v1/' ), PHP_URL_PATH );
+		$this->assertStringContainsString( 'Cloudflare', $row );
+		$this->assertStringContainsString( 'skip rule', $row );
+		$this->assertStringContainsString( $path, $row );
+		$this->assertStringNotContainsString( '403', $row );
+	}
+
+	/**
+	 * What it checks: The "timer" warning shows only when the plugin's scheduled sending is actually overdue, not merely because the host
+	 *   switched WordPress's own timer off (most such hosts run it from the server instead).
+	 * Passes when: with the sending run due now, the health lines report nothing late; with its next run set twenty minutes in the past, they
+	 *   report it late.
+	 * Fails when: owners whose host runs the timer properly are told to call their host (kriesi.at, 2026-10-28), or a stuck timer that leaves
+	 *   messages waiting goes unmentioned.
+	 */
+	public function test_the_timer_warning_only_when_the_sending_is_overdue(): void {
+		$notes = new \OmnaBase\WordPress\Admin\HealthNotes( new \OmnaBase\WordPress\Facts\FactsLog() );
+		wp_clear_scheduled_hook( 'omnabase_outbox' );
+		wp_clear_scheduled_hook( 'omnabase_outbox_now' );
+		wp_schedule_event( time(), 'omnabase_every_minute', 'omnabase_outbox' );
+		$this->assertFalse( $notes->build()['cronLate'], 'due now: not late' );
+		wp_clear_scheduled_hook( 'omnabase_outbox' );
+		wp_schedule_event( time() - 1200, 'omnabase_every_minute', 'omnabase_outbox' );
+		$this->assertTrue( $notes->build()['cronLate'], 'twenty minutes overdue: late' );
+		wp_clear_scheduled_hook( 'omnabase_outbox' );
+	}
+
+	/**
 	 * What it checks: When OmnaBase refuses the key, "Check connection" says so, as the fourth state "Disconnected in OmnaBase".
 	 * Passes when: with `GET /me` answering 401, the Connection tab's connection box is in the `revoked` state and reads "Disconnected in
 	 *   OmnaBase"; a "me" row, if one is still printed, is not "ok".
@@ -210,5 +259,15 @@ final class DisconnectAndHealthTest extends RoundOneTestCase {
 
 		$this->restoreVaultKey();
 		$this->assertStringNotContainsString( 'OmnaBase: reconnect needed', $this->noticesOnTheDashboardFor( $this->admin ), 'the key back: no warning' );
+	}
+
+	/** The text of the first element matching an XPath query in some HTML ('' when none). */
+	private static function textAt( string $html, string $xpath ): string {
+		$doc = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$doc->loadHTML( '<?xml encoding="utf-8"?><div>' . $html . '</div>' );
+		libxml_clear_errors();
+		$node = ( new \DOMXPath( $doc ) )->query( $xpath )->item( 0 );
+		return $node ? trim( (string) $node->textContent ) : '';
 	}
 }

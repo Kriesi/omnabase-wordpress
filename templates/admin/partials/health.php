@@ -6,7 +6,7 @@
  * @package OmnaBase
  *
  * @var array{state:string,scopes:string[],keyHint:string,liveError:string} $omnabase_connection
- * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,factsAt:int,cronOff:bool} $omnabase_health
+ * @var array{checked:bool,at:int,results:array<string,array{result:string,message:string}>,waiting:bool,factsAt:int,cronOff:bool,cronLate:bool} $omnabase_health
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -28,9 +28,13 @@ $omnabase_words  = array(
 	<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'Status', 'omnabase' ); ?></h2></div>
 	<p class="ob-wp-settings__status"><span class="ob-wp-settings__dot" aria-hidden="true"></span><strong><?php echo esc_html( $omnabase_status['words'] ); ?></strong></p>
 
-	<?php if ( $omnabase_health['cronOff'] ) : ?>
+	<?php if ( $omnabase_health['cronLate'] ) : ?>
 		<div class="notice notice-warning inline ob-wp-settings__cron">
-			<p><?php esc_html_e( 'Your host turned WordPress\'s timer off: ask them to run it every minute, or messages to OmnaBase wait for visitors.', 'omnabase' ); ?></p>
+			<?php if ( $omnabase_health['cronOff'] ) : ?>
+				<p><?php esc_html_e( 'Your host turned WordPress\'s timer off: ask them to run it every minute, or messages to OmnaBase wait for visitors.', 'omnabase' ); ?></p>
+			<?php else : ?>
+				<p><?php esc_html_e( 'WordPress\'s timer has not run for over ten minutes, so messages to OmnaBase are waiting: ask your host to run it every minute.', 'omnabase' ); ?></p>
+			<?php endif; ?>
 		</div>
 	<?php endif; ?>
 

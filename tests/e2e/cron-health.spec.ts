@@ -51,6 +51,11 @@ test.describe.configure({ mode: "serial" });
 
 let key = "";
 const unsetCron = (): void => { try { wp("config", "delete", "DISABLE_WP_CRON", "--type=constant"); } catch { /* not set */ } };
+/** the outbox's every-minute run, due at `when` (a strtotime phrase: "now", "-20 minutes") */
+const outboxDue = (when: string): void => {
+  try { wp("cron", "event", "unschedule", "omnabase_outbox"); } catch { /* not scheduled */ }
+  wp("cron", "event", "schedule", "omnabase_outbox", when, "omnabase_every_minute");
+};
 /**
  * The builder's adjustment (round six, DECISIONS "M13 round six", test adjustments): wp-env's WordPress container keeps compiled PHP files
  * for 2 seconds (`opcache.revalidate_freq = 2`), so a page opened right after WP-CLI changed wp-config.php can still run the old one. The
@@ -72,17 +77,23 @@ test.afterAll(async () => {
 });
 
 /**
- * What it checks: An owner whose host switched WordPress's timer off learns it on Settings › OmnaBase, in plain words, with what to do.
- * Passes when: with the timer switched off (DISABLE_WP_CRON set), the status block on the Connection tab shows, without opening anything, a
- *   line saying WordPress's timer is off and asking the host to run it every minute, and that line holds no developer word (no "WP-Cron",
- *   "cron", "DISABLE_WP_CRON"); with the switch removed, that line is gone.
+ * What it checks: An owner whose host switched WordPress's timer off, and whose messages to OmnaBase therefore wait, learns it on Settings ›
+ *   OmnaBase, in plain words, with what to do; an owner whose host switched it off but runs it from the server is not bothered (2026-10-28).
+ * Passes when: with the timer switched off (DISABLE_WP_CRON set) but the sending run due now, no warning shows; with the sending run twenty
+ *   minutes overdue, the status block on the Connection tab shows, without opening anything, a line saying WordPress's timer is off and
+ *   asking the host to run it every minute, and that line holds no developer word (no "WP-Cron", "cron", "DISABLE_WP_CRON"); with the
+ *   switch removed and the run back on time, that line is gone.
  * Fails when: forum topics and licence changes wait for ever on such a host and nobody is told why, the owner is told about "WP-Cron" and
  *   "wp-cron.php", the warning hides behind "Details", or it stays after the host fixed it.
  */
 test("health warns while WordPress's timer is turned off", async ({ page }) => {
   wp("config", "set", "DISABLE_WP_CRON", "true", "--raw", "--type=constant");
   try {
+    outboxDue("now");
     await afterConfigChange(page);
+    await page.goto(SETTINGS);
+    await expect(page.locator(".ob-wp-settings__health"), "off, but the server runs it: no warning").not.toContainText(WARNING);
+    outboxDue("-20 minutes");
     await page.goto(SETTINGS);
     const health = page.locator(".ob-wp-settings__health");
     await expect(health).toContainText(WARNING);
@@ -91,6 +102,7 @@ test("health warns while WordPress's timer is turned off", async ({ page }) => {
     expect(bannedIn((await line.innerText()).replace(/\bhttps?:\/\/\S+/g, " ")), "the warning speaks plainly").toEqual([]);
   } finally {
     unsetCron();
+    outboxDue("now");
   }
   await afterConfigChange(page);
   await page.goto(SETTINGS);

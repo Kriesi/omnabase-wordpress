@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-25T11:44:12+00:00\n"
+"POT-Creation-Date: 2026-10-28T13:32:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -151,21 +151,27 @@ msgid "Sorry, you are not allowed to manage OmnaBase."
 msgstr ""
 
 #. translators: %d: the HTTP status the site answered OmnaBase's ping with.
-#: src/Admin/Health.php:106
+#: src/Admin/Health.php:110
 #, php-format
 msgid "OmnaBase called this site and was turned away (the site answered %d)."
 msgstr ""
 
 #. translators: %d: the HTTP status the site answered OmnaBase's ping with.
-#: src/Admin/Health.php:106
+#: src/Admin/Health.php:110
 msgid "OmnaBase could not reach the site."
 msgstr ""
 
-#: src/Admin/Health.php:128
+#. translators: %s: the path of the plugin's addresses on this site, such as /support/wp-json/omnabase/v1/.
+#: src/Admin/Health.php:120
+#, php-format
+msgid "Cloudflare's security rules stopped OmnaBase before it reached this site. In Cloudflare, add a skip rule for addresses starting with %s."
+msgstr ""
+
+#: src/Admin/Health.php:139
 msgid "No test message from OmnaBase arrived within 30 seconds: a security plugin or the server may block it."
 msgstr ""
 
-#: src/Admin/Health.php:130
+#: src/Admin/Health.php:141
 msgid "Waiting for OmnaBase's test message…"
 msgstr ""
 
@@ -513,25 +519,25 @@ msgstr ""
 msgid "Only administrators see this note."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:66
+#: src/Forum/ReplyPoster.php:67
 msgid "The topic of this ticket is no longer on the forum."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:70
+#: src/Forum/ReplyPoster.php:71
 msgid "No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet."
 msgstr ""
 
 #. translators: %s: the topic's title.
-#: src/Forum/ReplyPoster.php:89
+#: src/Forum/ReplyPoster.php:90
 #, php-format
 msgid "Reply To: %s"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:100
+#: src/Forum/ReplyPoster.php:101
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:115
+#: src/Forum/ReplyPoster.php:116
 msgid "the team"
 msgstr ""
 
@@ -1290,28 +1296,32 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: templates/admin/partials/health.php:33
+#: templates/admin/partials/health.php:34
 msgid "Your host turned WordPress's timer off: ask them to run it every minute, or messages to OmnaBase wait for visitors."
 msgstr ""
 
-#: templates/admin/partials/health.php:38
+#: templates/admin/partials/health.php:36
+msgid "WordPress's timer has not run for over ten minutes, so messages to OmnaBase are waiting: ask your host to run it every minute."
+msgstr ""
+
+#: templates/admin/partials/health.php:42
 #: templates/admin/partials/outbox.php:82
 msgid "Details"
 msgstr ""
 
 #. translators: %s: when the last check ran.
-#: templates/admin/partials/health.php:49
+#: templates/admin/partials/health.php:53
 #, php-format
 msgid "Last checked %s."
 msgstr ""
 
 #. translators: %s: date and time of OmnaBase's last customer-data call.
-#: templates/admin/partials/health.php:71
+#: templates/admin/partials/health.php:75
 #, php-format
 msgid "Last customer-data call from OmnaBase: %s."
 msgstr ""
 
-#: templates/admin/partials/health.php:72
+#: templates/admin/partials/health.php:76
 msgid "No customer-data call from OmnaBase yet."
 msgstr ""
 

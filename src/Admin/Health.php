@@ -11,6 +11,7 @@ use OmnaBase\WordPress\Api\Client;
 use OmnaBase\WordPress\Api\Loopback;
 use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Rest\DeliveryLog;
+use OmnaBase\WordPress\Rest\Events;
 use OmnaBase\WordPress\Rest\LastPing;
 use OmnaBase\WordPress\Security\Vault;
 
@@ -101,12 +102,22 @@ final class Health {
 			return array( 'requested' => false, 'message' => $answer->get_error_message() );
 		}
 		if ( false === ( $answer['ok'] ?? null ) ) {
+			if ( 'cloudflare' === ( $answer['firewall'] ?? '' ) ) {
+				return array( 'requested' => false, 'message' => self::cloudflareWords() );
+			}
 			$status = isset( $answer['status'] ) ? (int) $answer['status'] : 0;
 			/* translators: %d: the HTTP status the site answered OmnaBase's ping with. */
 			$message = $status ? sprintf( __( 'OmnaBase called this site and was turned away (the site answered %d).', 'omnabase' ), $status ) : (string) ( $answer['message'] ?? __( 'OmnaBase could not reach the site.', 'omnabase' ) );
 			return array( 'requested' => false, 'message' => $message );
 		}
 		return array( 'requested' => true, 'message' => '' );
+	}
+
+	/** Cloudflare stopped OmnaBase's call (its challenge page, 2026-10-28): what to let through there, as this site's own address path. */
+	private static function cloudflareWords(): string {
+		$path = (string) wp_parse_url( rest_url( Events::NAMESPACE . '/' ), PHP_URL_PATH );
+		/* translators: %s: the path of the plugin's addresses on this site, such as /support/wp-json/omnabase/v1/. */
+		return sprintf( __( 'Cloudflare\'s security rules stopped OmnaBase before it reached this site. In Cloudflare, add a skip rule for addresses starting with %s.', 'omnabase' ), $path );
 	}
 
 	/**
