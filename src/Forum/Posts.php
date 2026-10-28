@@ -17,6 +17,12 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Posts {
 
+	/** `_omnabase_posted_as` (the post-as-member round): the reply went out under the member's own moderator account (or the filter's). */
+	public const POSTED_AS_MEMBER = 'member';
+
+	/** `_omnabase_posted_as`: the reply went out under the support user. */
+	public const POSTED_AS_SUPPORT = 'support';
+
 	/** The statuses a topic shows to readers (published or closed). */
 	public static function shownTopicStatuses(): array {
 		return array( bbp_get_public_status_id(), bbp_get_closed_status_id() );
@@ -129,6 +135,17 @@ final class Posts {
 	 */
 	public static function messageOf( int $reply_id ): string {
 		return (string) get_post_meta( $reply_id, Options::MESSAGE_META, true );
+	}
+
+	/**
+	 * Marks how a posted reply's author was chosen (the post-as-member round): `member` (the member's own moderator account, or the filter's
+	 * moderator) or `support` (the support user). Read by nothing yet but tests and diagnosis.
+	 *
+	 * @param int    $reply_id The reply.
+	 * @param string $as       `member` or `support`.
+	 */
+	public static function markPostedAs( int $reply_id, string $as ): void {
+		update_post_meta( $reply_id, Options::POSTED_AS_META, $as );
 	}
 
 	/**

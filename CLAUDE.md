@@ -106,7 +106,7 @@ is. Rules and options are a list, never a sentence with commas. Sentence case fo
 release day; a dated section is frozen and never changed again (0.1.0 was released on 2026-10-13). New work after a release goes into a new
 `= X.Y.Z — unreleased =` section above it, with the version bumped everywhere `bin/check-version.sh` checks (the plugin header,
 `OMNABASE_VERSION`, readme.txt's Stable tag, package.json). At release the top section is copied into `readme.txt`'s "Changelog". One line
-per customer-visible change, no class or file names. The current unreleased section is 0.2.0 (the front-end design round).
+per customer-visible change, no class or file names. The current unreleased section is 0.2.1 (the post-as-member round); 0.2.0 was released on 2026-10-29.
 
 ## The three test layers
 

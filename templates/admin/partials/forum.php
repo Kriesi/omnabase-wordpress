@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 		<?php wp_nonce_field( 'omnabase_save_forum' ); ?>
 		<section class="ob-form__section ob-wp-settings__forum">
 			<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'Forums', 'omnabase' ); ?></h2></div>
-			<div class="ob-form__intro"><?php esc_html_e( 'Topics in the ticked forums become tickets, and your team\'s answers appear on the forum under the name you choose below.', 'omnabase' ); ?></div>
+			<div class="ob-form__intro"><?php esc_html_e( 'Topics in the ticked forums become tickets. Your team\'s answers appear under each member\'s own moderator account, else under the support user below.', 'omnabase' ); ?></div>
 			<ul class="ob-help-list ob-wp-settings__forum-rules">
 				<li class="ob-help-list__item"><?php esc_html_e( 'Topics in hidden forums are not public; every other forum is public to OmnaBase.', 'omnabase' ); ?></li>
 				<li class="ob-help-list__item"><?php esc_html_e( 'Replies by the topic\'s author and by moderators are sent.', 'omnabase' ); ?></li>
@@ -30,7 +30,7 @@ defined( 'ABSPATH' ) || exit;
 			<?php require __DIR__ . '/forum-rows.php'; ?>
 			<?php require __DIR__ . '/forum-fields.php'; ?>
 			<?php if ( 0 === $omnabase_forum['supportUser'] ) : ?>
-				<p class="ob-wp-settings__forum-warning"><?php esc_html_e( 'Choose who answers on the forum: until then your team\'s answers wait at OmnaBase.', 'omnabase' ); ?></p>
+				<p class="ob-wp-settings__forum-warning"><?php esc_html_e( 'Choose a support user: until then the AI\'s answers, and answers from team members without a moderator account here, wait at OmnaBase.', 'omnabase' ); ?></p>
 			<?php endif; ?>
 		</section>
 		<p class="ob-wp-settings__actions"><button type="submit" class="ob-btn ob-btn--primary" name="omnabase_forum_submit"><?php esc_html_e( 'Save', 'omnabase' ); ?></button></p>

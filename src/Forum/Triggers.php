@@ -80,8 +80,8 @@ final class Triggers {
 	 */
 	public function reply( $reply_id ): void {
 		$reply = get_post( (int) $reply_id );
-		if ( ReplyPoster::isPosting() || ! Posts::isReply( $reply ) || bbp_get_public_status_id() !== $reply->post_status ) {
-			return;
+		if ( ReplyPoster::isPosting() || ! Posts::isReply( $reply ) || bbp_get_public_status_id() !== $reply->post_status || '' !== Posts::messageOf( $reply->ID ) ) {
+			return; // the post-as-member round: a reply the plugin posted carries its mark, whoever it was posted under
 		}
 		$support = $this->settings->supportUser();
 		if ( ( $support > 0 && (int) $reply->post_author === $support ) || ! $this->settings->isMarked( Posts::forumOf( Posts::topicOf( $reply ) ) ) ) {

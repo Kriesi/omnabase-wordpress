@@ -117,6 +117,9 @@ final class Options {
 	/** Post meta: OmnaBase's message id on a reply the plugin posted (the echo marker: a reply carrying it is never sent back). */
 	public const MESSAGE_META = '_omnabase_message_id';
 
+	/** Post meta (the post-as-member round): how a reply the plugin posted got its author, `member` or `support`. Removed at uninstall. */
+	public const POSTED_AS_META = '_omnabase_posted_as';
+
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';
 

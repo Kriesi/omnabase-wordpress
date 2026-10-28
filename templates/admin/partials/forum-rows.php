@@ -34,7 +34,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="ob-form-row">
 	<div class="ob-form-row__text">
 		<label class="ob-form-row__label" for="omnabase-support-user"><?php esc_html_e( 'Who answers on the forum', 'omnabase' ); ?></label>
-		<div class="ob-form-row__help"><?php esc_html_e( 'The forum moderator whose name your team\'s answers appear under.', 'omnabase' ); ?></div>
+		<div class="ob-form-row__help"><?php esc_html_e( 'Posts the AI\'s replies, and a team member\'s reply when the site has no moderator with their email address.', 'omnabase' ); ?></div>
 	</div>
 	<div class="ob-form-row__control">
 		<select id="omnabase-support-user" name="omnabase_forum[support_user]">

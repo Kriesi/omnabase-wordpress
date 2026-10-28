@@ -3,6 +3,10 @@ OmnaBase for WordPress — release notes for customers
 Each release has a section. A section headed "unreleased" is still being built; it gets its date on the release day, and a dated
 section is never changed again. At release the top section is copied into readme.txt's "Changelog".
 
+= 0.2.1 — unreleased =
+
+* Changed: A team member's answer appears on the forum under their own forum account when they are a moderator there with the same email address; the support user posts the AI's answers and the rest.
+
 = 0.2.0 — 2026-10-29 =
 
 * Added: Post fields under Settings › OmnaBase › Forums: a topic's or reply's private data (such as a "Private data" box) travels with the message to OmnaBase, and your team's private data from OmnaBase lands in the same field of its forum reply.

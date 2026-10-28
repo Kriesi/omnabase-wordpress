@@ -1229,3 +1229,37 @@ forum reply. Generic: any post meta (a named extra value WordPress keeps beside 
   no version bump), `languages/omnabase.pot` regenerated, uninstall removes the transient (the values on forum replies are the site's own
   post meta and stay). `AdminParts` names `Forum\PostFields` without a new `use` line: Plugin Check reads only a file's first 50 lines for
   the direct-access guard, and one more import pushed it to line 52.
+
+## 2026-10-29 — The post-as-member round: a team member's answer is posted under their own moderator account
+
+OmnaBase's brief `docs/briefs/post-as-member-round.md` (its last section holds the decisions), the red team's report and the builder's
+report `docs/reviews/post-as-member-round-{red-team-report,builder-report}.md` in the OmnaBase repository. Version 0.2.1, unreleased.
+
+- **Who posts** (`src/Forum/ReplyAuthor.php`, one method, its own class so `ReplyPoster` stays a poster): `message.sent`'s
+  `message.author.email` (OmnaBase sends it only on the delivery to the ticket's own site, for a current member) → `get_user_by( 'email' )`
+  (the database compares without case) → that user only when `Settings::canModerate` (bbPress's `moderate` right: closed topics, and Avia
+  Support shows a moderator's private data to the topic's author). Else the support user, else 0. An address that is not a string or not
+  `is_email()` counts as none. An AI reply names no address, so it always goes out as the support user.
+- **The filter** `omnabase_forum_reply_author( int $user_id, array $message, \WP_Post $topic )` gets the poster chosen so far (the matched
+  moderator, else the support user, else 0); the answer is checked again: a user without `moderate` (or no user) is replaced by the support
+  user.
+- **The support user is a fallback now**: a matched moderator posts without one; with neither the receiver answers 503 as before (OmnaBase
+  retries while the administrator picks one). The 503 check moved after the choice.
+- **The mark** `_omnabase_posted_as` (`Options::POSTED_AS_META`, `Posts::POSTED_AS_MEMBER` / `POSTED_AS_SUPPORT`): `member` when anyone other
+  than the support user posted (the matched moderator or the filter's), else `support`; written right before the message mark. Read by
+  nothing yet but tests and diagnosis; no "Posted as" words in Activity (its list keeps no names by design). Removed at uninstall.
+- **The echo guard**: `ReplySender::whyNot` already reads the message mark first; `Triggers::reply` now skips a reply carrying the mark too,
+  so bbPress approving, unspamming or restoring a reply posted under a member's account queues nothing (no pointless "not sent" line). The
+  member's own replies written on the forum still reach OmnaBase as a moderator's answer with `siteAuthor`.
+- **The subscription**: the poster's "notify me" on the topic is read before `bbp_insert_reply` and given back afterwards when the insert
+  dropped it (bbPress before 2.6.20 does when the request carries no tick; 2.6.20 and later keep it, and the restore does nothing). No version
+  check: the restore only acts when the subscription was lost.
+- **bbPress's insert needs nothing else**: no flood, capability, spam or moderation check runs there; the counts, "last reply by" and the
+  subscriber mails (which leave out the reply's author) follow the given author.
+- **The words**: the support user's help "Posts the AI's replies, and a team member's reply when the site has no moderator with their email
+  address."; the card's intro and its warning say the answers appear under each member's own moderator account, else the support user, and
+  that the AI's and non-moderators' answers wait without one. The row's label stays "Who answers on the forum" (two Forums tab tests pin it;
+  the help says the rest). The readme's description bullet and a new FAQ entry name the behaviour and the filter.
+- **Records**: changelog.txt `= 0.2.1 — unreleased =` above the frozen 0.2.0 with one line; the version 0.2.1 in the header,
+  `OMNABASE_VERSION`, readme.txt's Stable tag and package.json (`bin/check-version.sh`); `languages/omnabase.pot` regenerated. The two
+  structure tests that read 0.2.0's lines from "the top section" read the 0.2.0 section by number (the red team's adjustment).

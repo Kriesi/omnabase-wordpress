@@ -70,6 +70,8 @@ final class FrontendDesignStructureTest extends TestCase {
 	/** The version of the release already out, frozen since it was dated. */
 	private const RELEASED = '0.1.0';
 	private const RELEASED_HEADING = '= 0.1.0 — 2026-10-13 =';
+	/** The section this round's lines shipped in (adjusted 2026-10-29, the post-as-member round: found by its number, not as the top one). */
+	private const ROUND_HEADING = '= 0.2.0 — 2026-10-29 =';
 
 	/**
 	 * What it checks: The stylesheet the form and the message centre load carries a dark set of colours in the three places the brief names:
@@ -325,10 +327,10 @@ final class FrontendDesignStructureTest extends TestCase {
 	/**
 	 * What it checks: The customer release notes get a new, unreleased section for this round, the released 0.1.0 stays as published, and the
 	 *   version agrees everywhere.
-	 * Passes when: changelog.txt's top section is a higher version than 0.1.0 (marked "unreleased" until it ships; 0.2.0 shipped on 2026-10-29
-	 *   and carries that date since); it holds a line about choosing light
-	 *   or dark and a line about the form's or the message centre's new look; the 0.1.0 section keeps its date and says nothing about the
-	 *   round; the plugin's header, its version constant, readme.txt's Stable tag and package.json name the new version.
+	 * Passes when: changelog.txt's top section is a higher version than 0.1.0, marked "unreleased" or dated; the round's own section, 0.2.0
+	 *   (shipped on 2026-10-29, found by its number since 0.2.1 opened above it), holds a line about choosing light or dark and a line about
+	 *   the form's or the message centre's new look; the 0.1.0 section keeps its date and says nothing about the round; the plugin's header,
+	 *   its version constant, readme.txt's Stable tag and package.json name the top section's version.
 	 * Fails when: the round's lines are added to the release customers already downloaded (its notes then describe code nobody received), the
 	 *   new section is dated before it ships, or the zip's build refuses because one file still says 0.1.0.
 	 */
@@ -339,7 +341,9 @@ final class FrontendDesignStructureTest extends TestCase {
 		// Adjusted, not weakened (the 0.2.0 release, 2026-10-29): the section was "unreleased" while it was built and is dated since the release;
 		// either marker passes, a dated section still needs the round's lines, and the 0.1.0 section stays frozen below.
 		$this->assertMatchesRegularExpression( '/^(unreleased|\d{4}-\d{2}-\d{2})$/', $top[2], 'the new section is marked unreleased or carries its release date' );
-		$this->assertSame( 1, preg_match( '/^= ' . preg_quote( $top[1], '/' ) . ' — ' . preg_quote( $top[2], '/' ) . ' =$(.*?)(?:^= |\z)/ms', $changelog, $section ) );
+		// Adjusted, not weakened (the post-as-member round, 2026-10-29): 0.2.1 opened above the released 0.2.0, so the round's lines are read in
+		// the 0.2.0 section by its number (where they shipped), no longer in whatever section is on top; the top section's checks stay.
+		$this->assertSame( 1, preg_match( '/^' . preg_quote( self::ROUND_HEADING, '/' ) . '$(.*?)(?:^= |\z)/ms', $changelog, $section ), 'the round\'s own section, 0.2.0' );
 		$lines = array_values( array_filter( array_map( 'trim', explode( "\n", $section[1] ) ) ) );
 		$this->assertNotEmpty( preg_grep( '/\bdark\b/i', $lines ), 'a line about light and dark' );
 		$this->assertNotEmpty( preg_grep( '/(form|message centre).*(look|design)|(look|design).*(form|message centre)/i', $lines ), 'a line about the new look of the form or the message centre' );

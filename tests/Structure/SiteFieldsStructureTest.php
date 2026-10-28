@@ -118,14 +118,15 @@ final class SiteFieldsStructureTest extends TestCase {
 
 	/**
 	 * What it checks: Site owners read about the new setting in the plugin's release notes.
-	 * Passes when: the top section of changelog.txt (unreleased while the round was built; 0.2.0, dated 2026-10-29, since the release) has a
-	 *   line about post fields or private data.
+	 * Passes when: the 0.2.0 section of changelog.txt (unreleased while the round was built, dated 2026-10-29 since the release, found by its
+	 *   number since 0.2.1 opened above it) has a line about post fields or private data.
 	 * Fails when: an owner updates and cannot tell that forum private data now travels to OmnaBase and back.
 	 */
 	public function test_the_changelog_records_the_round(): void {
 		$log = $this->read( 'changelog.txt' );
 		// Adjusted, not weakened (the 0.2.0 release, 2026-10-29): the top section carries its date since the release; the line is checked as before.
-		$this->assertSame( 1, preg_match( '/^= [0-9.]+ — (?:unreleased|\d{4}-\d{2}-\d{2}) =$(.*?)(?=^= |\z)/msu', $log, $m ), 'the top section' );
+		// Adjusted, not weakened (the post-as-member round, 2026-10-29): 0.2.1 opened above it, so the round's section is found by its number.
+		$this->assertSame( 1, preg_match( '/^= 0\.2\.0 — (?:unreleased|\d{4}-\d{2}-\d{2}) =$(.*?)(?=^= |\z)/msu', $log, $m ), 'the 0.2.0 section' );
 		$this->assertMatchesRegularExpression( '/post field|private data/i', $m[1] );
 	}
 
