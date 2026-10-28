@@ -136,16 +136,18 @@ final class FormEmbedStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The customer release notes of 0.2.0 (still unreleased) tell site owners that the contact form now comes from OmnaBase's
+	 * What it checks: The customer release notes of 0.2.0 tell site owners that the contact form now comes from OmnaBase's
 	 *   form builder, and no longer describe the retired form's success card.
-	 * Passes when: the 0.2.0 section of changelog.txt is still marked unreleased, has a line naming forms built in OmnaBase, and holds no line
+	 * Passes when: the 0.2.0 section of changelog.txt (unreleased until 2026-10-29, dated since) has a line naming forms built in OmnaBase, and holds no line
 	 *   promising "Send another".
 	 * Fails when: owners update without learning that their form is now built in OmnaBase, or the notes describe a card that no longer exists.
 	 */
 	public function test_the_unreleased_notes_describe_the_new_form(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertMatchesRegularExpression( '/^= 0\.2\.0 — unreleased =$/m', $changelog, '0.2.0 stays unreleased' );
-		$section = (string) preg_replace( '/^.*?^= 0\.2\.0 — unreleased =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
+		// Adjusted, not weakened (the 0.2.0 release, 2026-10-29): 0.2.0 was released and dated that day, so the heading now carries its date; the
+		// section's lines are checked exactly as before.
+		$this->assertMatchesRegularExpression( '/^= 0\.2\.0 — (unreleased|\d{4}-\d{2}-\d{2}) =$/m', $changelog, 'the 0.2.0 section exists' );
+		$section = (string) preg_replace( '/^.*?^= 0\.2\.0 — (?:unreleased|\d{4}-\d{2}-\d{2}) =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
 		$lines   = array_filter( explode( "\n", $section ), static fn ( string $l ) => str_starts_with( $l, '* ' ) );
 		$this->assertNotSame( array(), array_filter( $lines, static fn ( string $l ) => (bool) preg_match( '/\bforms?\b/i', $l ) && (bool) preg_match( '/\bbuil(t|d|der)\b/i', $l ) && str_contains( $l, 'OmnaBase' ) ), 'a line about forms built in OmnaBase' );
 		$this->assertSame( array(), array_values( array_filter( $lines, static fn ( string $l ) => str_contains( $l, 'Send another' ) ) ), 'no promise of the retired card' );

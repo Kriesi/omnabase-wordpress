@@ -105,16 +105,18 @@ final class MessageHtmlStructureTest extends TestCase {
 	}
 
 	/**
-	 * What it checks: The customer release notes of 0.2.0 (still unreleased) tell site owners that the message centre now shows messages in
+	 * What it checks: The customer release notes of 0.2.0 tell site owners that the message centre now shows messages in
 	 *   their shape and that the forum reply is cleaned more tightly.
-	 * Passes when: the 0.2.0 section is still marked unreleased and has a line naming the message centre with its paragraphs, lists, bold words,
+	 * Passes when: the 0.2.0 section (unreleased until 2026-10-29, dated since) has a line naming the message centre with its paragraphs, lists, bold words,
 	 *   tables or formatting (the shape), and a line naming the forum with pictures or styles (the tighter cleaning).
 	 * Fails when: owners update and do not learn why their customers' messages look different, or why a forum answer lost its picture.
 	 */
 	public function test_the_unreleased_notes_name_both_changes(): void {
 		$changelog = $this->read( 'changelog.txt' );
-		$this->assertMatchesRegularExpression( '/^= 0\.2\.0 — unreleased =$/m', $changelog, '0.2.0 stays unreleased' );
-		$section = (string) preg_replace( '/^.*?^= 0\.2\.0 — unreleased =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
+		// Adjusted, not weakened (the 0.2.0 release, 2026-10-29): 0.2.0 was released and dated that day, so the heading now carries its date; the
+		// section's lines are checked exactly as before.
+		$this->assertMatchesRegularExpression( '/^= 0\.2\.0 — (unreleased|\d{4}-\d{2}-\d{2}) =$/m', $changelog, 'the 0.2.0 section exists' );
+		$section = (string) preg_replace( '/^.*?^= 0\.2\.0 — (?:unreleased|\d{4}-\d{2}-\d{2}) =$(.*?)(?:^= |\z).*$/ms', '$1', $changelog );
 		$lines   = array_filter( explode( "\n", $section ), static fn ( string $l ) => str_starts_with( $l, '* ' ) );
 		$this->assertNotSame( array(), array_filter( $lines, static fn ( string $l ) => (bool) preg_match( '/message centre/i', $l ) && (bool) preg_match( '/\b(lists?|paragraphs?|bold|tables?|formatting)\b/i', $l ) ), 'a line about the shaped messages' );
 		$this->assertNotSame( array(), array_filter( $lines, static fn ( string $l ) => (bool) preg_match( '/forum/i', $l ) && (bool) preg_match( '/pictures?|images?|styles?/i', $l ) ), 'a line about the forum reply\'s cleaning' );

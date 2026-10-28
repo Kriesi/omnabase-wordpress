@@ -127,6 +127,28 @@ OmnaBase keeps its own copy of support conversations. To export or delete what O
 
 == Changelog ==
 
+= 0.2.0 =
+
+* Added: Post fields under Settings › OmnaBase › Forums: a topic's or reply's private data (such as a "Private data" box) travels with the message to OmnaBase, and your team's private data from OmnaBase lands in the same field of its forum reply.
+* Added: A screenshot your team pasted into a reply now shows in the message centre inside the reply, where they put it; forum replies say "[Picture: name]" in its place.
+* The plugin is now called "OmnaBase Connector" in the plugins list and on its settings page; nothing else changes, an installed copy updates in place.
+
+* Changed: Check connection says when Cloudflare's security rules stop OmnaBase from reaching your site, and which addresses to let through.
+* Changed: The warning about WordPress's timer shows only when messages to OmnaBase are really waiting, not on every site that runs the timer from the server.
+* Changed: The message centre asks a customer to confirm their email only when earlier conversations by email or in the forum wait behind it, and says so in plain words.
+* Fixed: A member of your support team who opens the message centre page no longer reads "cannot be shown right now"; it says why the page is empty and links to the OmnaBase inbox.
+* Added: An Appearance tab under Settings › OmnaBase: the contact form and the message centre in light, dark or following the visitor's device, in OmnaBase's blue or your own colour, in your theme's font or OmnaBase's.
+* Changed: The contact form now shows a form you build in OmnaBase (Settings › Forms there): [omnabase_form id="…"] picks the form, a shortcode without one shows the project's default form, and the form wears your Appearance choices.
+* Added: Signed-in customers find their email, name, newest WooCommerce order number and their licence (when they hold exactly one) already filled in, and your team sees those values as verified.
+* Added: The Forms and messages tab lists your forms with their shortcodes and links to Settings › Forms in OmnaBase; "Build a shortcode" lets you pick one of your forms.
+* Added: The contact form links your site's privacy policy page in a small line under the form, when the site has one.
+* Removed: The old built-in contact form and its settings (products to pick, the licence field); a message it could not send before the update shows as needing attention under Activity and is then cleaned up.
+* Changed: The message centre has a new look, the OmnaBase app's inbox: each conversation with its status in words and its date, your messages told apart from the team's, the answer box as in the app.
+* Changed: The "Theme styles only" switch moved to the Appearance tab; it now also keeps OmnaBase's font away.
+* Fixed: Error messages, notices and help text on the form and the message centre are easier to read, and keyboard users see a clear focus ring in both light and dark.
+* Changed: The message centre shows each message as your team wrote it, with paragraphs, bold words, lists, tables, quotes, code and clickable links, never pictures or scripts.
+* Changed: Team answers posted on the forum are cleaned more tightly: pictures, inline styles and class names from the message no longer reach the forum post.
+
 = 0.1.0 =
 
 * Added: Settings › OmnaBase, the plugin's settings screen, showing whether the site is connected to OmnaBase.

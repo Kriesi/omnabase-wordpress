@@ -325,7 +325,8 @@ final class FrontendDesignStructureTest extends TestCase {
 	/**
 	 * What it checks: The customer release notes get a new, unreleased section for this round, the released 0.1.0 stays as published, and the
 	 *   version agrees everywhere.
-	 * Passes when: changelog.txt's top section is a higher version than 0.1.0 marked "unreleased" (no date); it holds a line about choosing light
+	 * Passes when: changelog.txt's top section is a higher version than 0.1.0 (marked "unreleased" until it ships; 0.2.0 shipped on 2026-10-29
+	 *   and carries that date since); it holds a line about choosing light
 	 *   or dark and a line about the form's or the message centre's new look; the 0.1.0 section keeps its date and says nothing about the
 	 *   round; the plugin's header, its version constant, readme.txt's Stable tag and package.json name the new version.
 	 * Fails when: the round's lines are added to the release customers already downloaded (its notes then describe code nobody received), the
@@ -335,8 +336,10 @@ final class FrontendDesignStructureTest extends TestCase {
 		$changelog = $this->read( 'changelog.txt' );
 		$this->assertSame( 1, preg_match( '/^= (\d+\.\d+\.\d+) — (.+) =$/m', $changelog, $top ), 'a version heading' );
 		$this->assertTrue( version_compare( $top[1], self::RELEASED, '>' ), "the top section ({$top[1]}) is newer than the released " . self::RELEASED );
-		$this->assertSame( 'unreleased', $top[2], 'the new section is marked unreleased, not dated' );
-		$this->assertSame( 1, preg_match( '/^= ' . preg_quote( $top[1], '/' ) . ' — unreleased =$(.*?)(?:^= |\z)/ms', $changelog, $section ) );
+		// Adjusted, not weakened (the 0.2.0 release, 2026-10-29): the section was "unreleased" while it was built and is dated since the release;
+		// either marker passes, a dated section still needs the round's lines, and the 0.1.0 section stays frozen below.
+		$this->assertMatchesRegularExpression( '/^(unreleased|\d{4}-\d{2}-\d{2})$/', $top[2], 'the new section is marked unreleased or carries its release date' );
+		$this->assertSame( 1, preg_match( '/^= ' . preg_quote( $top[1], '/' ) . ' — ' . preg_quote( $top[2], '/' ) . ' =$(.*?)(?:^= |\z)/ms', $changelog, $section ) );
 		$lines = array_values( array_filter( array_map( 'trim', explode( "\n", $section[1] ) ) ) );
 		$this->assertNotEmpty( preg_grep( '/\bdark\b/i', $lines ), 'a line about light and dark' );
 		$this->assertNotEmpty( preg_grep( '/(form|message centre).*(look|design)|(look|design).*(form|message centre)/i', $lines ), 'a line about the new look of the form or the message centre' );

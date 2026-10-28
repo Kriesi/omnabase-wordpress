@@ -3,7 +3,7 @@ OmnaBase for WordPress — release notes for customers
 Each release has a section. A section headed "unreleased" is still being built; it gets its date on the release day, and a dated
 section is never changed again. At release the top section is copied into readme.txt's "Changelog".
 
-= 0.2.0 — unreleased =
+= 0.2.0 — 2026-10-29 =
 
 * Added: Post fields under Settings › OmnaBase › Forums: a topic's or reply's private data (such as a "Private data" box) travels with the message to OmnaBase, and your team's private data from OmnaBase lands in the same field of its forum reply.
 * Added: A screenshot your team pasted into a reply now shows in the message centre inside the reply, where they put it; forum replies say "[Picture: name]" in its place.
