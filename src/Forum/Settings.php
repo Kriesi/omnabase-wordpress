@@ -13,7 +13,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * One option (`omnabase_forum`). Missing keys mean: no forum marked, no support user, the closing line "— {agent}, {workspace}", guests'
- * topics forwarded (the brief's default), closing a topic when its ticket is resolved off. The support user must have bbPress's moderator
+ * topics forwarded (the brief's default), closing a topic when its ticket is resolved off, no post fields (the site-fields round: `fields`,
+ * key ⇒ name, cleaned by `PostFields::cleanRows`). The support user must have bbPress's moderator
  * rights (`moderate`: they can reply on closed topics); anyone else is never stored and never used.
  */
 final class Settings {
@@ -54,6 +55,21 @@ final class Settings {
 		return (bool) ( $this->all()['guests'] ?? true );
 	}
 
+	/** The declared post fields as stored, key ⇒ name. @return array<string,string> */
+	public function fields(): array {
+		$saved = $this->all()['fields'] ?? array();
+		return is_array( $saved ) ? array_map( 'strval', $saved ) : array();
+	}
+
+	/**
+	 * Stores the post fields (already cleaned), keeping the rest of the forum settings.
+	 *
+	 * @param array<string,string> $fields Key ⇒ name.
+	 */
+	public function saveFields( array $fields ): void {
+		update_option( Options::FORUM, array( 'fields' => $fields ) + $this->all(), false );
+	}
+
 	/** Whether a resolved ticket closes its topic. */
 	public function closeResolved(): bool {
 		return (bool) ( $this->all()['close_resolved'] ?? false );
@@ -80,6 +96,7 @@ final class Settings {
 				'closing_line'   => $line,
 				'guests'         => $guests,
 				'close_resolved' => $close_resolved,
+				'fields'         => $this->fields(),
 			),
 			false
 		);

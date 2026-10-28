@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-28T13:32:11+00:00\n"
+"POT-Creation-Date: 2026-10-28T21:32:40+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -141,8 +141,14 @@ msgstr ""
 msgid "licences (the oldest)"
 msgstr ""
 
-#: src/Admin/ForumActions.php:47
+#: src/Admin/ForumActions.php:64
 msgid "Forum settings saved."
+msgstr ""
+
+#. translators: %s: the post fields not saved, separated by commas.
+#: src/Admin/ForumActions.php:67
+#, php-format
+msgid "Forum settings saved. These post fields were left out (a key is lower-case letters, digits, _ and -, with a name of up to 60 characters, at most 10 fields): %s"
 msgstr ""
 
 #: src/Admin/Guard.php:26
@@ -189,7 +195,7 @@ msgid "Contact support"
 msgstr ""
 
 #: src/Admin/PageMaker.php:57
-#: src/Forum/ReplySender.php:139
+#: src/Forum/ReplySender.php:145
 #: src/Portal/MyAccountLink.php:51
 #: src/Portal/MyAccountLink.php:55
 msgid "Support"
@@ -519,86 +525,86 @@ msgstr ""
 msgid "Only administrators see this note."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:67
+#: src/Forum/ReplyPoster.php:70
 msgid "The topic of this ticket is no longer on the forum."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:71
+#: src/Forum/ReplyPoster.php:74
 msgid "No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet."
 msgstr ""
 
 #. translators: %s: the topic's title.
-#: src/Forum/ReplyPoster.php:90
+#: src/Forum/ReplyPoster.php:93
 #, php-format
 msgid "Reply To: %s"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:101
+#: src/Forum/ReplyPoster.php:104
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:116
+#: src/Forum/ReplyPoster.php:120
 msgid "the team"
 msgstr ""
 
-#: src/Forum/ReplySender.php:52
+#: src/Forum/ReplySender.php:54
 msgid "Forum reply to ticket"
 msgstr ""
 
-#: src/Forum/ReplySender.php:73
+#: src/Forum/ReplySender.php:75
 msgid "Waiting for its topic to become a ticket."
 msgstr ""
 
-#: src/Forum/ReplySender.php:74
+#: src/Forum/ReplySender.php:76
 msgid "Not sent: its topic was never sent to OmnaBase (published before its forum was marked)."
 msgstr ""
 
-#: src/Forum/ReplySender.php:78
+#: src/Forum/ReplySender.php:80
 msgid "Not sent: only the topic's author and moderators speak on the ticket."
 msgstr ""
 
-#: src/Forum/ReplySender.php:92
+#: src/Forum/ReplySender.php:94
 msgid "Not sent: the reply was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/ReplySender.php:96
+#: src/Forum/ReplySender.php:98
 msgid "Not sent: the reply came from OmnaBase."
 msgstr ""
 
-#: src/Forum/ReplySender.php:100
+#: src/Forum/ReplySender.php:102
 msgid "Not sent: its topic was removed."
 msgstr ""
 
-#: src/Forum/ReplySender.php:102
-#: src/Forum/TopicSender.php:94
+#: src/Forum/ReplySender.php:104
+#: src/Forum/TopicSender.php:96
 msgid "Not sent: its forum is no longer marked."
 msgstr ""
 
-#: src/Forum/TopicSender.php:46
+#: src/Forum/TopicSender.php:48
 msgid "Forum topic to ticket"
 msgstr ""
 
-#: src/Forum/TopicSender.php:64
+#: src/Forum/TopicSender.php:66
 msgid "This topic has no usable email address (a guest who left none), so OmnaBase cannot file it. Discard it, or Retry once the topic has one."
 msgstr ""
 
-#: src/Forum/TopicSender.php:68
+#: src/Forum/TopicSender.php:70
 msgid "The connection names no project for new tickets: connect the site again."
 msgstr ""
 
-#: src/Forum/TopicSender.php:88
+#: src/Forum/TopicSender.php:90
 msgid "Not sent: the topic was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/TopicSender.php:91
+#: src/Forum/TopicSender.php:93
 msgid "Not sent: the topic is a ticket already."
 msgstr ""
 
-#: src/Forum/TopicSender.php:97
+#: src/Forum/TopicSender.php:99
 msgid "Not sent: guests' topics are switched off."
 msgstr ""
 
-#: src/Forum/TopicSender.php:112
+#: src/Forum/TopicSender.php:114
 #: src/Privacy/Exporter.php:117
 msgid "Forum topic"
 msgstr ""
@@ -1142,7 +1148,7 @@ msgid "Fields to send"
 msgstr ""
 
 #: templates/admin/partials/facts.php:78
-#: templates/admin/partials/forum.php:35
+#: templates/admin/partials/forum.php:36
 #: templates/admin/tabs/appearance.php:78
 #: templates/admin/tabs/pages.php:27
 msgid "Save"
@@ -1178,6 +1184,30 @@ msgstr ""
 
 #: templates/admin/partials/forms.php:36
 msgid "Build forms in OmnaBase"
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:17
+msgid "Post fields"
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:18
+msgid "Fields of a topic or reply (post meta) that travel with the message to OmnaBase and back onto the team's replies."
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:30
+msgid "Field"
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:34
+msgid "Name"
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:37
+msgid "Remove"
+msgstr ""
+
+#: templates/admin/partials/forum-fields.php:41
+msgid "Add a field"
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:14
@@ -1260,7 +1290,7 @@ msgstr ""
 msgid "Edits and deletions on the forum are not sent."
 msgstr ""
 
-#: templates/admin/partials/forum.php:32
+#: templates/admin/partials/forum.php:33
 msgid "Choose who answers on the forum: until then your team's answers wait at OmnaBase."
 msgstr ""
 

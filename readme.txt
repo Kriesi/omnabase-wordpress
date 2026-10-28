@@ -16,6 +16,7 @@ OmnaBase is a shared support inbox for small teams. This plugin connects your Wo
 
 * **Customer data on every ticket.** When a customer writes in, your team sees what they bought on your site: their account, WooCommerce and Easy Digital Downloads orders, subscriptions and licences (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing, License Manager for WooCommerce). Every source stays off until you turn it on, and licence keys are always masked.
 * **bbPress forums.** Topics in the forums you tick become tickets; your team's answers appear as forum replies under one support user, with a closing line you can word. Moderators' replies reach the ticket too.
+* **Private data and other post fields.** Name a topic's or reply's extra fields (post meta, such as a forum's "Private data" box) under Post fields: they travel with the message to OmnaBase, and your team can fill the same field on its forum reply.
 * **Your forms from OmnaBase.** Build forms in OmnaBase and put `[omnabase_form id="…"]` on any page: messages become tickets. Signed-in customers find their details filled in, and your team sees them as verified.
 * **A message centre.** Put `[omnabase_messages]` on a page you pick: signed-in customers read and answer their tickets there, and see their earlier email conversations and forum topics once they confirm their address. A "Support" link in WooCommerce's My Account leads there if you want one.
 * **Nothing gets lost.** What the site sends to OmnaBase waits on your site when OmnaBase cannot be reached and goes out once it is back; the Activity tab of Settings › OmnaBase shows what waits, with Send now, Retry and Discard.
@@ -80,6 +81,18 @@ Yes. On the Appearance tab of Settings › OmnaBase choose Light, Dark or "Follo
 = Which font does the plugin bring? =
 
 Plus Jakarta Sans, under the SIL Open Font License 1.1 (the licence ships beside the font files in assets/fonts). It loads from your own site, never from a font service, and only when you choose "Load OmnaBase's font".
+
+= How does a forum's "Private data" box reach my team? =
+
+Under Settings › OmnaBase › Forums, Post fields, add a row: the Field is the name the box's value is saved under (for example `_av_supp_private_info`), the Name is what your team reads ("Private data"). The value then shows as a small table under the customer's message in OmnaBase, and a "Private data" button under the reply box writes your team's value into the same field of the forum reply. At most 10 fields; a key is lower-case letters, digits, `_` and `-`; bbPress's, WordPress's and the plugin's own keys are refused. OmnaBase never writes a field you have not named.
+
+= Can a developer add fields or keep them elsewhere? =
+
+Yes, with three hooks (named moments where a plugin's code runs):
+
+* `omnabase_forum_fields` (filter): the declared fields as an array key ⇒ name; add yours, under the same rules as the Post fields rows.
+* `omnabase_forum_field_value( $value, $key, $post_id )` (filter): the value sent for a field of a topic or reply; return it from wherever you keep it.
+* `omnabase_forum_field_saved( $reply_id, $key, $value )` (action): runs after the team's value was saved as the forum reply's post meta, for example to store it elsewhere too.
 
 = What happens when I delete the plugin? =
 

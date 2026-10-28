@@ -10,6 +10,7 @@ namespace OmnaBase\WordPress;
 
 use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Forum\Closer;
+use OmnaBase\WordPress\Forum\PostFields;
 use OmnaBase\WordPress\Forum\ReplyPoster;
 use OmnaBase\WordPress\Forum\ReplySender;
 use OmnaBase\WordPress\Forum\Settings;
@@ -42,12 +43,13 @@ final class Forums {
 	public function __construct( CustomerData $data ) {
 		$connection     = new ConnectionInfo();
 		$this->settings = new Settings();
+		$fields         = new PostFields( $this->settings ); // the site-fields round: the declared post fields, both ways
 		$this->triggers = new Triggers( $data->queue, $this->settings );
 		$this->mails    = new SubscriberMails();
-		$this->poster   = new ReplyPoster( $this->settings, $this->mails, $connection );
+		$this->poster   = new ReplyPoster( $this->settings, $this->mails, $connection, $fields );
 		$this->closer   = new Closer( $this->settings );
-		$data->worker->add( new TopicSender( $this->settings, $connection ) );
-		$data->worker->add( new ReplySender( $this->settings, $data->table ) );
+		$data->worker->add( new TopicSender( $this->settings, $connection, $fields ) );
+		$data->worker->add( new ReplySender( $this->settings, $data->table, $fields ) );
 	}
 
 	/** bbPress's moments, the webhook listeners and the mail job: once per request, with bbPress active. */

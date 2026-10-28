@@ -77,7 +77,8 @@ final class RoundTwoStructureTest extends TestCase {
 	 * What it checks: Database queries are written in one place, the outbox's table class, and orders are read through the shops' own
 	 *   functions.
 	 * Passes when: no file under src/ but src/Outbox/Table.php uses `$wpdb` (reading the site's table prefix, which runs no query, is
-	 *   allowed: the per-site user notes need it on a network); no file queries WooCommerce's orders as posts (`shop_order`), and the
+	 *   allowed: the per-site user notes need it on a network; since the site-fields round the Forums tab's one bounded read of the forum's
+	 *   meta key names in src/Forum/PostFields.php is the named exception); no file queries WooCommerce's orders as posts (`shop_order`), and the
 	 *   WooCommerce orders source calls `wc_get_orders`.
 	 * Fails when: SQL spreads through the plugin (harder to keep safe from injection), or orders are read in a way that misses shops on
 	 *   WooCommerce's newer order storage.
@@ -89,7 +90,10 @@ final class RoundTwoStructureTest extends TestCase {
 		foreach ( $this->srcFiles() as $file ) {
 			$code = $this->code( $file );
 			$queries = preg_replace( '/global\s+\$wpdb\s*;|\$wpdb->get_blog_prefix\s*\(/', '', $code );
-			if ( 'src/Outbox/Table.php' !== $file && preg_match( '/\$wpdb\b/', (string) $queries ) ) {
+			// Adjusted, not weakened (the site-fields round, the builder, 2026-10-29; OmnaBase's brief docs/briefs/site-fields-round.md, the red
+			// team's finding 25 and its own guard SiteFieldsStructureTest): the Post fields' auto-complete reads distinct meta keys with one bounded,
+			// prepared query that no WordPress function offers, so src/Forum/PostFields.php is the one named exception beside the outbox's table.
+			if ( ! in_array( $file, array( 'src/Outbox/Table.php', 'src/Forum/PostFields.php' ), true ) && preg_match( '/\$wpdb\b/', (string) $queries ) ) {
 				$sql[] = $file;
 			}
 			if ( preg_match( '/[\'"]shop_order[\'"]/', $code ) ) {

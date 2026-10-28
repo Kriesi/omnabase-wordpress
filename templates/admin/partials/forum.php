@@ -28,6 +28,7 @@ defined( 'ABSPATH' ) || exit;
 				<li class="ob-help-list__item"><?php esc_html_e( 'Edits and deletions on the forum are not sent.', 'omnabase' ); ?></li>
 			</ul>
 			<?php require __DIR__ . '/forum-rows.php'; ?>
+			<?php require __DIR__ . '/forum-fields.php'; ?>
 			<?php if ( 0 === $omnabase_forum['supportUser'] ) : ?>
 				<p class="ob-wp-settings__forum-warning"><?php esc_html_e( 'Choose who answers on the forum: until then your team\'s answers wait at OmnaBase.', 'omnabase' ); ?></p>
 			<?php endif; ?>

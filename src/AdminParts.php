@@ -132,7 +132,7 @@ final class AdminParts {
 	private function settingsSections( CustomerData $data, Forums $forum, Portal $portal, Display $display ): array {
 		return array(
 			'healthNotes' => array( new HealthNotes( $data->log ), 'build' ),
-			'forum'       => array( new ForumView( $forum->settings ), 'build' ),
+			'forum'       => array( new ForumView( $forum->settings, new Forum\PostFields( $forum->settings ) ), 'build' ),
 			'portal'      => array( new PortalView( $portal->page ), 'build' ),
 			'shortcodes'  => array( new ShortcodesView( $display ), 'build' ),
 			'appearance'  => array( new AppearanceView( new Appearance() ), 'build' ),

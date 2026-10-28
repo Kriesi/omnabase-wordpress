@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Admin;
 
+use OmnaBase\WordPress\Forum\PostFields;
 use OmnaBase\WordPress\Forum\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -14,6 +15,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A thin handler at `admin-post.php`: its nonce (a short-lived form token) and `manage_options`, then the forum settings store exactly what
  * was ticked and chosen, and the browser goes back to the Forums tab. The guest choice arrives as `1` ("Guests too") or `0` ("Members only").
+ * The site-fields round: the Post fields rows are cleaned by `PostFields::cleanRows`, the dropped ones named in the notice, and the
+ * auto-complete's cached meta keys forgotten.
  */
 final class ForumActions {
 
@@ -44,7 +47,23 @@ final class ForumActions {
 			! empty( $posted['guests'] ),
 			! empty( $posted['close_resolved'] )
 		);
-		$this->flash->set( get_current_user_id(), 'success', __( 'Forum settings saved.', 'omnabase' ) );
+		$fields = PostFields::cleanRows( $posted['fields'] ?? array() );
+		$this->settings->saveFields( $fields['fields'] );
+		PostFields::forgetMetaKeys();
+		$this->flash->set( get_current_user_id(), array() === $fields['dropped'] ? 'success' : 'warning', $this->savedWords( $fields['dropped'] ) );
 		Guard::backToScreen( Tabs::FORUMS );
+	}
+
+	/**
+	 * The notice after a save: saved, and the post fields left out by name.
+	 *
+	 * @param string[] $dropped The rows not kept.
+	 */
+	private function savedWords( array $dropped ): string {
+		if ( array() === $dropped ) {
+			return __( 'Forum settings saved.', 'omnabase' );
+		}
+		/* translators: %s: the post fields not saved, separated by commas. */
+		return sprintf( __( 'Forum settings saved. These post fields were left out (a key is lower-case letters, digits, _ and -, with a name of up to 60 characters, at most 10 fields): %s', 'omnabase' ), implode( ', ', $dropped ) );
 	}
 }

@@ -24,6 +24,8 @@ defined( 'ABSPATH' ) || exit;
  * - no support user chosen → 503 (OmnaBase retries while the administrator picks one);
  * - WordPress refused to save the reply → 500.
  * The topic's subscribers are mailed afterwards by a job of the plugin's (`SubscriberMails`), never inside OmnaBase's five seconds.
+ * The site-fields round: the message's `fields` whose keys are declared now are written as the reply's post meta right after it exists and
+ * before it is marked as OmnaBase's (a redelivery that finds the mark posts nothing more), then `omnabase_forum_field_saved` fires.
  */
 final class ReplyPoster {
 
@@ -36,8 +38,9 @@ final class ReplyPoster {
 	 * @param Settings        $settings   The forum settings.
 	 * @param SubscriberMails $mails      The subscriber mails, for later.
 	 * @param ConnectionInfo  $connection The workspace's name.
+	 * @param PostFields      $fields     The declared post fields.
 	 */
-	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection ) {}
+	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields ) {}
 
 	/** Whether the plugin is posting OmnaBase's reply right now. */
 	public static function isPosting(): bool {
@@ -100,6 +103,7 @@ final class ReplyPoster {
 		if ( ! is_int( $reply ) || $reply < 1 ) {
 			throw new Refusal( 500, esc_html__( 'WordPress did not save the reply; OmnaBase will try again.', 'omnabase' ) );
 		}
+		PostFields::write( $reply, $message['fields'] ?? null, $this->fields->declared() );
 		Posts::markPosted( $reply, (string) $message['id'] );
 		return $reply;
 	}

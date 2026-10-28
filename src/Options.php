@@ -125,4 +125,7 @@ final class Options {
 	 * (`…list`, an hour) and the signed-in visitors' prefill tokens (`…p_<hash of the person, form and details>`, an hour).
 	 */
 	public const FORM_TRANSIENT = 'omnabase_form_';
+
+	/** Transient: the Forums tab's auto-complete of meta keys for the Post fields (the site-fields round), an hour, dropped on save. */
+	public const FORUM_META_KEYS_TRANSIENT = 'omnabase_forum_meta_keys';
 }

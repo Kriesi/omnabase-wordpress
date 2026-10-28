@@ -185,9 +185,56 @@
 		}
 	}
 
+	/**
+	 * The Forums tab's Post fields (the site-fields round): "Add a field" copies the last row with empty inputs and the next index (at most
+	 * the box's data-ob-max rows); each row's Remove takes it away (the last one left is emptied instead). Without this script the screen
+	 * still offers one empty row per save.
+	 */
+	function initPostFields() {
+		var box = document.querySelector('[data-ob-post-fields]');
+		if (!box) {
+			return;
+		}
+		var list = box.querySelector('.ob-wp-settings__field-rows');
+		var add = box.querySelector('[data-ob-add-field]');
+		var max = parseInt(box.getAttribute('data-ob-max'), 10) || 10;
+		var rows = function () { return list.querySelectorAll('[data-ob-field-row]'); };
+		var next = rows().length;
+		var refresh = function () { add.hidden = rows().length >= max; };
+		var wire = function (row) {
+			var remove = row.querySelector('[data-ob-remove-field]');
+			remove.hidden = false;
+			remove.addEventListener('click', function () {
+				if (rows().length > 1) {
+					row.remove();
+				} else {
+					row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+				}
+				refresh();
+			});
+		};
+		rows().forEach(wire);
+		add.addEventListener('click', function () {
+			var last = rows()[rows().length - 1];
+			var copy = last.cloneNode(true);
+			copy.querySelectorAll('input').forEach(function (input) {
+				input.value = '';
+				input.name = input.name.replace(/\[fields\]\[\d+\]/, '[fields][' + next + ']');
+			});
+			next++;
+			list.appendChild(copy);
+			wire(copy);
+			refresh();
+			copy.querySelector('input').focus();
+		});
+		add.hidden = false;
+		refresh();
+	}
+
 	function start() {
 		init();
 		initColour();
+		initPostFields();
 	}
 
 	if ('loading' === document.readyState) {

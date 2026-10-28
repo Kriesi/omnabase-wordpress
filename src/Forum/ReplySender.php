@@ -22,7 +22,8 @@ defined( 'ABSPATH' ) || exit;
  * - by someone with moderator rights → the team's answer already on the forum (`from: team`, `delivered: true`, `siteAuthor` with the
  *   support user's name, the moderator's address, which OmnaBase matches to a member, and their forum role): never mailed, never a note;
  * - by anyone else → nothing (another customer's words never land on Ada's ticket).
- * Each with the site's reference `reply-<id>` and the row's idempotency key.
+ * Each with the site's reference `reply-<id>` and the row's idempotency key, and (the site-fields round) `fields`: the reply's declared post
+ * fields that hold a value.
  */
 final class ReplySender implements Job {
 
@@ -38,9 +39,10 @@ final class ReplySender implements Job {
 	 * Builds the sender.
 	 *
 	 * @param Settings $settings The forum settings.
-	 * @param Table    $table    The outbox's table (whether the topic is still on its way).
+	 * @param Table      $table    The outbox's table (whether the topic is still on its way).
+	 * @param PostFields $fields   The declared post fields.
 	 */
-	public function __construct( private Settings $settings, private Table $table ) {}
+	public function __construct( private Settings $settings, private Table $table, private PostFields $fields ) {}
 
 	/** {@inheritDoc} */
 	public function kind(): string {
@@ -115,6 +117,10 @@ final class ReplySender implements Job {
 			'body'     => '' !== $text ? $text : (string) get_permalink( $reply ),
 			'external' => array( 'id' => 'reply-' . $reply->ID ),
 		);
+		$values = $this->fields->valuesOf( $reply->ID );
+		if ( array() !== $values ) {
+			$base['fields'] = $values;
+		}
 		if ( Posts::byTopicAuthor( $reply, $topic ) ) {
 			return array( 'from' => 'customer' ) + $base;
 		}

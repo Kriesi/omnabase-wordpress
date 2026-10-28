@@ -1197,3 +1197,35 @@ none of the visitor's minute allowance spent.
   into `assets/form.css`).
 - **Not this round**: a customer's own mailed pictures (OmnaBase still sends none to the message centre); no version change (0.2.0 stays
   unreleased).
+
+## 2026-10-29 — The site-fields round: Post fields travel with a forum post to OmnaBase and back onto the team's reply
+
+OmnaBase's brief `docs/briefs/site-fields-round.md` (rule 5 and its last section), the red team's report and the builder's report
+`docs/reviews/site-fields-round-{red-team-report,builder-report}.md` in the OmnaBase repository. The founder's ask: kriesi.at's "Private
+data" box (AviaSupport's post meta `_av_supp_private_info`) reaches the team, and the team's own private data lands in the same box of its
+forum reply. Generic: any post meta (a named extra value WordPress keeps beside a post) the administrator names.
+
+- **The setting**: Settings › OmnaBase › Forums › "Post fields", rows of Field (the meta key, with a datalist: the browser's suggestions
+  under the input) and Name (what the team reads, at most 60 characters); the saved rows plus one empty row, so adding one field needs no
+  JavaScript; "Add a field" and Remove are small conveniences of `assets/admin.js`. Stored in the forum option as `fields` (key ⇒ name),
+  cleaned by `PostFields::cleanRows`: keys `a-z 0-9 _ -` (1 to 100), **a key with capitals is dropped, never lower-cased** (WordPress reads
+  meta by its exact name), `_bbp_`, `_omnabase_`, `_wp_` and `_edit_` refused (OmnaBase must never write bbPress's counters, the plugin's own
+  marks or WordPress's), at most 10; the dropped rows are named in the notice after the save. The filter `omnabase_forum_fields` (key ⇒ name)
+  is merged after the setting under the same rules.
+- **The auto-complete**: one bounded, prepared read of the distinct meta keys of the 500 newest topics and replies (`_bbp_` and the refused
+  keys left out, at most 100, the declared keys added), kept in the transient `omnabase_forum_meta_keys` for an hour, dropped on every save of
+  the forum settings and at uninstall. **The one named exception to "SQL only in the outbox's table class"**: no WordPress function lists
+  distinct meta keys; the structure guard names `src/Forum/PostFields.php` beside `src/Outbox/Table.php` (adjusted, not weakened).
+- **Sending**: a forum with declared fields sends `replyFields` (every declared field) on every topic and `fields` only for values that are
+  not empty; a forum without declared fields sends exactly the old body. Replies (the customer's and a moderator's) send `fields` the same
+  way. A value: the meta through `omnabase_forum_field_value( $value, $key, $post_id )` (asked for every declared key, also with an empty
+  meta, so a developer can supply a value kept elsewhere), then `PlainText::of` cut at 10,000 characters.
+- **Receiving**: `ReplyPoster` writes, right after `bbp_insert_reply` and before the posted mark (a redelivery that finds the mark posts
+  nothing more), each field of the message whose key is declared at that moment, stored with `wp_kses( $value, array() )` (tags out, line
+  breaks and `%2F`-style sequences kept; `sanitize_textarea_field` would break `wp-login.php?redirect_to=%2Fwp-admin`), then the action
+  `omnabase_forum_field_saved( $reply_id, $key, $value )`. Any other key writes nothing. AviaSupport's own `wptexturize` on display turns
+  straight quotes into typographic ones for any private data, ours or the customer's: noted for the founder, not ours to change.
+- **Records**: readme.txt (the setting in the description, two FAQ entries with the three hooks), changelog.txt 0.2.0 unreleased (one line,
+  no version bump), `languages/omnabase.pot` regenerated, uninstall removes the transient (the values on forum replies are the site's own
+  post meta and stay). `AdminParts` names `Forum\PostFields` without a new `use` line: Plugin Check reads only a file's first 50 lines for
+  the direct-access guard, and one more import pushed it to line 52.

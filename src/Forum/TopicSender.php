@@ -19,7 +19,8 @@ defined( 'ABSPATH' ) || exit;
  * waits for the administrator. Otherwise the ticket: the connection's first project, the author's address and name, the title and the first
  * post as plain text, the site's reference `topic-<id>` with the topic's address, replies back to the site, `public` for every forum but a
  * hidden one, on the `api` channel, with the row's idempotency key. OmnaBase's answer (201, or 200 for the topic it filed already) gives the
- * ticket number, kept on the topic.
+ * ticket number, kept on the topic. The site-fields round: a forum with declared post fields also sends `replyFields` (every declared field)
+ * and `fields` (those with a value on the topic); a forum without any sends today's body.
  */
 final class TopicSender implements Job {
 
@@ -33,8 +34,9 @@ final class TopicSender implements Job {
 	 *
 	 * @param Settings       $settings   The forum settings.
 	 * @param ConnectionInfo $connection The connection's projects.
+	 * @param PostFields     $fields     The declared post fields.
 	 */
-	public function __construct( private Settings $settings, private ConnectionInfo $connection ) {}
+	public function __construct( private Settings $settings, private ConnectionInfo $connection, private PostFields $fields ) {}
 
 	/** {@inheritDoc} */
 	public function kind(): string {
@@ -116,7 +118,7 @@ final class TopicSender implements Job {
 		if ( '' !== $name ) {
 			$customer['name'] = $name;
 		}
-		return array(
+		$body = array(
 			'project'  => $project,
 			'customer' => $customer,
 			'subject'  => $subject,
@@ -126,5 +128,21 @@ final class TopicSender implements Job {
 			'public'   => Posts::isPublicForum( Posts::forumOf( $topic->ID ) ),
 			'channel'  => 'api',
 		);
+		return $body + $this->fieldsOf( $topic->ID );
+	}
+
+	/**
+	 * The site-fields round: the topic's post fields and the fields a reply may carry back; nothing without declared fields.
+	 *
+	 * @param int $topic_id The topic.
+	 * @return array<string,mixed>
+	 */
+	private function fieldsOf( int $topic_id ): array {
+		$reply = $this->fields->replyFields();
+		if ( array() === $reply ) {
+			return array();
+		}
+		$values = $this->fields->valuesOf( $topic_id );
+		return ( array() === $values ? array() : array( 'fields' => $values ) ) + array( 'replyFields' => $reply );
 	}
 }

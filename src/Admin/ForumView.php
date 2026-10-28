@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Admin;
 
+use OmnaBase\WordPress\Forum\PostFields;
 use OmnaBase\WordPress\Forum\Posts;
 use OmnaBase\WordPress\Forum\Settings;
 
@@ -14,7 +15,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Every forum of the site (public, private and hidden ones, at most 200), each with its visibility; the support user picker offers only
- * users with bbPress's moderator rights. Without bbPress the section says so and offers nothing.
+ * users with bbPress's moderator rights. Without bbPress the section says so and offers nothing. The site-fields round: the Post fields rows
+ * (the saved ones plus one empty row) and the auto-complete's meta keys.
  */
 final class ForumView {
 
@@ -24,14 +26,15 @@ final class ForumView {
 	/**
 	 * Builds the section.
 	 *
-	 * @param Settings $settings The forum settings.
+	 * @param Settings   $settings The forum settings.
+	 * @param PostFields $fields   The declared post fields (the auto-complete's keys).
 	 */
-	public function __construct( private Settings $settings ) {}
+	public function __construct( private Settings $settings, private PostFields $fields ) {}
 
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,closeResolved:bool}
+	 * @return array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,closeResolved:bool,fieldRows:array<int,array{key:string,label:string}>,metaKeys:string[],fieldsMax:int,labelMax:int}
 	 */
 	public function build(): array {
 		$active = function_exists( 'bbp_get_forum_post_type' );
@@ -43,7 +46,23 @@ final class ForumView {
 			'closingLine'   => $this->settings->closingLine(),
 			'guests'        => $this->settings->guests(),
 			'closeResolved' => $this->settings->closeResolved(),
+			'fieldRows'     => $this->fieldRows(),
+			'metaKeys'      => $active ? $this->fields->metaKeys() : array(),
+			'fieldsMax'     => PostFields::MAX,
+			'labelMax'      => PostFields::LABEL_MAX,
 		);
+	}
+
+	/** The saved post fields as rows, plus one empty row while fewer than ten are saved. @return array<int,array{key:string,label:string}> */
+	private function fieldRows(): array {
+		$rows = array();
+		foreach ( $this->settings->fields() as $key => $label ) {
+			$rows[] = array( 'key' => (string) $key, 'label' => (string) $label );
+		}
+		if ( count( $rows ) < PostFields::MAX ) {
+			$rows[] = array( 'key' => '', 'label' => '' );
+		}
+		return $rows;
 	}
 
 	/** Every forum with its visibility and tick. @return array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}> */

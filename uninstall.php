@@ -18,7 +18,8 @@
  * belong to a site's connection are user options, stored under the site's table prefix (`wp_2_omnabase_known` …); the customer's site id is
  * shared by the network's sites and goes once at the end. The vault's key file (2026-10-11): the key file and its folder (`omnabase/` under
  * wp-content or the main site's uploads folder, with its `index.php` and `.htaccess`) are one per network and go once, after every site has
- * stopped its key at OmnaBase (that stop still needs the key).
+ * stopped its key at OmnaBase (that stop still needs the key). The site-fields round: the Forums tab's cached meta keys (a transient); the
+ * post fields themselves live in the forum settings, and the values on forum replies are the site's own post meta, which stay.
  *
  * @package OmnaBase
  */
@@ -97,6 +98,14 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 		$wpdb->prepare(
 			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
 			$wpdb->esc_like( '_transient_' ) . '%' . $wpdb->esc_like( 'omnabase_form_' ) . '%'
+		)
+	);
+
+	// The Forums tab's auto-complete of meta keys for the Post fields (the site-fields round: `omnabase_forum_meta_keys` and its timeout).
+	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall: one transient and its timeout, the same way as the prefixes above.
+		$wpdb->prepare(
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+			$wpdb->esc_like( '_transient_' ) . '%' . $wpdb->esc_like( 'omnabase_forum_meta_keys' )
 		)
 	);
 

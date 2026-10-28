@@ -5,6 +5,7 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.0 — unreleased =
 
+* Added: Post fields under Settings › OmnaBase › Forums: a topic's or reply's private data (such as a "Private data" box) travels with the message to OmnaBase, and your team's private data from OmnaBase lands in the same field of its forum reply.
 * Added: A screenshot your team pasted into a reply now shows in the message centre inside the reply, where they put it; forum replies say "[Picture: name]" in its place.
 * The plugin is now called "OmnaBase Connector" in the plugins list and on its settings page; nothing else changes, an installed copy updates in place.
 
