@@ -12,8 +12,9 @@
  *
  * Shapes the red team pins here (chosen; the builder may rename and tell the red team; every name sits in this file):
  * - The forum settings live in one option, `omnabase_forum`: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>,
- *   'closing_line' => <text with {agent} and {workspace}>, 'guests' => bool, 'close_resolved' => bool ]`. Missing keys: no forum marked, no
- *   support user, the default closing line "— {agent}, {workspace}", guests forwarded (the brief's default), closing on resolve off.
+ *   'closing_line' => <text with {agent} and {workspace}, up to five lines>, 'guests' => bool, 'close_resolved' => bool ]`. Missing keys: no forum marked, no
+ *   support user, the default closing line "Best regards" and "{agent}, {workspace}" on two lines (the polish round, 2026-10-31; before:
+ *   "— {agent}, {workspace}"), guests forwarded (the brief's default), closing on resolve off.
  * - The ticket number is kept on the topic as post meta `_omnabase_ticket`; OmnaBase's message id on a reply the plugin posted as
  *   `_omnabase_message_id` (the brief's name).
  * - The project of a new ticket is the connection's first project (`omnabase_site`'s `projects`, round one's record).

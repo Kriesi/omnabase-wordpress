@@ -31,7 +31,7 @@ final class AdminLookForumTest extends RoundThreeTestCase {
 	/** Each forum setting's row label and the field its control must hold. */
 	private const ROWS = array(
 		'Who answers on the forum' => "select[@name='omnabase_forum[support_user]']",
-		'Line under each answer'   => "input[@name='omnabase_forum[closing_line]']",
+		'Line under each answer'   => "textarea[@name='omnabase_forum[closing_line]']", // adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: a box of a few lines
 		'Who may send topics'      => "input[@type='radio'][@name='omnabase_forum[guests]']",
 		'Resolved tickets'         => "input[@type='checkbox'][@name='omnabase_forum[close_resolved]']",
 	);

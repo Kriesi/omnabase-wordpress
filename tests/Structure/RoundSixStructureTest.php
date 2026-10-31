@@ -55,9 +55,12 @@ final class RoundSixStructureTest extends TestCase {
 
 	/**
 	 * Prose-looking strings in src/ that are not words for people: SQL, HTTP header values, WordPress's own placeholder salt, a third-party
-	 * hook's tag. Each is named, so a new label cannot hide among them.
+	 * hook's tag, the forum closing line's default template. Each is named, so a new label cannot hide among them.
+	 * Adjusted 2026-10-31 by the builder (the polish round), not weakened: the closing line's default "Best regards" / "{agent}, {workspace}"
+	 * is a stored template the site owner edits in the Forums tab (the red team's structure test pins it as one constant, which cannot call
+	 * a translation function); it is named here alone, like the message centre's cache tag.
 	 */
-	private const TECHNICAL = array( '/^(SELECT|UPDATE|DELETE|INSERT|CREATE|DROP)\b/', '/no-store/', '/^Bearer $/', '/^put your unique phrase here$/', '/^OmnaBase message centre$/' );
+	private const TECHNICAL = array( '/^(SELECT|UPDATE|DELETE|INSERT|CREATE|DROP)\b/', '/no-store/', '/^Bearer $/', '/^put your unique phrase here$/', '/^OmnaBase message centre$/', '/^Best regards\\\\?n\{agent\}, \{workspace\}$/' );
 
 	/** Sentences the `.pot` must hold: one per part of the plugin (the screen, the form, the message centre, the outbox, the header). */
 	private const POT_SAMPLE = array( 'This site is not connected to OmnaBase yet.', 'On its way to OmnaBase', 'Retry', 'Discard', 'Message centre', 'Shortcodes', 'Forms and messages', 'What OmnaBase sent here', 'Disconnected in OmnaBase', 'Save' );

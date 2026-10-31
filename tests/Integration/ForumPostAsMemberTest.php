@@ -57,7 +57,7 @@ final class ForumPostAsMemberTest extends RoundThreeTestCase {
 	/**
 	 * What it checks: A team member who is also a moderator on the forum answers under their own forum account, not the shared support one.
 	 * Passes when: a `message.sent` naming Nina's address is answered 200; the topic's one reply is written by Nina, is marked "member", keeps
-	 *   the closing line "— Nina, Team Kriesi" and OmnaBase's message id; the topic's last reply is it and Nina's forum reply count grew by one.
+	 *   the closing line "Best regards" / "Nina, Team Kriesi" (adjusted 2026-10-31) and OmnaBase's message id; the topic's last reply is it and Nina's forum reply count grew by one.
 	 * Fails when: the customer still sees every answer under "Kriesi Support", or the forum's counts and "last reply by" do not follow.
 	 */
 	public function test_a_moderators_address_posts_the_reply_under_their_own_account(): void {
@@ -70,7 +70,8 @@ final class ForumPostAsMemberTest extends RoundThreeTestCase {
 		$reply = $this->posted( $topic );
 		$this->assertSame( $this->moderator, (int) $reply->post_author, 'posted under Nina\'s account' );
 		$this->assertSame( 'member', (string) get_post_meta( $reply->ID, self::POSTED_AS, true ) );
-		$this->assertStringContainsString( '— Nina, Team Kriesi', wp_strip_all_tags( $reply->post_content ) );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the default closing line is "Best regards", then the name on its own line
+		$this->assertMatchesRegularExpression( '/Best regards\s*Nina, Team Kriesi/', wp_strip_all_tags( $reply->post_content ) );
 		$this->assertSame( 'msg-pam-1', (string) get_post_meta( $reply->ID, self::MESSAGE_META, true ) );
 		$this->assertSame( $reply->ID, (int) bbp_get_topic_last_reply_id( $topic ) );
 		$this->assertSame( $this->moderator, (int) bbp_get_reply_author_id( $reply->ID ) );

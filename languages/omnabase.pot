@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-28T23:42:00+00:00\n"
+"POT-Creation-Date: 2026-10-31T22:28:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -543,7 +543,13 @@ msgstr ""
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:142
+#. translators: %s: the workspace's name, e.g. "Kriesi".
+#: src/Forum/ReplyPoster.php:159
+#, php-format
+msgid "The %s team"
+msgstr ""
+
+#: src/Forum/ReplyPoster.php:161
 msgid "the team"
 msgstr ""
 
@@ -1243,7 +1249,7 @@ msgid "Line under each answer"
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:51
-msgid "{agent} becomes the team member's name and {workspace} your workspace's."
+msgid "{agent} becomes the team member's customer-facing name, {workspace} your workspace's name. Each line becomes a line of the post."
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:59

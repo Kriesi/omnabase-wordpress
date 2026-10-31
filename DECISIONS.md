@@ -1263,3 +1263,29 @@ report `docs/reviews/post-as-member-round-{red-team-report,builder-report}.md` i
 - **Records**: changelog.txt `= 0.2.1 — unreleased =` above the frozen 0.2.0 with one line; the version 0.2.1 in the header,
   `OMNABASE_VERSION`, readme.txt's Stable tag and package.json (`bin/check-version.sh`); `languages/omnabase.pot` regenerated. The two
   structure tests that read 0.2.0's lines from "the top section" read the 0.2.0 section by number (the red team's adjustment).
+
+## 2026-10-31 — The polish round: the closing line under a forum reply is a few lines
+
+Brief `docs/briefs/polish-round.md` (rule 2 and its last section) and reports `docs/reviews/polish-round-{red-team-report,builder-report}.md`
+in the OmnaBase repository. Version 0.2.1, unreleased.
+
+- **The field** on the Forums tab is a `<textarea rows="3">` printed with `esc_textarea`; the help reads "{agent} becomes the team member's
+  customer-facing name, {workspace} your workspace's name. Each line becomes a line of the post." OmnaBase now sends the customer-facing
+  name as `author.name` (its own polish-round change); the plugin still prints whatever arrives.
+- **The default** `Settings::DEFAULT_CLOSING_LINE` is "Best regards\n{agent}, {workspace}".
+- **Cleaned once, at save** (`Settings::cleanClosingLine`): `sanitize_textarea_field` (tags stripped, line breaks kept), Windows line ends made
+  plain, each line trimmed, empty lines dropped, at most 5 lines, cut at the last whole line within 300 characters (one longer line is cut at
+  300, so a placeholder is split only in that case). The admin action passes the raw value through; it no longer runs `sanitize_text_field`,
+  which flattened the lines before the settings saw them. The poster still never runs `sanitize_textarea_field` (the site-fields rule).
+- **Saving the default stores nothing**, and a stored line that is exactly the old default "— {agent}, {workspace}" counts as not set, so every
+  site that saved the Forums tab before (kriesi.at among them) gets the new default without retyping; the box shows the default either way.
+  A later default reaches a site that never changed the line.
+- **The post** ends with one `<p>`: the lines (placeholders filled) each escaped and joined by `<br>` with no raw line break inside, so
+  WordPress's automatic paragraphs on display cannot double a break; empty lines left out (also for a value stored by hand).
+- **The AI's own answers sign as the workspace's team** (the founder, 2026-10-31, overturning question 8's pinned default "AI"): for a message
+  of kind `ai` the poster puts "The <workspace> team" into `{agent}` (translated, `The %s team`) and drops a ", {workspace}" that directly
+  follows `{agent}` in the template, so the default line posts "Best regards<br>The Kriesi team"; an own line such as "{agent} from {workspace}"
+  keeps its words. A person's answer is unchanged ("Best regards<br>Günter, Kriesi"). Without a workspace name the AI's answer falls back to
+  OmnaBase's author name as before.
+- Records: changelog.txt's 0.2.1 section, readme.txt's description bullet and FAQ answer, `languages/omnabase.pot` regenerated, the admin
+  stylesheet's textarea rule (built from `styles/admin.css`).

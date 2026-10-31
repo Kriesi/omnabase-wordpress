@@ -132,16 +132,54 @@ final class ReplyPoster {
 
 	/**
 	 * The reply's HTML: OmnaBase's HTML through the plugin's fence (no pictures, inline styles or classes; its text when it has none), then
-	 * the closing line.
+	 * the closing line as one paragraph, its lines joined by `<br>` (no raw line break inside, so a theme's automatic paragraphs cannot double
+	 * it), each line escaped, empty lines left out.
 	 *
 	 * @param array<string,mixed> $message   OmnaBase's message.
 	 * @param string              $workspace The workspace's name.
 	 */
 	private function content( array $message, string $workspace ): string {
-		$body  = MessageHtml::of( is_string( $message['bodyHtml'] ?? null ) ? $message['bodyHtml'] : null, (string) ( $message['bodyText'] ?? '' ) );
-		$agent = is_string( $message['author']['name'] ?? null ) && '' !== trim( $message['author']['name'] ) ? trim( $message['author']['name'] ) : __( 'the team', 'omnabase' );
-		$line  = strtr( $this->settings->closingLine(), array( '{agent}' => $agent, '{workspace}' => $workspace ) );
-		return $body . "\n\n<p>" . esc_html( $line ) . '</p>';
+		$body = MessageHtml::of( is_string( $message['bodyHtml'] ?? null ) ? $message['bodyHtml'] : null, (string) ( $message['bodyText'] ?? '' ) );
+		$ai   = 'ai' === ( $message['kind'] ?? null ) && '' !== trim( $workspace );
+		$line = strtr( self::template( $this->settings->closingLine(), $ai ), array( '{agent}' => self::agent( $message, $workspace, $ai ), '{workspace}' => $workspace ) );
+		return $body . "\n\n<p>" . self::lines( $line ) . '</p>';
+	}
+
+	/**
+	 * Who `{agent}` names (the polish round, the founder's decision of 2026-10-31): the AI's own answer signs as "The <workspace> team", a
+	 * person's answer by the name OmnaBase sends (their customer-facing name), else "the team".
+	 *
+	 * @param array<string,mixed> $message   OmnaBase's message.
+	 * @param string              $workspace The workspace's name.
+	 * @param bool                $ai        Whether the AI wrote it (and the workspace has a name).
+	 */
+	private static function agent( array $message, string $workspace, bool $ai ): string {
+		if ( $ai ) {
+			/* translators: %s: the workspace's name, e.g. "Kriesi". */
+			return sprintf( __( 'The %s team', 'omnabase' ), trim( $workspace ) );
+		}
+		return is_string( $message['author']['name'] ?? null ) && '' !== trim( $message['author']['name'] ) ? trim( $message['author']['name'] ) : __( 'the team', 'omnabase' );
+	}
+
+	/**
+	 * The closing line's template for this answer: for the AI's own answer a ", {workspace}" right after `{agent}` is dropped, since the agent
+	 * text already names the workspace ("Best regards / The Kriesi team", never "The Kriesi team, Kriesi").
+	 *
+	 * @param string $template The closing line with its placeholders.
+	 * @param bool   $ai       Whether the AI wrote it.
+	 */
+	private static function template( string $template, bool $ai ): string {
+		return $ai ? str_replace( '{agent}, {workspace}', '{agent}', $template ) : $template;
+	}
+
+	/**
+	 * A closing line's lines, each escaped, joined by `<br>`, empty lines left out.
+	 *
+	 * @param string $line The closing line with its placeholders filled.
+	 */
+	private static function lines( string $line ): string {
+		$lines = array_filter( array_map( 'trim', preg_split( '/\R/u', $line ) ), 'strlen' );
+		return implode( '<br>', array_map( 'esc_html', $lines ) );
 	}
 
 	/**

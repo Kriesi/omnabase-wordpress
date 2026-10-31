@@ -81,7 +81,7 @@ final class ForumsTabTest extends RoundThreeTestCase {
 		update_option( self::FORUM_OPTION, array( 'guests' => false ) + (array) get_option( self::FORUM_OPTION, array() ) );
 		$html   = $this->openTab( 'forums' );
 		$select = self::query( $html, "//select[@name='omnabase_forum[support_user]']" )->item( 0 );
-		$line   = self::query( $html, "//input[@name='omnabase_forum[closing_line]']" )->item( 0 );
+		$line   = self::query( $html, "//textarea[@name='omnabase_forum[closing_line]']" )->item( 0 ); // adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: a box of a few lines
 		$this->assertInstanceOf( \DOMElement::class, $select );
 		$this->assertInstanceOf( \DOMElement::class, $line );
 		$this->assertStringContainsString( 'Who answers on the forum', self::labelOf( $select ) );

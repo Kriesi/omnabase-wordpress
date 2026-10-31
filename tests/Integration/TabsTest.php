@@ -165,7 +165,8 @@ final class TabsTest extends TabsTestCase {
 		$this->assertNotEmpty( $look, 'the Appearance form' );
 		$this->assertSame( 'appearance', $this->tabIn( $this->postFields( $look[0]['fields'] ) ), 'Appearance' );
 
-		$forum = array( 'action' => 'omnabase_save_forum', '_wpnonce' => wp_create_nonce( 'omnabase_save_forum' ), 'omnabase_forum' => array( 'closing_line' => 'Cheers, {agent}' ) );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the closing line is a box of a few lines; the save still returns to the Forums tab
+		$forum = array( 'action' => 'omnabase_save_forum', '_wpnonce' => wp_create_nonce( 'omnabase_save_forum' ), 'omnabase_forum' => array( 'closing_line' => "Cheers,\n{agent}" ) );
 		$this->assertSame( 'forums', $this->tabIn( $this->postFields( $forum ) ), 'the forum settings' );
 
 		$activity = $this->openTab( 'activity' );

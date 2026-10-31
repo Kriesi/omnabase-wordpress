@@ -30,7 +30,7 @@ final class ForumPostShapeTest extends RoundThreeTestCase {
 	 *   no class, and still ends with the agent's closing line.
 	 * Passes when: a signed `message.sent` whose HTML holds bold words, a list, a link, an outside picture, an embedded picture, a paragraph with
 	 *   an inline style and a class is answered 200; the forum reply holds the `strong`, the two list items and the link, no `img`, no `style=`
-	 *   and no `class=` from the message, and its text ends with "— Ada, Team Kriesi".
+	 *   and no `class=` from the message, and its text ends with "Best regards" / "Ada, Team Kriesi" (adjusted 2026-10-31).
 	 * Fails when: every visitor of the public forum loads a tracking picture from another server, or the team's answer wears styles the site's
 	 *   theme cannot override.
 	 */
@@ -52,6 +52,8 @@ final class ForumPostShapeTest extends RoundThreeTestCase {
 		$this->assertStringNotContainsString( 'tracker.example', $content );
 		$this->assertStringNotContainsString( 'style=', $content, 'no inline style' );
 		$this->assertStringNotContainsString( 'has-red-color', $content, 'no class from the message' );
-		$this->assertStringEndsWith( '— Ada, Team Kriesi', trim( wp_strip_all_tags( $content ) ), 'the closing line stays last' );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the default closing line is two lines, "Best regards" and "Ada, Team Kriesi"; it still comes last
+		$this->assertStringEndsWith( 'Ada, Team Kriesi', trim( wp_strip_all_tags( $content ) ), 'the closing line stays last' );
+		$this->assertMatchesRegularExpression( '/Best regards\s*Ada, Team Kriesi$/', trim( wp_strip_all_tags( $content ) ) );
 	}
 }

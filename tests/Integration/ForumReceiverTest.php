@@ -37,7 +37,7 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 	 * What it checks: The team's answer in OmnaBase appears on the forum under the support user, with the agent's name, as a real bbPress
 	 *   reply.
 	 * Passes when: a signed `message.sent` for Ada's topic is answered 200; the topic then has one published reply by the support user holding
-	 *   the answer's formatting (bold kept, a script removed) and the closing line "— Ada, Team Kriesi", marked with OmnaBase's message id; the
+	 *   the answer's formatting (bold kept, a script removed) and the closing line "Best regards" / "Ada, Team Kriesi" (adjusted 2026-10-31), marked with OmnaBase's message id; the
 	 *   topic's reply count is 1 and its last reply is that reply.
 	 * Fails when: the customer never sees the answer on the forum, sees it under a random account or without who answered, or a script in a
 	 *   reply runs in visitors' browsers.
@@ -56,7 +56,8 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 		$this->assertSame( bbp_get_public_status_id(), $reply->post_status );
 		$this->assertStringContainsString( '<strong>2.1</strong>', $reply->post_content );
 		$this->assertStringNotContainsString( '<script', $reply->post_content );
-		$this->assertStringContainsString( '— Ada, Team Kriesi', wp_strip_all_tags( $reply->post_content ) );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the default closing line is now "Best regards", then "Ada, Team Kriesi" on its own line
+		$this->assertMatchesRegularExpression( '/Best regards\s*Ada, Team Kriesi/', wp_strip_all_tags( $reply->post_content ) );
 		$this->assertSame( 'msg-1', (string) get_post_meta( $reply->ID, self::MESSAGE_META, true ) );
 		$this->assertSame( 1, (int) bbp_get_topic_reply_count( $topic, true ) );
 		$this->assertSame( $reply->ID, (int) bbp_get_topic_last_reply_id( $topic ) );
@@ -194,19 +195,22 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 
 	/**
 	 * What it checks: The closing line follows the administrator's setting.
-	 * Passes when: with the closing line "Cheers, {agent} from {workspace}" the posted reply ends with "Cheers, Ada from Team Kriesi" and not the
+	 * Passes when: with the closing line "Cheers," and "{agent} from {workspace}" on two lines (adjusted 2026-10-31) the posted reply ends with
+	 *   "Cheers," and "Ada from Team Kriesi" as two lines of one paragraph and not the
 	 *   default line.
 	 * Fails when: the site owner cannot word how the team signs its forum answers.
 	 */
 	public function test_the_closing_line_follows_the_setting(): void {
 		$topic = $this->filedTopic();
-		$this->markForums( array( $this->publicForum ), array( 'closing_line' => 'Cheers, {agent} from {workspace}' ) );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the owner's line may have several lines; each becomes a line of the post
+		$this->markForums( array( $this->publicForum ), array( 'closing_line' => "Cheers,\n{agent} from {workspace}" ) );
 
 		$this->deliverEvent( 'message.sent', 'dlv-closing', $this->teamReply( $topic, 'msg-closing' ) );
 
-		$text = wp_strip_all_tags( (string) ( self::repliesOn( $topic )[0]->post_content ?? '' ) );
-		$this->assertStringContainsString( 'Cheers, Ada from Team Kriesi', $text );
-		$this->assertStringNotContainsString( '— Ada, Team Kriesi', $text );
+		$content = (string) ( self::repliesOn( $topic )[0]->post_content ?? '' );
+		$text    = wp_strip_all_tags( $content );
+		$this->assertMatchesRegularExpression( '#<p>Cheers,<br\s*/?>Ada from Team Kriesi</p>\s*$#', $content );
+		$this->assertStringNotContainsString( 'Best regards', $text, 'not the default line' );
 	}
 
 	/**

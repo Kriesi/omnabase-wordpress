@@ -48,10 +48,10 @@ defined( 'ABSPATH' ) || exit;
 <div class="ob-form-row">
 	<div class="ob-form-row__text">
 		<label class="ob-form-row__label" for="omnabase-closing-line"><?php esc_html_e( 'Line under each answer', 'omnabase' ); ?></label>
-		<div class="ob-form-row__help"><?php esc_html_e( '{agent} becomes the team member\'s name and {workspace} your workspace\'s.', 'omnabase' ); ?></div>
+		<div class="ob-form-row__help"><?php esc_html_e( '{agent} becomes the team member\'s customer-facing name, {workspace} your workspace\'s name. Each line becomes a line of the post.', 'omnabase' ); ?></div>
 	</div>
 	<div class="ob-form-row__control">
-		<input type="text" id="omnabase-closing-line" name="omnabase_forum[closing_line]" value="<?php echo esc_attr( $omnabase_forum['closingLine'] ); ?>">
+		<textarea id="omnabase-closing-line" name="omnabase_forum[closing_line]" rows="3"><?php echo esc_textarea( $omnabase_forum['closingLine'] ); ?></textarea>
 	</div>
 </div>
 <div class="ob-form-row">

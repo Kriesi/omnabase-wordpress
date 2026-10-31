@@ -113,13 +113,14 @@ final class ForumScreenTest extends RoundThreeTestCase {
 
 	/**
 	 * What it checks: Saving the forum section stores exactly what the administrator chose.
-	 * Passes when: ticking only Support and Off topic, choosing Nina as the support user, a closing line, guests off and closing on resolve on,
+	 * Passes when: ticking only Support and Off topic, choosing Nina as the support user, a closing line of two lines (adjusted 2026-10-31), guests off and closing on resolve on,
 	 *   then saving, leaves the forum option with exactly those forums, Nina, the line, guests false and closing true, and goes back to the
 	 *   screen's Forums tab.
 	 * Fails when: ticks are lost, a forum stays marked after unticking it, or the switches cannot be turned off.
 	 */
 	public function test_saving_stores_exactly_the_choices(): void {
-		$back = $this->save( array( 'forums' => array( (string) $this->publicForum, (string) $this->unmarkedForum ), 'support_user' => (string) $this->moderator, 'closing_line' => 'Cheers, {agent} <b>from</b> {workspace}' , 'close_resolved' => '1' ) );
+		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the line has two lines now; the tag is still stripped and the break kept
+		$back = $this->save( array( 'forums' => array( (string) $this->publicForum, (string) $this->unmarkedForum ), 'support_user' => (string) $this->moderator, 'closing_line' => "Cheers,\n{agent} <b>from</b> {workspace}", 'close_resolved' => '1' ) );
 
 		$this->assertNotNull( $back );
 		$this->assertStringContainsString( 'page=omnabase', (string) $back );
@@ -127,7 +128,7 @@ final class ForumScreenTest extends RoundThreeTestCase {
 		$saved = (array) get_option( self::FORUM_OPTION, array() );
 		$this->assertEqualsCanonicalizing( array( $this->publicForum, $this->unmarkedForum ), array_map( 'intval', (array) ( $saved['forums'] ?? array() ) ) );
 		$this->assertSame( $this->moderator, (int) ( $saved['support_user'] ?? 0 ) );
-		$this->assertSame( 'Cheers, {agent} from {workspace}', $saved['closing_line'] ?? null, 'stored as plain text' );
+		$this->assertSame( "Cheers,\n{agent} from {workspace}", $saved['closing_line'] ?? null, 'stored as plain text, its line break kept' );
 		$this->assertFalse( (bool) ( $saved['guests'] ?? true ), 'unticked guests switch' );
 		$this->assertTrue( (bool) ( $saved['close_resolved'] ?? false ) );
 	}
