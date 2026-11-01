@@ -83,7 +83,8 @@ final class Shaper {
 	}
 
 	/**
-	 * The profile: registered since, roles, the usermeta that may be sent.
+	 * The profile: registered since, roles, the billing country (two upper-case letters, else left out), the usermeta that may be sent; never
+	 * a language.
 	 *
 	 * @param mixed $raw The raw profile.
 	 */
@@ -100,6 +101,10 @@ final class Shaper {
 		if ( isset( $raw['roles'] ) && is_array( $raw['roles'] ) ) {
 			$roles            = array_map( static fn ( $role ) => is_string( $role ) && Field::trim( $role ) !== '' && mb_strlen( Field::trim( $role ), 'UTF-8' ) <= 60 ? Field::trim( $role ) : null, $raw['roles'] );
 			$profile['roles'] = array_slice( array_values( array_filter( $roles, 'is_string' ) ), 0, self::ITEMS );
+		}
+		$country = BillingCountry::code( $raw['country'] ?? null );
+		if ( null !== $country ) {
+			$profile['country'] = $country;
 		}
 		$meta = $this->meta( $raw['meta'] ?? null );
 		if ( array() !== $meta ) {

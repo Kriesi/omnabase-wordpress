@@ -32,15 +32,13 @@ final class PortalApi {
 	public function __construct( private Client $client ) {}
 
 	/**
-	 * Tells OmnaBase the user's current address and name.
+	 * Tells OmnaBase the user's current address, name and billing country.
 	 *
-	 * @param string $site_id The user's site id.
-	 * @param string $email   Their address.
-	 * @param string $name    Their name ('' leaves it out).
+	 * @param string               $site_id The user's site id.
+	 * @param array<string,string> $body    What to tell (`CustomerBody`: the address, the name and the country when there are any).
 	 * @return array{status:?int,headers:array<string,string>,body:?array,error:?string}
 	 */
-	public function sync( string $site_id, string $email, string $name ): array {
-		$body = '' === $name ? array( 'email' => $email ) : array( 'email' => $email, 'name' => $name );
+	public function sync( string $site_id, array $body ): array {
 		return $this->client->call( 'PUT', '/customers/by-external/' . rawurlencode( $site_id ), $body, self::TIMEOUT_SECONDS );
 	}
 

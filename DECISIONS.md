@@ -1289,3 +1289,27 @@ in the OmnaBase repository. Version 0.2.1, unreleased.
   OmnaBase's author name as before.
 - Records: changelog.txt's 0.2.1 section, readme.txt's description bullet and FAQ answer, `languages/omnabase.pot` regenerated, the admin
   stylesheet's textarea rule (built from `styles/admin.css`).
+
+## 2026-11-01 — The customer sidebar round: the billing country goes to OmnaBase
+
+Brief `docs/briefs/customer-sidebar-round.md` (its last section) and reports `docs/reviews/customer-sidebar-round-{red-team-report,builder-report}.md`
+in the OmnaBase repository. Version 0.2.1, unreleased. OmnaBase now fills a customer's Country row from a connected shop.
+
+- **Which country**: the billing country, two upper-case letters (ISO 3166-1 alpha-2, "AT"): WooCommerce's billing country first (the user
+  field `billing_country`), else the Easy Digital Downloads customer's primary address (`edd_get_customer_address`). Anything else (a name,
+  three letters, an empty value) is no country. One class reads it, `Facts\BillingCountry`.
+- **Never sent empty**: without a country the key is left out. OmnaBase's sync empties a field it is sent as null, so an empty value would
+  wipe the country a person or another source set there. OmnaBase itself never lets a shop overwrite a team member's value or an outside
+  program's (its order of trust: a person, an outside program, a shop or the company's own system, the AI).
+- **Where it goes**: in both calls that tell OmnaBase about a user, through one body builder (`Sync\CustomerBody`: the address, the name when
+  there is one, the country when there is one): the outbox's first link (`UserLink`) and the message centre's own call (`Portal\Visitor` +
+  `PortalApi::sync`). The message centre's fingerprint includes the country, so a changed billing country is sent on the next visit. In the
+  customer-data answer the profile carries it too (`Facts\Sources\Profile` collects it, the shaper keeps it as two upper-case letters,
+  `ContractCheck` accepts a country of up to 60 and a language of up to 40 characters, as OmnaBase's reader does).
+- **No language**: a WordPress user's language setting is usually the site's, not the customer's; OmnaBase reads the language from the
+  customer's own messages. The shaper drops a language handed to it.
+- **Not this round**: a billing-country change outside the message centre is not sent on its own (the profile's country reaches OmnaBase on
+  the next ticket a team member opens anyway, through the customer-data answer).
+- **Words**: the suggested privacy text names "the country of your billing address" in the message centre's and the customer data's
+  sentences; readme.txt's External services list names it; the Customer data tab's profile switch reads "Profile: registered since, roles,
+  billing country and the ticked user fields"; `languages/omnabase.pot` regenerated.

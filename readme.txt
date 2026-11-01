@@ -56,7 +56,7 @@ No. The plugin makes no call to OmnaBase until an administrator clicks Connect, 
 
 = Which customer data does my team see? =
 
-Only the sources you tick on the Customer data tab of Settings › OmnaBase: the profile (registered since, roles and the user fields you pick), orders, subscriptions and licences. Passwords, tokens and keys are never sent, even when ticked.
+Only the sources you tick on the Customer data tab of Settings › OmnaBase: the profile (registered since, roles, the billing country and the user fields you pick), orders, subscriptions and licences. Passwords, tokens and keys are never sent, even when ticked.
 
 = What happens when OmnaBase cannot be reached? =
 
@@ -115,8 +115,8 @@ This plugin connects to **OmnaBase** (https://app.omnabase.com), a support inbox
 * **Connect and health:** the site's address and name when you connect; Check connection asks OmnaBase who the key is and to call the site back.
 * **Forum:** forum topics and replies in the forums you mark (title, text, the author's name and email address), when they are published.
 * **Contact form:** a page with `[omnabase_form]` loads OmnaBase's form script from app.omnabase.com in the visitor's browser, which sends the visitor's form messages straight to OmnaBase. For a signed-in customer the site asks OmnaBase for a short-lived note vouching for their email address, name, newest WooCommerce order number and licence key (when they hold exactly one).
-* **Message centre:** the signed-in customer's name, email address and an id for their account, each time they open the message centre; their new questions and answers when they send them.
-* **Customer data:** when OmnaBase asks about a customer, their account, orders, subscriptions and licences from the sources you switch on; licence changes when they happen.
+* **Message centre:** the signed-in customer's name, email address, the country of their billing address (when the shop knows one) and an id for their account, each time they open the message centre; their new questions and answers when they send them.
+* **Customer data:** when OmnaBase asks about a customer, their account (with the country of their billing address), orders, subscriptions and licences from the sources you switch on; licence changes when they happen.
 
 The site receives the replies and status changes of its own tickets from OmnaBase, OmnaBase's questions about a customer, and a test call when you check the connection. Each of these calls is signed by OmnaBase and checked by the plugin.
 

@@ -15,8 +15,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * When OmnaBase asks about an address that belongs to a user it does not know by id yet, the plugin queues one `PUT
- * /customers/by-external/<site id>` with the user's address and name; once OmnaBase accepted it, the user is known (later calls carry the
- * id, and licence refreshes can reach them). A user OmnaBase asked about by their site id is known already.
+ * /customers/by-external/<site id>` with the user's address, name and billing country (`CustomerBody`); once OmnaBase accepted it, the user
+ * is known (later calls carry the id, and licence refreshes can reach them). A user OmnaBase asked about by their site id is known already.
  */
 final class UserLink implements Job {
 
@@ -67,7 +67,7 @@ final class UserLink implements Job {
 			return Step::attention( KnownUsers::goneReason() );
 		}
 		$path = '/customers/by-external/' . rawurlencode( $this->site_ids->forUser( (int) $user->ID ) );
-		return Step::send( 'PUT', $path, array( 'email' => (string) $user->user_email, 'name' => (string) $user->display_name ), 10 );
+		return Step::send( 'PUT', $path, CustomerBody::of( $user ), 10 );
 	}
 
 	/** {@inheritDoc} */

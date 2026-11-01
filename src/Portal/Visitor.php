@@ -8,6 +8,7 @@
 namespace OmnaBase\WordPress\Portal;
 
 use OmnaBase\WordPress\Options;
+use OmnaBase\WordPress\Sync\CustomerBody;
 use OmnaBase\WordPress\Sync\KnownUsers;
 use OmnaBase\WordPress\Sync\SiteId;
 use OmnaBase\WordPress\UserNotes;
@@ -16,8 +17,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The identity is always the current WordPress user's site id (`<user id>-<8 characters>`, round two), never anything from the request.
- * Each view first tells OmnaBase the user's current address and name (`PUT /customers/by-external/<site id>`) unless a stored fingerprint
- * says OmnaBase already holds exactly these and called the address confirmed: while OmnaBase says unconfirmed every view asks again (it
+ * Each view first tells OmnaBase the user's current address, name and billing country (`PUT /customers/by-external/<site id>`, the body
+ * `CustomerBody` builds) unless a stored fingerprint says OmnaBase already holds exactly these and called the address confirmed: while OmnaBase says unconfirmed every view asks again (it
  * never tells the site when the link is opened). OmnaBase's refusals come back as `address_taken`, `forgotten` and `team_member` (the address
  * is a member of the workspace, never a customer), anything else that went wrong as `unavailable`. A user OmnaBase accepted counts as known (their later address changes go through the outbox).
  */
@@ -46,14 +47,15 @@ final class Visitor {
 	public function ensure( \WP_User $user ): array {
 		$user_id = (int) $user->ID;
 		$site_id = $this->site_ids->forUser( $user_id );
-		$print   = self::fingerprint( $user );
+		$body    = CustomerBody::of( $user );
+		$print   = self::fingerprint( $body );
 		if ( '' === $site_id ) {
 			return self::state( '', false, self::UNAVAILABLE );
 		}
 		if ( $this->known->isKnown( $user_id ) && hash_equals( (string) UserNotes::get( $user_id, Options::PORTAL_FINGERPRINT_META ), $print ) ) {
 			return self::state( $site_id, true, '' );
 		}
-		$answer = $this->api->sync( $site_id, trim( (string) $user->user_email ), trim( (string) $user->display_name ) );
+		$answer = $this->api->sync( $site_id, $body );
 		return $this->read( $user_id, $site_id, $print, $answer );
 	}
 
@@ -89,12 +91,13 @@ final class Visitor {
 	}
 
 	/**
-	 * The fingerprint of what OmnaBase is told: the address (as OmnaBase compares it) and the name.
+	 * The fingerprint of what OmnaBase is told: the address (as OmnaBase compares it), the name and (the customer sidebar round) the billing
+	 * country, so a changed country is sent on the next visit.
 	 *
-	 * @param \WP_User $user The user.
+	 * @param array<string,string> $body The body `CustomerBody` built.
 	 */
-	private static function fingerprint( \WP_User $user ): string {
-		return hash( 'sha256', strtolower( trim( (string) $user->user_email ) ) . '|' . trim( (string) $user->display_name ) );
+	private static function fingerprint( array $body ): string {
+		return hash( 'sha256', strtolower( $body['email'] ?? '' ) . '|' . ( $body['name'] ?? '' ) . '|' . ( $body['country'] ?? '' ) );
 	}
 
 	/**

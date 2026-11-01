@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Facts\Sources;
 
+use OmnaBase\WordPress\Facts\BillingCountry;
 use OmnaBase\WordPress\Facts\FactsSource;
 use OmnaBase\WordPress\Facts\MetaPolicy;
 use OmnaBase\WordPress\Facts\Person;
@@ -15,7 +16,8 @@ use OmnaBase\WordPress\Facts\Switches;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Only for a user with an account. Usermeta only when ticked, never a banned key (the shaper checks again), and only keys the user has.
+ * Only for a user with an account. Usermeta only when ticked, never a banned key (the shaper checks again), and only keys the user has. The
+ * customer sidebar round (2026-11-01): the billing country (`BillingCountry`) when the shop knows one; no language.
  */
 final class Profile implements FactsSource {
 
@@ -33,7 +35,7 @@ final class Profile implements FactsSource {
 
 	/** {@inheritDoc} */
 	public function label(): string {
-		return __( 'Profile: registered since, roles and the ticked user fields', 'omnabase' );
+		return __( 'Profile: registered since, roles, billing country and the ticked user fields', 'omnabase' );
 	}
 
 	/** {@inheritDoc} */
@@ -58,10 +60,12 @@ final class Profile implements FactsSource {
 				$meta[ $key ] = get_user_meta( (int) $user->ID, $key, true );
 			}
 		}
-		return array(
+		$profile = array(
 			'registeredAt' => Format::day( (string) $user->user_registered ),
 			'roles'        => array_values( (array) $user->roles ),
 			'meta'         => $meta,
 		);
+		$country = BillingCountry::ofUser( (int) $user->ID );
+		return null === $country ? $profile : $profile + array( 'country' => $country );
 	}
 }

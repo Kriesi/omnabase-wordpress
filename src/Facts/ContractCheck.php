@@ -42,7 +42,7 @@ final class ContractCheck {
 	}
 
 	/**
-	 * A profile: an object (or null) with registeredAt, roles and meta of the right shapes.
+	 * A profile: an object (or null) with registeredAt, roles, country, language and meta of the right shapes.
 	 *
 	 * @param mixed $p The profile as OmnaBase decodes it.
 	 */
@@ -53,8 +53,10 @@ final class ContractCheck {
 		if ( ! $p instanceof \stdClass ) {
 			return false;
 		}
-		if ( property_exists( $p, 'registeredAt' ) && ! self::text( $p->registeredAt, 40, false ) ) {
-			return false;
+		foreach ( array( 'registeredAt' => 40, 'country' => 60, 'language' => 40 ) as $field => $max ) {
+			if ( property_exists( $p, $field ) && ! self::text( $p->$field, $max, false ) ) {
+				return false;
+			}
 		}
 		if ( property_exists( $p, 'roles' ) && ! ( is_array( $p->roles ) && self::allTexts( array_slice( $p->roles, 0, 20 ), 60 ) ) ) {
 			return false;
