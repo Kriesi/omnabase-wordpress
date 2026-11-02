@@ -449,11 +449,6 @@
   background: var(--ob-status-resolved);
 }
 
-.ob-wp .ob-pill--archived::before {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--ob-status-pending);
-}
-
 /* the thread: the visitor's own messages tinted and set in, the team's on the surface; each names its author in words */
 .ob-wp .ob-wp-messages__thread {
   gap: var(--ob-space-3);

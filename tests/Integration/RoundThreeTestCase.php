@@ -12,9 +12,10 @@
  *
  * Shapes the red team pins here (chosen; the builder may rename and tell the red team; every name sits in this file):
  * - The forum settings live in one option, `omnabase_forum`: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>,
- *   'closing_line' => <text with {agent} and {workspace}, up to five lines>, 'guests' => bool, 'close_resolved' => bool ]`. Missing keys: no forum marked, no
+ *   'closing_line' => <text with {agent} and {workspace}, up to five lines>, 'guests' => bool, 'in_step' => bool ]` (adjusted 2026-11-02, OmnaBase's forum
+ *   sync and small fixes round rule 3: `in_step`, "Keep topics in step with tickets", replaces `close_resolved` and is on when missing). Missing keys: no forum marked, no
  *   support user, the default closing line "Best regards" and "{agent}, {workspace}" on two lines (the polish round, 2026-10-31; before:
- *   "— {agent}, {workspace}"), guests forwarded (the brief's default), closing on resolve off.
+ *   "— {agent}, {workspace}"), guests forwarded (the brief's default), topics kept in step with tickets (adjusted 2026-11-02: was closing on resolve off).
  * - The ticket number is kept on the topic as post meta `_omnabase_ticket`; OmnaBase's message id on a reply the plugin posted as
  *   `_omnabase_message_id` (the brief's name).
  * - The project of a new ticket is the connection's first project (`omnabase_site`'s `projects`, round one's record).
@@ -104,7 +105,7 @@ abstract class RoundThreeTestCase extends RoundTwoTestCase {
 	 * The forum settings: these forums marked, the support user chosen, anything else as given.
 	 *
 	 * @param int[]               $forums The marked forums.
-	 * @param array<string,mixed> $more   Other keys (`closing_line`, `guests`, `close_resolved`, `support_user`).
+	 * @param array<string,mixed> $more   Other keys (`closing_line`, `guests`, `in_step`, `support_user`).
 	 */
 	protected function markForums( array $forums, array $more = array() ): void {
 		update_option( self::FORUM_OPTION, array_merge( array( 'forums' => array_map( 'intval', $forums ), 'support_user' => $this->support ), $more ) );

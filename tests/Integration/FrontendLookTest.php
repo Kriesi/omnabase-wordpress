@@ -155,13 +155,17 @@ final class FrontendLookTest extends AppearanceTestCase {
 
 	/**
 	 * What it checks: Each conversation's status reads as a word in the kit's pill, one look per status, in the list and in the thread.
-	 * Passes when: for four conversations OmnaBase reports as open, pending, resolved and archived, each row's pill carries the kit's `ob-pill`,
-	 *   a modifier naming its status, and reads Open, Answered, Resolved and Closed; the thread of the archived one shows the same pill.
+	 * Passes when: for three conversations OmnaBase reports as open, pending and resolved, each row's pill carries the kit's `ob-pill`, a
+	 *   modifier naming its status, and reads Open, Answered and Resolved; the thread of the resolved one shows the same pill.
+	 *
+	 * Adjusted 2026-11-02 by the red team (OmnaBase's forum sync and small fixes round, the founder's decision on Archived, brief rule 11: the
+	 * status `archived` and its word "Closed" leave the message centre), not weakened: three states, three words, three looks; the thread is
+	 * checked on the resolved conversation.
 	 * Fails when: the state shows as colour alone (a colour-blind customer cannot tell Answered from Open), a word changes, or two different
 	 *   states share one look.
 	 */
 	public function test_the_status_pills_carry_the_words(): void {
-		$words = array( 'open' => 'Open', 'pending' => 'Answered', 'resolved' => 'Resolved', 'archived' => 'Closed' );
+		$words = array( 'open' => 'Open', 'pending' => 'Answered', 'resolved' => 'Resolved' );
 		$numbers = array();
 		foreach ( array_keys( $words ) as $status ) {
 			$numbers[ $status ] = $this->ticketFor( $this->ada, "Pill {$status}", array( array( 'kind' => 'you', 'name' => 'Ada Lovelace', 'bodyText' => 'Hello.' ) ), array( 'status' => $status ) );
@@ -179,9 +183,9 @@ final class FrontendLookTest extends AppearanceTestCase {
 			$this->assertNotEmpty( $mine, "{$status}: a modifier naming the status" );
 			$modifiers[ $status ] = reset( $mine );
 		}
-		$this->assertCount( 4, array_unique( $modifiers ), 'four states, four looks' );
-		$thread = $this->centreAs( $this->ada, array( self::TICKET_QUERY => $numbers['archived'] ) );
-		$this->assertSame( 'Closed', self::wordsOf( self::nodes( $thread, '//*[' . self::hasClass( 'ob-pill' ) . ']' )->item( 0 ) ?? new \DOMText( '' ) ), 'the thread shows the same pill' );
+		$this->assertCount( 3, array_unique( $modifiers ), 'three states, three looks' );
+		$thread = $this->centreAs( $this->ada, array( self::TICKET_QUERY => $numbers['resolved'] ) );
+		$this->assertSame( 'Resolved', self::wordsOf( self::nodes( $thread, '//*[' . self::hasClass( 'ob-pill' ) . ']' )->item( 0 ) ?? new \DOMText( '' ) ), 'the thread shows the same pill' );
 	}
 
 	/**

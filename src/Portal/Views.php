@@ -102,7 +102,6 @@ final class Views {
 		return match ( $status ) {
 			'pending'  => __( 'Answered', 'omnabase' ),
 			'resolved' => __( 'Resolved', 'omnabase' ),
-			'archived' => __( 'Closed', 'omnabase' ),
 			default    => __( 'Open', 'omnabase' ),
 		};
 	}

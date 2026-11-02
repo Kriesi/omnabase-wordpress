@@ -1,6 +1,6 @@
 <?php
 /**
- * The forum settings: which forums send their topics, the support user, the closing line, guests, closing on resolve.
+ * The forum settings: which forums send their topics, the support user, the closing line, guests, keeping topics in step with tickets.
  *
  * @package OmnaBase
  */
@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * One option (`omnabase_forum`). Missing keys mean: no forum marked, no support user, the closing line "Best regards" / "{agent}, {workspace}"
  * (the polish round, 2026-10-31: a few lines; an empty line or the old default "— {agent}, {workspace}" counts as not set), guests'
- * topics forwarded (the brief's default), closing a topic when its ticket is resolved off, no post fields (the site-fields round: `fields`,
+ * topics forwarded (the brief's default), topics kept in step with their tickets (`in_step`, the forum sync round of 2026-11-02: on when
+ * missing; the earlier `close_resolved` is ignored and dropped at the next save), no post fields (the site-fields round: `fields`,
  * key ⇒ name, cleaned by `PostFields::cleanRows`). The support user must have bbPress's moderator
  * rights (`moderate`: they can reply on closed topics); anyone else is never stored and never used.
  */
@@ -77,9 +78,9 @@ final class Settings {
 		update_option( Options::FORUM, array( 'fields' => $fields ) + $this->all(), false );
 	}
 
-	/** Whether a resolved ticket closes its topic. */
-	public function closeResolved(): bool {
-		return (bool) ( $this->all()['close_resolved'] ?? false );
+	/** Whether topics follow their tickets: closed when resolved, reopened when open or pending (on when never stored). */
+	public function inStep(): bool {
+		return (bool) ( $this->all()['in_step'] ?? true );
 	}
 
 	/**
@@ -90,20 +91,20 @@ final class Settings {
 	 * @param int    $support_user   The chosen support user.
 	 * @param string $closing_line   The closing line.
 	 * @param bool   $guests         Whether guests' topics are forwarded.
-	 * @param bool   $close_resolved Whether a resolved ticket closes its topic.
+	 * @param bool   $in_step        Whether topics follow their tickets.
 	 */
-	public function save( array $forums, int $support_user, string $closing_line, bool $guests, bool $close_resolved ): void {
+	public function save( array $forums, int $support_user, string $closing_line, bool $guests, bool $in_step ): void {
 		$forums = array_values( array_unique( array_filter( array_map( 'intval', $forums ), array( self::class, 'isForum' ) ) ) );
 		$line   = self::cleanClosingLine( $closing_line );
 		update_option(
 			Options::FORUM,
 			array(
-				'forums'         => $forums,
-				'support_user'   => self::canModerate( $support_user ) ? $support_user : (int) ( $this->all()['support_user'] ?? 0 ),
-				'closing_line'   => self::DEFAULT_CLOSING_LINE === $line ? '' : $line,
-				'guests'         => $guests,
-				'close_resolved' => $close_resolved,
-				'fields'         => $this->fields(),
+				'forums'       => $forums,
+				'support_user' => self::canModerate( $support_user ) ? $support_user : (int) ( $this->all()['support_user'] ?? 0 ),
+				'closing_line' => self::DEFAULT_CLOSING_LINE === $line ? '' : $line,
+				'guests'       => $guests,
+				'in_step'      => $in_step,
+				'fields'       => $this->fields(),
 			),
 			false
 		);

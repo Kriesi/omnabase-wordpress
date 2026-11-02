@@ -20,7 +20,8 @@
  * Shapes the red team pins (chosen; the builder may rename and tell the red team), besides `RoundThreeTestCase`'s:
  * - The forum section is `.ob-wp-settings__forum`: a form to `admin-post.php` with the action `omnabase_save_forum` (its nonce of the same
  *   name): a checkbox per forum `omnabase_forum[forums][]` (value: the forum's id), a select `omnabase_forum[support_user]`, a text field
- *   `omnabase_forum[closing_line]`, checkboxes `omnabase_forum[guests]` and `omnabase_forum[close_resolved]` (value `1`).
+ *   `omnabase_forum[closing_line]`, checkboxes `omnabase_forum[guests]` and `omnabase_forum[in_step]` (value `1`; adjusted 2026-11-02, OmnaBase's
+ *   forum sync round rule 3: was `omnabase_forum[close_resolved]`).
  * - Without bbPress the section says so and offers nothing to tick (not tested here: this run has bbPress).
  *
  * Why these fail today: the screen has no forum section and the action does not exist.
@@ -113,14 +114,14 @@ final class ForumScreenTest extends RoundThreeTestCase {
 
 	/**
 	 * What it checks: Saving the forum section stores exactly what the administrator chose.
-	 * Passes when: ticking only Support and Off topic, choosing Nina as the support user, a closing line of two lines (adjusted 2026-10-31), guests off and closing on resolve on,
+	 * Passes when: ticking only Support and Off topic, choosing Nina as the support user, a closing line of two lines (adjusted 2026-10-31), guests off and "Keep topics in step with tickets" on (adjusted 2026-11-02: was closing on resolve),
 	 *   then saving, leaves the forum option with exactly those forums, Nina, the line, guests false and closing true, and goes back to the
 	 *   screen's Forums tab.
 	 * Fails when: ticks are lost, a forum stays marked after unticking it, or the switches cannot be turned off.
 	 */
 	public function test_saving_stores_exactly_the_choices(): void {
 		// adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: the line has two lines now; the tag is still stripped and the break kept
-		$back = $this->save( array( 'forums' => array( (string) $this->publicForum, (string) $this->unmarkedForum ), 'support_user' => (string) $this->moderator, 'closing_line' => "Cheers,\n{agent} <b>from</b> {workspace}", 'close_resolved' => '1' ) );
+		$back = $this->save( array( 'forums' => array( (string) $this->publicForum, (string) $this->unmarkedForum ), 'support_user' => (string) $this->moderator, 'closing_line' => "Cheers,\n{agent} <b>from</b> {workspace}", 'in_step' => '1' ) ); // adjusted 2026-11-02 (OmnaBase's forum sync round, rule 3): the switch is `in_step`
 
 		$this->assertNotNull( $back );
 		$this->assertStringContainsString( 'page=omnabase', (string) $back );
@@ -130,7 +131,7 @@ final class ForumScreenTest extends RoundThreeTestCase {
 		$this->assertSame( $this->moderator, (int) ( $saved['support_user'] ?? 0 ) );
 		$this->assertSame( "Cheers,\n{agent} from {workspace}", $saved['closing_line'] ?? null, 'stored as plain text, its line break kept' );
 		$this->assertFalse( (bool) ( $saved['guests'] ?? true ), 'unticked guests switch' );
-		$this->assertTrue( (bool) ( $saved['close_resolved'] ?? false ) );
+		$this->assertTrue( (bool) ( $saved['in_step'] ?? false ), 'adjusted 2026-11-02: the switch "Keep topics in step with tickets" is stored as in_step' );
 	}
 
 	/**

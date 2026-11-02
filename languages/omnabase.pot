@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-01T08:27:36+00:00\n"
+"POT-Creation-Date: 2026-11-02T21:28:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -586,6 +586,18 @@ msgstr ""
 msgid "Not sent: its forum is no longer marked."
 msgstr ""
 
+#: src/Forum/StatusSender.php:35
+msgid "Forum topic closed or opened"
+msgstr ""
+
+#: src/Forum/StatusSender.php:49
+msgid "Not sent: the topic was removed or is no ticket."
+msgstr ""
+
+#: src/Forum/StatusSender.php:53
+msgid "Not sent: the topic is neither open nor closed now."
+msgstr ""
+
 #: src/Forum/TopicSender.php:48
 msgid "Forum topic to ticket"
 msgstr ""
@@ -747,15 +759,11 @@ msgid "Resolved"
 msgstr ""
 
 #: src/Portal/Views.php:105
-msgid "Closed"
-msgstr ""
-
-#: src/Portal/Views.php:106
 msgid "Open"
 msgstr ""
 
 #. translators: the date format of a ticket's last change in the message centre (PHP date format; keep the year).
-#: src/Portal/Views.php:118
+#: src/Portal/Views.php:117
 msgid "j M Y"
 msgstr ""
 
@@ -1269,11 +1277,11 @@ msgid "Guests too"
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:77
-msgid "Resolved tickets"
+msgid "Keep topics in step with tickets"
 msgstr ""
 
 #: templates/admin/partials/forum-rows.php:78
-msgid "Close the topic when its ticket is resolved"
+msgid "Closed when the ticket is resolved, reopened when it is open or pending."
 msgstr ""
 
 #: templates/admin/partials/forum.php:16

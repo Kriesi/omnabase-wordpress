@@ -33,14 +33,16 @@ final class AdminLookForumTest extends RoundThreeTestCase {
 		'Who answers on the forum' => "select[@name='omnabase_forum[support_user]']",
 		'Line under each answer'   => "textarea[@name='omnabase_forum[closing_line]']", // adjusted 2026-10-31 by the red team (the polish round, OmnaBase brief docs/briefs/polish-round.md rule 2), not weakened: a box of a few lines
 		'Who may send topics'      => "input[@type='radio'][@name='omnabase_forum[guests]']",
-		'Resolved tickets'         => "input[@type='checkbox'][@name='omnabase_forum[close_resolved]']",
+		// adjusted 2026-11-02 by the red team (OmnaBase's forum sync and small fixes round, brief rule 3), not weakened: the switch is renamed
+		// "Keep topics in step with tickets" and stored as `in_step`; the row still holds its one checkbox
+		'Keep topics in step with tickets' => "input[@type='checkbox'][@name='omnabase_forum[in_step]']",
 	);
 
 	/**
 	 * What it checks: With bbPress active, the Forums tab is a white card whose settings are the kit's rows, without WordPress's settings table.
 	 * Passes when: the Forums tab holds no `form-table` and no table row heading; its forum section is (or sits in) a well-formed card; every
 	 *   tick, box and choice (the forum ticks too) sits in a row's control; there are rows labelled "Who answers on the forum", "Line under
-	 *   each answer", "Who may send topics" and "Resolved tickets", each control holding its own field (both guest choices in one row); every
+	 *   each answer", "Who may send topics" and "Keep topics in step with tickets" (adjusted 2026-11-02: was "Resolved tickets"), each control holding its own field (both guest choices in one row); every
 	 *   help at most 30 words; nothing to read outside a card.
 	 * Fails when: the forum settings keep WordPress's grey two-column table, the forum ticks hang outside the layout, or a label no longer sits
 	 *   beside the field it names.

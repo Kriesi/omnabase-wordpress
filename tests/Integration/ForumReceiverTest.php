@@ -241,9 +241,14 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 	}
 
 	/**
-	 * What it checks: A ticket resolved in OmnaBase closes its forum topic only when the administrator turned that on.
-	 * Passes when: with the switch off the resolve leaves the topic open; with it on, the resolve closes it (answered 200 both times).
-	 * Fails when: topics close behind the site owner's back, or the switch does nothing.
+	 * What it checks: A ticket resolved in OmnaBase closes its forum topic unless the administrator turned that off.
+	 * Passes when: with the switch stored off the resolve leaves the topic open; with nothing stored (the switch's default, on) the resolve
+	 *   closes it (answered 200 both times).
+	 * Fails when: topics close although the site owner turned the switch off, or the switch does nothing.
+	 *
+	 * Adjusted 2026-11-02 by the red team (OmnaBase's forum sync and small fixes round, brief docs/briefs/forum-sync-and-small-fixes-round.md
+	 * rule 3: the switch becomes "Keep topics in step with tickets", stored as `in_step`, on by default, the old `close_resolved` dropped), not
+	 * weakened: "off" is now stored explicitly and "on" is the default; both outcomes are checked as before.
 	 *
 	 * @dataProvider resolves
 	 *
@@ -251,13 +256,14 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 	 * @param array  $changes The event's `changes`.
 	 */
 	public function test_a_resolved_ticket_closes_the_topic_only_when_switched_on( string $type, array $changes ): void {
+		$this->markForums( array( $this->publicForum ), array( 'in_step' => false ) ); // adjusted 2026-11-02: off is stored explicitly (the default is on)
 		$topic = $this->filedTopic();
 
 		$off = $this->deliverEvent( $type, 'dlv-off', array( 'ticket' => $this->ticketData( $topic, 'resolved' ), 'changes' => $changes ) );
 		$this->assertSame( 200, $off->get_status() );
 		$this->assertFalse( bbp_is_topic_closed( $topic ), 'switched off: the topic stays open' );
 
-		$this->markForums( array( $this->publicForum ), array( 'close_resolved' => true ) );
+		$this->markForums( array( $this->publicForum ) ); // adjusted 2026-11-02: nothing stored is the switch's default, on (was `close_resolved` true)
 		$on = $this->deliverEvent( $type, 'dlv-on', array( 'ticket' => $this->ticketData( $topic, 'resolved' ), 'changes' => $changes ) );
 		$this->assertSame( 200, $on->get_status() );
 		$this->assertTrue( bbp_is_topic_closed( $topic ), 'switched on: the topic is closed' );
@@ -266,8 +272,24 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 	/** The two shapes a resolve can arrive in. */
 	public static function resolves(): array {
 		return array(
-			'ticket.updated to resolved (the brief)' => array( 'ticket.updated', array( 'status' => 'resolved' ) ),
-			'ticket.resolved (OmnaBase\'s fan-out)'  => array( 'ticket.resolved', array( 'status' => 'resolved' ) ),
+			// adjusted 2026-11-02 by the builder (the founder's decision on the forum sync round's question 1): "ticket.updated to resolved" is how
+			// OmnaBase now sends the AI's automatic resolve, which never closes the topic; it moved to the test below with that outcome
+			'ticket.resolved (OmnaBase\'s fan-out)' => array( 'ticket.resolved', array( 'status' => 'resolved' ) ),
 		);
+	}
+
+	/**
+	 * What it checks: A "ticket updated" whose status change is "resolved" (the AI's automatic answer that resolved the ticket) never closes the
+	 *   topic, whatever the switch says.
+	 * Passes when: with the switch on (its default) the event is answered 200 and the topic stays open.
+	 * Fails when: a bot answer closes the thread at once and the customer cannot answer in the forum.
+	 *
+	 * Added 2026-11-02 by the builder (OmnaBase's forum sync round, the founder's decision on question 1), replacing the provider row above.
+	 */
+	public function test_the_ais_automatic_resolve_never_closes_the_topic(): void {
+		$topic = $this->filedTopic();
+		$r     = $this->deliverEvent( 'ticket.updated', 'dlv-ai', array( 'ticket' => $this->ticketData( $topic, 'resolved' ), 'changes' => array( 'status' => 'resolved' ) ) );
+		$this->assertSame( 200, $r->get_status() );
+		$this->assertFalse( bbp_is_topic_closed( $topic ), 'the topic stays open' );
 	}
 }

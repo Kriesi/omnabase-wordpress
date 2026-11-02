@@ -7,6 +7,8 @@ section is never changed again. At release the top section is copied into readme
 
 * Added: OmnaBase now learns a customer's billing country from WooCommerce or Easy Digital Downloads, when the shop knows one, so it shows in the customer's details beside every ticket; the suggested privacy text names it.
 * Changed: A team member's answer appears on the forum under their own forum account when they are a moderator there with the same email address; the support user posts the AI's answers and the rest.
+* Changed: Forum topics and their tickets stay in step both ways: closing a topic in the forum resolves its ticket in OmnaBase and reopening it opens the ticket; a ticket your team resolves closes its topic, and one set back to open or pending reopens it. The switch "Keep topics in step with tickets" under Settings › OmnaBase › Forums is on for every site after the update; the AI's automatic answers leave the topic open.
+* Changed: The message centre shows three statuses (Open, Answered, Resolved); "Closed" is gone, as OmnaBase no longer archives tickets.
 * Changed: The closing line under a forum reply can have several lines; it now starts with "Best regards" and the team member's customer-facing name, and sites still on the old line get the new one; the AI's own answers sign off as your team ("Best regards / The Kriesi team").
 
 = 0.2.0 — 2026-10-29 =

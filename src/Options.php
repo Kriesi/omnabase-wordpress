@@ -44,7 +44,7 @@ final class Options {
 
 	/**
 	 * The forum settings: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>, 'closing_line' => <text>, 'guests' => bool,
-	 * 'close_resolved' => bool ]`; read and written by `Forum\Settings` alone.
+	 * 'in_step' => bool, 'fields' => [ key => name ] ]`; read and written by `Forum\Settings` alone.
 	 */
 	public const FORUM = 'omnabase_forum';
 
@@ -119,6 +119,9 @@ final class Options {
 
 	/** Post meta (the post-as-member round): how a reply the plugin posted got its author, `member` or `support`. Removed at uninstall. */
 	public const POSTED_AS_META = '_omnabase_posted_as';
+
+	/** Post meta (the forum sync round, 2026-11-02): the number (`seq`) of the newest status message applied to a topic. Removed at uninstall. */
+	public const STATUS_SEQ_META = '_omnabase_status_seq';
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';

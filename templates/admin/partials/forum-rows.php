@@ -5,7 +5,7 @@
  *
  * @package OmnaBase
  *
- * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,closeResolved:bool} $omnabase_forum
+ * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool} $omnabase_forum
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -74,10 +74,10 @@ defined( 'ABSPATH' ) || exit;
 </div>
 <div class="ob-form-row">
 	<div class="ob-form-row__text">
-		<label class="ob-form-row__label" for="omnabase-close-resolved"><?php esc_html_e( 'Resolved tickets', 'omnabase' ); ?></label>
-		<div class="ob-form-row__help"><?php esc_html_e( 'Close the topic when its ticket is resolved', 'omnabase' ); ?></div>
+		<label class="ob-form-row__label" for="omnabase-in-step"><?php esc_html_e( 'Keep topics in step with tickets', 'omnabase' ); ?></label>
+		<div class="ob-form-row__help"><?php esc_html_e( 'Closed when the ticket is resolved, reopened when it is open or pending.', 'omnabase' ); ?></div>
 	</div>
 	<div class="ob-form-row__control">
-		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-close-resolved" name="omnabase_forum[close_resolved]" value="1" <?php checked( $omnabase_forum['closeResolved'] ); ?>>
+		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-in-step" name="omnabase_forum[in_step]" value="1" <?php checked( $omnabase_forum['inStep'] ); ?>>
 	</div>
 </div>

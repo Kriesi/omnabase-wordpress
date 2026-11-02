@@ -20,7 +20,8 @@
  * wp-content or the main site's uploads folder, with its `index.php` and `.htaccess`) are one per network and go once, after every site has
  * stopped its key at OmnaBase (that stop still needs the key). The site-fields round: the Forums tab's cached meta keys (a transient); the
  * post fields themselves live in the forum settings, and the values on forum replies are the site's own post meta, which stay. The
- * post-as-member round: the mark on every posted reply of how its author was chosen (`_omnabase_posted_as`, post meta).
+ * post-as-member round: the mark on every posted reply of how its author was chosen (`_omnabase_posted_as`, post meta). The forum sync
+ * round (2026-11-02): the number of the newest status message applied to every topic (`_omnabase_status_seq`, post meta).
  *
  * @package OmnaBase
  */
@@ -77,10 +78,12 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 		delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . $note, '', true );
 	}
 
-	// Every topic's ticket number, every posted reply's OmnaBase message id and how its author was chosen (the post-as-member round).
+	// Every topic's ticket number and newest applied status message (the forum sync round), every posted reply's OmnaBase message id and
+	// how its author was chosen (the post-as-member round).
 	delete_post_meta_by_key( '_omnabase_ticket' );
 	delete_post_meta_by_key( '_omnabase_message_id' );
 	delete_post_meta_by_key( '_omnabase_posted_as' );
+	delete_post_meta_by_key( '_omnabase_status_seq' );
 
 	// The outbox's timer (the job every minute and the one-off run after a new row) and the forum's waiting subscriber mails.
 	wp_clear_scheduled_hook( 'omnabase_outbox' );

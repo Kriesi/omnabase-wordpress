@@ -1313,3 +1313,34 @@ in the OmnaBase repository. Version 0.2.1, unreleased. OmnaBase now fills a cust
 - **Words**: the suggested privacy text names "the country of your billing address" in the message centre's and the customer data's
   sentences; readme.txt's External services list names it; the Customer data tab's profile switch reads "Profile: registered since, roles,
   billing country and the ticked user fields"; `languages/omnabase.pot` regenerated.
+
+## 2026-11-02 — The forum sync round: topics and tickets in step, both ways
+
+Brief `docs/briefs/forum-sync-and-small-fixes-round.md` (its last two sections hold the founder's decisions) and reports
+`docs/reviews/forum-sync-and-small-fixes-round-{red-team-report,builder-report}.md` in the OmnaBase repository. Version 0.2.1, unreleased.
+**Round three's "No reopening" is overturned.**
+
+- **Forum → ticket.** A filed topic closed in the forum (bbPress's Close, `bbp_closed_topic`) or opened again (`bbp_opened_topic`), or moved
+  between `publish` and `closed` in wp-admin's editor (WordPress's `transition_post_status`, a hook: a named moment where plugin code runs),
+  queues one outbox row of the kind `forum_status` per topic (the outbox's one-waiting-row-per-key rule folds bbPress's two moments for one
+  close into one row). The row reads the topic when it goes and sends `PATCH /tickets/{number}` with `{ "status": "resolved" }` for a closed
+  topic or `{ "status": "open" }` for an open one, so a close and a reopen within a minute send "open" once. A topic moved to spam, the bin
+  or held for moderation sends nothing; a topic that is no ticket queues nothing. `Forum\StatusTriggers` hooks the moments,
+  `Forum\StatusSender` is the job.
+- **Forum → ticket needs no switch.** The brief's rule 1 has none, and the switch's words describe OmnaBase's word only ("Closed when the
+  ticket is resolved, reopened when it is open or pending."). A site that turns the switch off still tells OmnaBase what its moderators do.
+- **Ticket → forum** (`Forum\Closer`): with the switch "Keep topics in step with tickets" on, `ticket.resolved` closes an open topic and
+  `ticket.updated` whose change is the status `open` or `pending` reopens a closed one (`bbp_open_topic`). `ticket.updated` with the status
+  `resolved` changes nothing: OmnaBase sends the AI's automatic answer that resolved a ticket that way, and the founder decided (question 1)
+  that a bot answer must never lock the thread; the topic closes when a person resolves the ticket or OmnaBase's auto-close runs. The
+  red team's two tests that pinned "ticket.updated resolved closes" were adjusted with dated notes and a test of the opposite outcome each.
+- **No echo.** The plugin's own close and reopen run with a flag up (`TopicStatus::isApplying()`, as `ReplyPoster::isPosting()` for
+  replies), so the status listener queues nothing for them. OmnaBase in turn never sends a change made through the site's own key back.
+- **Late deliveries.** Each topic keeps the number (`seq`) of the newest status webhook it applied as post meta `_omnabase_status_seq`; a
+  webhook with a smaller or equal number changes nothing. A webhook ignored because the switch is off records no number. Removed at
+  uninstall.
+- **The switch** is stored as `in_step` in `omnabase_forum`, on when missing; the old `close_resolved` is ignored and dropped at the next save
+  (development stage: no migration), so every connected site is in step after the update. Label "Keep topics in step with tickets".
+- **Three statuses.** OmnaBase dropped Archived (the founder's decision): the message centre's `'archived' => 'Closed'` word and the
+  `ob-pill--archived` look are gone.
+- Records: changelog.txt's 0.2.1 section, readme.txt's forum bullet, `languages/omnabase.pot` regenerated, `assets/form.css` rebuilt.
