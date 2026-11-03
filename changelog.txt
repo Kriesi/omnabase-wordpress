@@ -5,6 +5,7 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.1 — unreleased =
 
+* Added: "Licence in a user field" can count only the values that equal or contain a text you choose, read the code from a key inside a stored list, and show the licence's end date from an expiry field, so your team sees it as active or expired with its day.
 * Added: "Licence in a user field" under Settings › OmnaBase › Customer data (off by default): a licence code another plugin keeps for each user, such as a purchase code checked at registration, shows in OmnaBase as a licence of the product you name, with only its last four characters; a changed or removed code reaches OmnaBase on its own.
 * Fixed: A reply on a forum topic by another forum member (not the topic's author, not a moderator) now reaches the ticket in OmnaBase under that member's name, and brings the ticket back to your team like the customer's own reply; it never carries that member's private data.
 * Fixed: A moderator's answer written on the forum now shows in OmnaBase under the moderator's own name, not the support user's.

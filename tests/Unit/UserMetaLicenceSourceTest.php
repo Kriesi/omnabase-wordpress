@@ -269,6 +269,10 @@ final class UserMetaLicenceSourceTest extends TestCase {
 	 * Passes when: saving `av_purchase_code` (it holds "purchase" and "code") and "Enfold" with the source ticked stores both, reads them back
 	 *   through the switches, and never adds the field to the ticked user fields.
 	 * Fails when: kriesi.at's field cannot be chosen at all (the ban refuses it), or choosing it as a licence also sends it as a profile field.
+	 *
+	 * Adjusted 2026-11-04 (outside red team, licence-and-fields round, piece A): the licence settings grow a condition, its text and an expiry
+	 *   on purpose, so the field and the product are compared one by one instead of as the whole settings list. Not a weakening: both stay
+	 *   pinned exactly as before; the three new settings are pinned in `LicenceConditionExpiryTest.php`.
 	 */
 	public function test_saving_keeps_the_field_and_product_even_with_a_banned_word(): void {
 		$switches = new Switches();
@@ -276,7 +280,8 @@ final class UserMetaLicenceSourceTest extends TestCase {
 		$switches->save( array( 'profile', 'user_meta_licence' ), array( 'user_meta_licence' ), array( 'billing_country' ), array( 'key' => ' av_purchase_code ', 'product' => ' Enfold ' ) );
 
 		$this->assertIsArray( $this->saved );
-		$this->assertSame( array( 'key' => 'av_purchase_code', 'product' => 'Enfold' ), $switches->licenceMeta() );
+		$this->assertSame( 'av_purchase_code', $switches->licenceMeta()['key'] ?? null );
+		$this->assertSame( 'Enfold', $switches->licenceMeta()['product'] ?? null );
 		$this->assertSame( array( 'billing_country' ), $switches->meta() );
 		$this->assertTrue( $switches->isOn( 'user_meta_licence' ) );
 	}
@@ -301,11 +306,16 @@ final class UserMetaLicenceSourceTest extends TestCase {
 	 * Passes when: with the facts option as it was before this round (sources and user fields only), the switches answer an empty field name
 	 *   and an empty product name.
 	 * Fails when: an updated site's customer-data tab or facts call breaks because its stored option predates the new settings.
+	 *
+	 * Adjusted 2026-11-04 (outside red team, licence-and-fields round, piece A): the settings list grows on purpose (condition, its text,
+	 *   expiry), so the two names are compared one by one. Not a weakening: both must still read as empty strings; the new settings' empty
+	 *   values ("any", '', '') are pinned in `LicenceConditionExpiryTest.php`.
 	 */
 	public function test_an_older_option_reads_as_empty_settings(): void {
 		$this->option = array( 'sources' => array( 'profile' => true ), 'meta' => array( 'billing_country' ) );
 
-		$this->assertSame( array( 'key' => '', 'product' => '' ), ( new Switches() )->licenceMeta() );
+		$this->assertSame( '', ( new Switches() )->licenceMeta()['key'] ?? null );
+		$this->assertSame( '', ( new Switches() )->licenceMeta()['product'] ?? null );
 	}
 
 	/* ---------- helpers ---------- */

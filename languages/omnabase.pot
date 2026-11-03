@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T20:38:48+00:00\n"
+"POT-Creation-Date: 2026-11-03T22:50:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -115,29 +115,50 @@ msgstr ""
 msgid "That call is no longer waiting."
 msgstr ""
 
+#: src/Admin/FactsView.php:74
+#: src/Facts/Sources/UserMetaLicence.php:113
+msgid "Licence"
+msgstr ""
+
+#: src/Admin/FactsView.php:75
+msgid "active"
+msgstr ""
+
+#. translators: %s: a made-up end day, such as 12 Mar 2027.
+#: src/Admin/FactsView.php:78
+#, php-format
+msgid "expires %s"
+msgstr ""
+
+#. translators: 1: the product's name, 2: the licence's status, such as "active" or "expires 12 Mar 2027".
+#: src/Admin/FactsView.php:81
+#, php-format
+msgid "Your team sees, for example: %1$s ••••-1a2b, %2$s."
+msgstr ""
+
 #. translators: 1: the installed version, 2: the oldest supported version.
-#: src/Admin/FactsView.php:87
+#: src/Admin/FactsView.php:105
 #, php-format
 msgid "unsupported version %1$s; needs %2$s or newer"
 msgstr ""
 
-#: src/Admin/FactsView.php:97
+#: src/Admin/FactsView.php:115
 msgid "profile"
 msgstr ""
 
-#: src/Admin/FactsView.php:98
+#: src/Admin/FactsView.php:116
 msgid "orders"
 msgstr ""
 
-#: src/Admin/FactsView.php:99
+#: src/Admin/FactsView.php:117
 msgid "subscriptions"
 msgstr ""
 
-#: src/Admin/FactsView.php:100
+#: src/Admin/FactsView.php:118
 msgid "licences"
 msgstr ""
 
-#: src/Admin/FactsView.php:101
+#: src/Admin/FactsView.php:119
 msgid "licences (the oldest)"
 msgstr ""
 
@@ -476,18 +497,13 @@ msgstr ""
 msgid "License Manager for WooCommerce licences"
 msgstr ""
 
-#: src/Facts/Sources/Profile.php:39
+#: src/Facts/Sources/Profile.php:40
 msgid "Profile: registered since, roles, billing country and the ticked user fields"
 msgstr ""
 
-#: src/Facts/Sources/UserMetaLicence.php:41
-#: templates/admin/partials/facts-licence.php:17
+#: src/Facts/Sources/UserMetaLicence.php:46
+#: templates/admin/partials/facts-licence.php:21
 msgid "Licence in a user field"
-msgstr ""
-
-#: src/Facts/Sources/UserMetaLicence.php:85
-#: templates/admin/partials/facts-licence.php:14
-msgid "Licence"
 msgstr ""
 
 #: src/Facts/Sources/WooCommerce.php:29
@@ -1124,30 +1140,60 @@ msgstr ""
 msgid "Disconnect"
 msgstr ""
 
-#: templates/admin/partials/facts-licence.php:18
-msgid "A licence code another plugin keeps for each user, such as a purchase code checked at registration; your team sees only its last four characters."
+#: templates/admin/partials/facts-licence.php:15
+msgid "Any value"
 msgstr ""
 
-#: templates/admin/partials/facts-licence.php:21
-msgid "Field name"
+#: templates/admin/partials/facts-licence.php:16
+msgid "Equals"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:17
+msgid "Contains"
 msgstr ""
 
 #: templates/admin/partials/facts-licence.php:22
-msgid "The name the code is stored under for each user, such as av_purchase_code."
+msgid "A licence code another plugin keeps for each user, such as a purchase code checked at registration; your team sees only its last four characters."
 msgstr ""
 
-#: templates/admin/partials/facts-licence.php:24
+#: templates/admin/partials/facts-licence.php:25
+msgid "Field name"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:26
+msgid "The field holding each user's code, such as av_purchase_code, or a key inside a stored list, such as av_purchase_data.purchase_code."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:28
 msgid "No user has this field yet: check the name, or wait until the first code is saved."
 msgstr ""
 
-#: templates/admin/partials/facts-licence.php:33
+#: templates/admin/partials/facts-licence.php:37
 msgid "Product name"
 msgstr ""
 
-#. translators: %s: the product's name, as the team sees it beside a made-up masked code.
-#: templates/admin/partials/facts-licence.php:37
-#, php-format
-msgid "Shown beside the licence in OmnaBase, for example: %s ••••-1a2b, active."
+#: templates/admin/partials/facts-licence.php:38
+msgid "Shown beside the licence in OmnaBase."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:46
+msgid "Condition"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:47
+msgid "Which stored values count as a licence; capitals and spaces around the text are ignored."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:55
+msgid "Condition text"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:60
+msgid "Expiry field"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:61
+msgid "Optional: the field holding the day the licence ends, such as av_purchase_data.supported_until; after that day your team sees it as expired."
 msgstr ""
 
 #: templates/admin/partials/facts.php:18

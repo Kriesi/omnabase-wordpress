@@ -169,6 +169,10 @@
 .ob-wp-settings .ob-form-row__control textarea:focus { border-color: var(--ob-focus); box-shadow: 0 0 0 1px var(--ob-focus); outline: none; }
 .ob-wp-settings .ob-form-row__control select:focus,
 .ob-wp-settings .ob-form-row__control input[type="text"]:focus { border-color: var(--ob-focus); box-shadow: 0 0 0 1px var(--ob-focus); outline: none; }
+/* the licence card (the licence-and-fields round): the condition's choice and its text side by side, the sample line under the rows */
+.ob-wp-settings .ob-form-row__control select.ob-wp-settings__condition { width: 140px; }
+.ob-wp-settings .ob-form-row__control input.ob-wp-settings__condition-text { width: 148px; }
+.ob-wp-settings .ob-wp-settings__licence-meta-sample { margin: var(--ob-space-3) 0 0; }
 .ob-wp-settings .ob-form-row__control fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .ob-wp-settings .ob-wp-settings__choices { display: flex; flex-direction: column; gap: 6px; }
 .ob-wp-settings .ob-wp-settings__choices label { display: flex; align-items: center; gap: var(--ob-space-2); }

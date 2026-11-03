@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Sync;
 
+use OmnaBase\WordPress\Facts\FieldPath;
 use OmnaBase\WordPress\Facts\Sources\UserMetaLicence;
 use OmnaBase\WordPress\Facts\Switches;
 
@@ -17,6 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * of the field named as the licence, while its source is on, hands the user to `LicenceRefresh::changed` (which keeps its own guards: a user
  * OmnaBase knows, one waiting row per user). A user being deleted queues nothing: WordPress removes their fields one by one first, and
  * OmnaBase learns of the deletion otherwise. On a network, a field written on another site of it fires no moment here (DECISIONS.md).
+ * The licence-and-fields round (2026-11-04): the expiry's field is watched too, and a `field.key` setting is watched by its field part
+ * (WordPress names the field, never the key inside its list).
  */
 final class LicenceFieldHooks {
 
@@ -63,12 +66,13 @@ final class LicenceFieldHooks {
 	}
 
 	/**
-	 * Whether the field is the one named as the licence, with its source on.
+	 * Whether the field is the one the licence or its expiry is read from, with the source on.
 	 *
 	 * @param string $meta_key The field's name.
 	 */
 	private function isLicenceField( string $meta_key ): bool {
-		$key = $this->switches->licenceMeta()['key'];
-		return '' !== $key && $key === $meta_key && $this->switches->isOn( UserMetaLicence::ID );
+		$settings = $this->switches->licenceMeta();
+		$watched  = array_filter( array( FieldPath::field( $settings['key'] ), FieldPath::field( $settings['expiry'] ) ) );
+		return in_array( $meta_key, $watched, true ) && $this->switches->isOn( UserMetaLicence::ID );
 	}
 }

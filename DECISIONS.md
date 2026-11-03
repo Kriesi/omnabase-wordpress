@@ -1441,3 +1441,45 @@ new code); no shop plugin runs there, so no source read it.
 - Tests: `tests/Unit/UserMetaLicenceSourceTest.php`, `tests/Integration/UserMetaLicenceTest.php`,
   `tests/Structure/LicenceSourcesStructureTest.php` (the red team's), and `RoundTwoScreenTest::test_a_switch_per_detected_source_all_off`
   (adjusted by the red team, dated note).
+
+## 2026-11-04 — The licence's condition and expiry, and how `field.key` and dates are read
+
+OmnaBase's brief `docs/briefs/licence-and-fields-round.md` piece A with its final section "After the red teams' review" (final), and the
+outside red team's report `docs/reviews/licence-and-fields-round-outside-red-team-report.md` (findings A1 to A13), both in the OmnaBase
+repository. "Licence in a user field" learns a condition on the value and an optional expiry, so kriesi.at's support end
+(`av_purchase_data.supported_until`) reaches the team.
+
+- **The settings** grow three keys in the same option: `omnabase_facts['licence_meta'] = [ 'key', 'product', 'condition', 'condition_text',
+  'expiry' ]`. `Switches::licenceMeta()` answers all five; a site saved before this round reads "any", '' and ''. No migration.
+- **The condition** is "any" (today's rule), "equals" or "contains", each compared without capitals and with the spaces around both texts
+  trimmed (Q4). A condition with no text, or a word the screen never offers, is stored as "any": an "equals nothing" must never take every
+  member's licence away, and a forged form cannot store a rule the source does not know. The text goes through `sanitize_text_field` on
+  save (tags and `%xx` sequences stripped; acceptable for this purpose, A10), at most 120 characters. A value that fails the condition is
+  "no licence now" (an empty list); the mask stays the value's last four characters.
+- **`field.key` (A1, Q-A1).** A name is a user field, or one key of a list stored in a user field: the part before the **first dot** is the
+  field, the rest is one key (`Facts\FieldPath`). A name with an empty part or a second dot (`a.b.c`) is refused and stored empty; the
+  field part follows the licence field's rule (WordPress's own secrets and role fields refused, banned words accepted), the key part the
+  plain naming rule. The cost, accepted: a field whose own name holds a dot can no longer be named (it could before, as a licence field).
+  The licence field accepts the same syntax (`av_purchase_data.purchase_code`), so kriesi.at's direct-shop buyers count. The list is read as
+  an array, or an object's property; anything else reads as nothing. Only the masked code and the day leave the site, never the list.
+  The profile source, the user-field picker and the "no user has this field yet" note use the field part.
+- **Dates (A4, `Facts\Sources\ExpiryDate`).** A Unix time is a number, or a text of 9 to 11 digits. An 8-digit text that is a real calendar
+  day (`20270312`, ACF's way) is that day, never a 1970 timestamp. Any other text is read only when it names one fixed moment: PHP's
+  reader also accepts "tomorrow" or "+1 week", so a text whose moment changes with "now" (`strtotime` against two different "nows") is
+  unreadable. Zero, a negative number, `0000-00-00` and empty text are unreadable. A date without a time lasts the whole day, until 23:59:59
+  in the site's time zone (Q-A3). `expiresAt` is `Y-m-d`: a text by its own date part (Envato's `2027-03-12T05:25:07+11:00` shows
+  2027-03-12), a Unix time in the site's zone; the status compares the exact moment, so near midnight the two may differ by hours (accepted).
+- **Status.** With an expiry, "active" until its moment and "expired" after it, with `expiresAt`; without one, "active" as before. **An
+  unreadable expiry** (a missing key, a missing field, a word, a list) keeps the licence, without a date (Q5): one odd row must never take a
+  paying member's licence away, and no made-up date may leave. An expiry alone is no licence. The word stays "expired" (Q-A4); members
+  allowed to post for ever (`av_perma_license`) show "expired" when their support end passed (Q-A2, a later item).
+- **The refresh hooks** (A3) compare the changed field's name with the field part of the licence field and of the expiry, while the source
+  is on; kriesi.at writes both fields in a row, which still makes one waiting row per user. A passing date changes no field, so nothing is
+  queued; the next lookup writes the status through (A8). On a network the main site's writes still fire nothing here (2026-11-03).
+- **The card's copy.** Two new rows, "Condition" (a select Any value / Equals / Contains with its text beside it) and "Expiry field"; each
+  help one sentence of at most 30 words. The made-up example moved from the product's help to one sample line under the card
+  (`ob-wp-settings__licence-meta-sample`): "Your team sees, for example: Enfold ••••-1a2b, active." or "…, expires <a day one year from today>."
+  (`j M Y` through `wp_date`). The note for a field no user holds yet still covers the licence field only (A13 not taken).
+- Tests: `tests/Unit/LicenceConditionExpiryTest.php`, `tests/Structure/LicenceConditionExpiryStructureTest.php`,
+  `tests/Integration/LicenceConditionExpiryTest.php` (the red team's), and `UserMetaLicenceSourceTest.php` /
+  `LicenceSourcesStructureTest.php` (adjusted by the red team, dated notes).

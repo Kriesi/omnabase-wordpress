@@ -88,16 +88,20 @@ final class DataActions {
 	}
 
 	/**
-	 * The posted licence field's settings, as plain strings (the switches check the name).
+	 * The posted licence field's settings, as plain strings (the switches check the names and the condition).
 	 *
-	 * @param mixed $posted The posted pair.
-	 * @return array{key:string,product:string}
+	 * @param mixed $posted The posted settings.
+	 * @return array{key:string,product:string,condition:string,condition_text:string,expiry:string}
 	 */
 	private static function licence( $posted ): array {
 		$posted = is_array( $posted ) ? $posted : array();
+		$plain  = static fn ( string $name ): string => sanitize_text_field( is_scalar( $posted[ $name ] ?? null ) ? (string) $posted[ $name ] : '' );
 		return array(
-			'key'     => sanitize_text_field( is_scalar( $posted['key'] ?? null ) ? (string) $posted['key'] : '' ),
-			'product' => sanitize_text_field( is_scalar( $posted['product'] ?? null ) ? (string) $posted['product'] : '' ),
+			'key'            => $plain( 'key' ),
+			'product'        => $plain( 'product' ),
+			'condition'      => $plain( 'condition' ),
+			'condition_text' => $plain( 'condition_text' ),
+			'expiry'         => $plain( 'expiry' ),
 		);
 	}
 

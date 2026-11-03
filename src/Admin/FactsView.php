@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Admin;
 
 use OmnaBase\WordPress\Facts\FactsLog;
 use OmnaBase\WordPress\Facts\FactsSource;
+use OmnaBase\WordPress\Facts\FieldPath;
 use OmnaBase\WordPress\Facts\MetaPolicy;
 use OmnaBase\WordPress\Facts\Shaper;
 use OmnaBase\WordPress\Facts\ShopVersions;
@@ -44,7 +45,7 @@ final class FactsView {
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,licence:array{key:string,product:string,unused:bool},last:?array}
+	 * @return array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,licence:array{key:string,product:string,condition:string,condition_text:string,expiry:string,unused:bool,sample:string},last:?array}
 	 */
 	public function build(): array {
 		$sources = array();
@@ -55,18 +56,35 @@ final class FactsView {
 		}
 		$ticked  = $this->switches->meta();
 		$licence = $this->switches->licenceMeta();
-		$meta    = array_map( static fn ( $key ) => array( 'key' => $key, 'on' => in_array( $key, $ticked, true ) ), $this->offeredKeys( $ticked, $licence['key'] ) );
+		$meta    = array_map( static fn ( $key ) => array( 'key' => $key, 'on' => in_array( $key, $ticked, true ) ), $this->offeredKeys( $ticked, FieldPath::field( $licence['key'] ) ) );
 		$last    = $this->log->all()[0] ?? null;
 		if ( null !== $last ) {
 			$last['dropped'] = array_map( array( self::class, 'sectionWords' ), (array) $last['dropped'] );
 		}
-		return array( 'sources' => $sources, 'meta' => $meta, 'licence' => $licence + array( 'unused' => self::nobodyHolds( $licence['key'] ) ), 'last' => $last );
+		return array( 'sources' => $sources, 'meta' => $meta, 'licence' => $licence + array( 'unused' => self::nobodyHolds( FieldPath::field( $licence['key'] ) ), 'sample' => self::sample( $licence ) ), 'last' => $last );
+	}
+
+	/**
+	 * The card's sample line: what the team sees for a made-up licence, "active" without an expiry and "expires <a day a year from now>"
+	 * with one (the licence-and-fields round, 2026-11-04).
+	 *
+	 * @param array{product:string,expiry:string} $licence The licence field's settings.
+	 */
+	private static function sample( array $licence ): string {
+		$product = '' === $licence['product'] ? __( 'Licence', 'omnabase' ) : $licence['product'];
+		$status  = __( 'active', 'omnabase' );
+		if ( '' !== $licence['expiry'] ) {
+			/* translators: %s: a made-up end day, such as 12 Mar 2027. */
+			$status = sprintf( __( 'expires %s', 'omnabase' ), (string) wp_date( 'j M Y', time() + YEAR_IN_SECONDS ) );
+		}
+		/* translators: 1: the product's name, 2: the licence's status, such as "active" or "expires 12 Mar 2027". */
+		return sprintf( __( 'Your team sees, for example: %1$s ••••-1a2b, %2$s.', 'omnabase' ), $product, $status );
 	}
 
 	/**
 	 * Whether a named licence field is held by no user of the network yet (the tab notes it: a typo, or a field filled later).
 	 *
-	 * @param string $key The licence field's name, or ''.
+	 * @param string $key The licence's user field (the field part of `field.key`), or ''.
 	 */
 	private static function nobodyHolds( string $key ): bool {
 		if ( '' === $key ) {

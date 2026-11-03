@@ -34,6 +34,11 @@ final class LicenceSourcesStructureTest extends TestCase {
 	 *   and the licence refresh names it among the licence sources.
 	 * Fails when: the source exists but is never asked (kriesi.at still answers no licence), or a changed code never reaches OmnaBase because
 	 *   the refresh thinks no licence source is on.
+	 *
+	 * Settled 2026-11-04 (outside red team, licence-and-fields round): the same day's widening ("or counts every switched-on source of the
+	 * licences section", for sources other plugins would add through developer hooks) is withdrawn with the hooks design itself, which the
+	 * licence-and-fields brief drops ("no developer hooks in the connector"). The test is back to its first, stricter form: the refresh names
+	 * the source.
 	 */
 	public function test_the_source_is_built_and_counted_by_the_refresh(): void {
 		$source = $this->code( 'src/Facts/Sources/UserMetaLicence.php' );

@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Facts\Sources;
 
 use OmnaBase\WordPress\Facts\BillingCountry;
 use OmnaBase\WordPress\Facts\FactsSource;
+use OmnaBase\WordPress\Facts\FieldPath;
 use OmnaBase\WordPress\Facts\MetaPolicy;
 use OmnaBase\WordPress\Facts\Person;
 use OmnaBase\WordPress\Facts\Switches;
@@ -72,7 +73,7 @@ final class Profile implements FactsSource {
 	 * @return array<string,mixed>
 	 */
 	private function meta( int $user_id ): array {
-		$licence = $this->switches->licenceMeta()['key'];
+		$licence = FieldPath::field( $this->switches->licenceMeta()['key'] );
 		$meta    = array();
 		foreach ( $this->switches->meta() as $key ) {
 			if ( $key !== $licence && ! MetaPolicy::isBanned( $key ) && metadata_exists( 'user', $user_id, $key ) ) {
