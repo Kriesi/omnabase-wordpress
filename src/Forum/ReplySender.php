@@ -21,9 +21,12 @@ defined( 'ABSPATH' ) || exit;
  * - by the topic's author → the customer's message (`from: customer`);
  * - by someone with moderator rights → the team's answer already on the forum (`from: team`, `delivered: true`, `siteAuthor` with the
  *   support user's name, the moderator's address, which OmnaBase matches to a member, and their forum role): never mailed, never a note;
- * - by anyone else → nothing (another customer's words never land on Ada's ticket).
- * Each with the site's reference `reply-<id>` and the row's idempotency key, and (the site-fields round) `fields`: the reply's declared post
- * fields that hold a value.
+ * - by anyone else, a guest included → another participant's post (`from: other`, `participant` with the display name or the guest's given
+ *   name, nothing else: since the composer-and-fixes round, 2026-11-03; until then nothing was sent, and ticket 395 lacked another member's
+ *   answer). OmnaBase keeps it on the customer's side under that name, never as the customer, and reopens the ticket like a customer's post.
+ * Each with the site's reference `reply-<id>` and the row's idempotency key; the customer's and the moderator's also with (the site-fields
+ * round) `fields`: the reply's declared post fields that hold a value. Another participant's post never carries fields: another person's
+ * private data must not land on the customer's ticket.
  */
 final class ReplySender implements Job {
 
@@ -75,10 +78,7 @@ final class ReplySender implements Job {
 				? Step::wait( self::TOPIC_WAIT_SECONDS, __( 'Waiting for its topic to become a ticket.', 'omnabase' ) )
 				: Step::skip( __( 'Not sent: its topic was never sent to OmnaBase (published before its forum was marked).', 'omnabase' ) );
 		}
-		$body = $this->body( $reply, $topic );
-		return null === $body
-			? Step::skip( __( 'Not sent: only the topic\'s author and moderators speak on the ticket.', 'omnabase' ) )
-			: Step::send( 'POST', '/tickets/' . $number . '/messages', $body, 15, true );
+		return Step::send( 'POST', '/tickets/' . $number . '/messages', $this->body( $reply, $topic ), 15, true );
 	}
 
 	/** {@inheritDoc} */
@@ -105,30 +105,51 @@ final class ReplySender implements Job {
 	}
 
 	/**
-	 * The message: the customer's, the team's, or null for anyone else.
+	 * The message: the customer's, the team's, or another participant's.
 	 *
 	 * @param \WP_Post $reply The reply.
 	 * @param \WP_Post $topic Its topic.
-	 * @return array<string,mixed>|null
+	 * @return array<string,mixed>
 	 */
-	private function body( \WP_Post $reply, \WP_Post $topic ): ?array {
+	private function body( \WP_Post $reply, \WP_Post $topic ): array {
 		$text = PlainText::of( (string) $reply->post_content );
 		$base = array(
 			'body'     => '' !== $text ? $text : (string) get_permalink( $reply ),
 			'external' => array( 'id' => 'reply-' . $reply->ID ),
 		);
-		$values = $this->fields->valuesOf( $reply->ID );
-		if ( array() !== $values ) {
-			$base['fields'] = $values;
-		}
 		if ( Posts::byTopicAuthor( $reply, $topic ) ) {
-			return array( 'from' => 'customer' ) + $base;
+			return array( 'from' => 'customer' ) + $base + $this->fieldsOf( $reply );
 		}
 		$author = (int) $reply->post_author;
-		if ( ! Settings::canModerate( $author ) ) {
-			return null;
+		if ( Settings::canModerate( $author ) ) {
+			return array( 'from' => 'team', 'delivered' => true, 'siteAuthor' => $this->siteAuthor( $author ) ) + $base + $this->fieldsOf( $reply );
 		}
-		return array( 'from' => 'team', 'delivered' => true, 'siteAuthor' => $this->siteAuthor( $author ) ) + $base;
+		return array( 'from' => 'other', 'participant' => array( 'name' => $this->participantName( $reply ) ) ) + $base;
+	}
+
+	/**
+	 * The reply's declared post fields that hold a value, as `fields`; nothing when none holds one.
+	 *
+	 * @param \WP_Post $reply The reply.
+	 * @return array<string,mixed>
+	 */
+	private function fieldsOf( \WP_Post $reply ): array {
+		$values = $this->fields->valuesOf( $reply->ID );
+		return array() !== $values ? array( 'fields' => $values ) : array();
+	}
+
+	/**
+	 * Another participant's name as the forum shows it (the composer-and-fixes round): a member's display name (else their login), a guest's
+	 * name as given (bbPress keeps it on the reply); never an address or a role.
+	 *
+	 * @param \WP_Post $reply The reply.
+	 */
+	private function participantName( \WP_Post $reply ): string {
+		$author = (int) $reply->post_author;
+		$user   = $author > 0 ? get_userdata( $author ) : false;
+		$name   = $user ? ( '' !== trim( (string) $user->display_name ) ? $user->display_name : $user->user_login ) : get_post_meta( $reply->ID, '_bbp_anonymous_name', true );
+		$name   = trim( wp_strip_all_tags( (string) $name ) );
+		return mb_substr( '' !== $name ? $name : __( 'Forum member', 'omnabase' ), 0, self::NAME_MAX );
 	}
 
 	/**

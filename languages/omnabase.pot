@@ -553,24 +553,24 @@ msgstr ""
 msgid "the team"
 msgstr ""
 
-#: src/Forum/ReplySender.php:54
+#: src/Forum/ReplySender.php:57
 msgid "Forum reply to ticket"
 msgstr ""
 
-#: src/Forum/ReplySender.php:75
+#: src/Forum/ReplySender.php:78
 msgid "Waiting for its topic to become a ticket."
 msgstr ""
 
-#: src/Forum/ReplySender.php:76
+#: src/Forum/ReplySender.php:79
 msgid "Not sent: its topic was never sent to OmnaBase (published before its forum was marked)."
-msgstr ""
-
-#: src/Forum/ReplySender.php:80
-msgid "Not sent: only the topic's author and moderators speak on the ticket."
 msgstr ""
 
 #: src/Forum/ReplySender.php:94
 msgid "Not sent: the reply was removed or unpublished before its turn."
+msgstr ""
+
+#: src/Forum/ReplySender.php:152
+msgid "Forum member"
 msgstr ""
 
 #: src/Forum/ReplySender.php:98

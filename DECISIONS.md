@@ -1379,3 +1379,21 @@ non-member moderator read as the support user.
 - The support user's own forum posts are still never sent (unchanged), so the support user's name never travels this way.
 - Stored messages keep the name they were recorded with (development stage, no backfill).
 - Test: `ForumRepliesTest::test_a_moderators_reply_is_a_delivered_team_message_under_the_moderators_own_name` (adjusted, dated note).
+
+## 2026-11-03 — Another forum member's reply reaches the ticket as "other"
+
+The OmnaBase composer-and-fixes round (OmnaBase `docs/briefs/composer-and-fixes-round.md`, rule 11; the red team's report, findings 19 to
+21). Ticket 395's thread lacked another member's answer: since M13 a reply by anyone but the topic's author or a moderator was skipped
+("Not sent: only the topic's author and moderators speak on the ticket"). The founder: "another members replys should ofc also show in a
+thread", and such a post reopens the ticket ("people hijack older posts").
+
+- **`ReplySender::body()` sends it** as `{ from: "other", participant: { name }, body, external: { id: "reply-<id>" } }` with the row's
+  idempotency key. The name is the member's display name (else their login), a guest's name as bbPress keeps it on the reply
+  (`_bbp_anonymous_name`), "Forum member" when none; at most 120 characters. No address, no role, no customer, no member, no site author.
+- **No `fields`** on such a post: another person's private data (a licence key in a "Private data" box) must never land on the customer's
+  ticket; OmnaBase refuses them too. The customer's and the moderator's replies keep their fields as before.
+- The support user's own replies and the plugin's marked replies are still never sent (the echo guard unchanged); the skip sentence for a
+  third person left the code and the `.pot` (edited by hand, as `bin/make-pot.sh` needs wp-env; the ReplySender line references moved with it).
+- OmnaBase accepts `from: "other"` only on a ticket this site filed and leaves these posts out of the customer's message centre; the forum
+  shows them as before.
+- Tests: `tests/Integration/ForumOtherRepliesTest.php` (new, the red team's) and `ForumRepliesTest.php` (adjusted by the red team, dated note).

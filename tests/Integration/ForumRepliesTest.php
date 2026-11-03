@@ -1,5 +1,9 @@
 <?php
 /**
+ * Adjusted, not weakened (the composer-and-fixes round, the red team, 2026-11-03; OmnaBase brief docs/briefs/composer-and-fixes-round.md
+ * rule 11): another member's reply is now sent as `from: "other"`; the "never sent" test keeps the support user's and the marked replies and
+ * checks Ben's goes as other, never as the customer. Everything else unchanged.
+ *
  * M13 round three, the red team's failing tests: replies on the forum reach the topic's ticket, the customer's as the customer's, a
  * moderator's as the team's answer already on the site, everyone else's not at all, and the plugin's own replies never come back.
  *
@@ -84,13 +88,16 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 	}
 
 	/**
-	 * What it checks: Replies by anyone else, by the support user, or carrying the plugin's own marker are never sent: only the customer and
-	 *   moderators speak on the ticket, and OmnaBase's answers never come back to it.
-	 * Passes when: Ben's reply on Ada's topic, a reply the support user typed on the forum, and Nina's reply that carries OmnaBase's message id
-	 *   (written after the post was saved, as the plugin's own insert does) make no call to the ticket, and no row needs attention.
+	 * What it checks: Replies by the support user, or carrying the plugin's own marker, are never sent, so OmnaBase's answers never come back to
+	 *   the ticket; another member's reply goes as "other", never as the customer's. (Adjusted 2026-11-03, the composer-and-fixes round, rule 11:
+	 *   until then another member's reply was not sent at all; ticket 395 lost such an answer. The founder: "another members replys should ofc
+	 *   also show in a thread".)
+	 * Passes when: of Ben's reply on Ada's topic, a reply the support user typed on the forum, and Nina's reply that carries OmnaBase's message
+	 *   id (written after the post was saved, as the plugin's own insert does), only Ben's makes a call, from "other" and not from the customer;
+	 *   no row needs attention.
 	 * Fails when: a stranger's post lands on Ada's ticket as hers, or the team's answer appears twice on the ticket (sent, then echoed back).
 	 */
-	public function test_other_users_the_support_user_and_marked_replies_are_never_sent(): void {
+	public function test_the_support_user_and_marked_replies_are_never_sent_and_another_member_goes_as_other(): void {
 		$topic = $this->filedTopic();
 		$this->calls = array();
 		$this->reply( $topic, $this->ben, 'Same here!' );
@@ -100,7 +107,10 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 
 		$this->sendEverything();
 
-		$this->assertCount( 0, $this->messageCalls() );
+		$calls = $this->messageCalls();
+		$this->assertCount( 1, $calls, 'only Ben\'s reply is sent' );
+		$this->assertSame( 'other', self::bodyOf( $calls[0] )['from'] ?? null, 'as another participant, never as the customer' );
+		$this->assertStringContainsString( 'Same here!', (string) ( self::bodyOf( $calls[0] )['body'] ?? '' ) );
 		$this->assertSame( array(), array_values( array_filter( $this->forumRows( 'reply' ), static fn ( $r ) => 'attention' === $r['state'] ) ) );
 	}
 
