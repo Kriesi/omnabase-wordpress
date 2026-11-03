@@ -1344,3 +1344,25 @@ Brief `docs/briefs/forum-sync-and-small-fixes-round.md` (its last two sections h
 - **Three statuses.** OmnaBase dropped Archived (the founder's decision): the message centre's `'archived' => 'Closed'` word and the
   `ob-pill--archived` look are gone.
 - Records: changelog.txt's 0.2.1 section, readme.txt's forum bullet, `languages/omnabase.pot` regenerated, `assets/form.css` rebuilt.
+
+## 2026-11-03 — The forum reply mails round: OmnaBase mails the topic's author
+
+OmnaBase's brief `docs/briefs/forum-reply-mails-round.md` (its last section holds the decisions after the red team's review); the
+founder chose "option 1" on 2026-11-02 night.
+
+- **The switch** "OmnaBase mails the customer about answers" is `customer_mail` in the forum option, **off when missing**, the sixth
+  argument of `Settings::save()` (default false), the row right under "Keep topics in step with tickets" with the founder's two sentences
+  as its help (25 words; the guard counts words, not sentences, so they stay as he wrote them).
+- **The answer to OmnaBase**: the events receiver's 200 answer is `ok: true` plus what listeners add through the new filter
+  `omnabase_webhook_answer( $body, $type, $payload, $delivery )`, on a new delivery and on a repeated one alike (the replay guard's early
+  answer too). `Forum\PostedAnswer` adds `posted: { id: "reply-<id>", url: bbp_get_reply_url() }` for every `message.sent` the plugin
+  posted, read from the posted reply itself (`Posts::postedFor`), and `mail: "omnabase"` when the reply carries the mark below. So a retry
+  after a slow first answer, or the same message under a new delivery id, answers the same `posted`.
+- **Decided at posting** (`Forum\CustomerMail::decide`): the reply gets the post meta `_omnabase_customer_mail = 1` when the switch is on,
+  the topic has an author with an account (`post_author > 0`) and no password; written before the echo mark, so a redelivery never finds
+  a posted reply without its choice. A guest's topic (an address nobody checked) and a password-protected topic are never mailed by OmnaBase.
+- **bbPress leaves the author out** only for a marked reply: `SubscriberMails::send` runs `bbp_notify_topic_subscribers` inside
+  `CustomerMail::aroundSubscriberMail`, which adds a callback on bbPress's `bbp_topic_subscription_user_ids` (bbPress 2.6.21, priority 10)
+  dropping the topic's author, and removes it in a `finally`. Every other subscriber is still mailed; with the switch off nothing changes.
+- **Cleaned up**: the mark is on `Options::CUSTOMER_MAIL_META` and removed by uninstall.php; the readme's FAQ, external services and
+  privacy sections and the suggested privacy text say that OmnaBase may email a topic's author about answers.

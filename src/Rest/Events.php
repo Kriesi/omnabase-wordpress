@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
  * the handler). A delivery id handled before is answered 200 without acting (OmnaBase's retry or "Redeliver"). A new one fires the action
  * `omnabase_webhook( $type, $payload, $delivery )` (round three's forum code listens there; a `ping` is also recorded for "Check connection")
  * and is recorded as handled only when that ran through; a listener's `Refusal` answers its own status (the forum: 409 for a topic that is
- * gone, 503 without a support user), any other throw answers 500, and either way OmnaBase tries again.
+ * gone, 503 without a support user), any other throw answers 500, and either way OmnaBase tries again. A 200 answer (new or repeated) is
+ * `ok: true` plus what a listener adds through the filter `omnabase_webhook_answer` (the forum reply mails round, 2026-11-03: `posted`).
  */
 final class Events {
 
@@ -64,7 +65,7 @@ final class Events {
 
 		if ( '' !== $delivery && $this->replay->handled( $delivery ) ) {
 			$this->log->add( $type, $delivery, $ticket, 'repeat' );
-			return new \WP_REST_Response( array( 'ok' => true ), 200 );
+			return new \WP_REST_Response( self::answer( $type, $payload, $delivery ), 200 );
 		}
 		$refusal = $this->handle( $type, $payload, $delivery );
 		if ( null !== $refusal ) {
@@ -75,7 +76,29 @@ final class Events {
 			$this->replay->remember( $delivery );
 		}
 		$this->log->add( $type, $delivery, $ticket, 'handled' );
-		return new \WP_REST_Response( array( 'ok' => true ), 200 );
+		return new \WP_REST_Response( self::answer( $type, $payload, $delivery ), 200 );
+	}
+
+	/**
+	 * The 200 answer: `ok: true` and what a listener adds through `omnabase_webhook_answer` (the forum reply mails round: the poster's
+	 * `posted`), on a new delivery and a repeated one alike.
+	 *
+	 * @param string              $type     The event type.
+	 * @param array<string,mixed> $payload  The event as sent.
+	 * @param string              $delivery The delivery id.
+	 * @return array<string,mixed>
+	 */
+	private static function answer( string $type, array $payload, string $delivery ): array {
+		/**
+		 * The body of the 200 answer to a handled (or repeated) webhook, beside `ok: true`.
+		 *
+		 * @param array  $body     What listeners add.
+		 * @param string $type     The event.
+		 * @param array  $payload  The event as OmnaBase sent it.
+		 * @param string $delivery The delivery id.
+		 */
+		$more = apply_filters( 'omnabase_webhook_answer', array(), $type, $payload, $delivery );
+		return array( 'ok' => true ) + ( is_array( $more ) ? $more : array() );
 	}
 
 	/**

@@ -79,11 +79,12 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 	}
 
 	// Every topic's ticket number and newest applied status message (the forum sync round), every posted reply's OmnaBase message id and
-	// how its author was chosen (the post-as-member round).
+	// how its author was chosen (the post-as-member round), and whether OmnaBase mails the topic's author about it (the forum reply mails round).
 	delete_post_meta_by_key( '_omnabase_ticket' );
 	delete_post_meta_by_key( '_omnabase_message_id' );
 	delete_post_meta_by_key( '_omnabase_posted_as' );
 	delete_post_meta_by_key( '_omnabase_status_seq' );
+	delete_post_meta_by_key( '_omnabase_customer_mail' );
 
 	// The outbox's timer (the job every minute and the one-off run after a new row) and the forum's waiting subscriber mails.
 	wp_clear_scheduled_hook( 'omnabase_outbox' );

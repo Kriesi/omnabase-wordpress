@@ -1,7 +1,8 @@
 <?php
 /**
  * The forum parts, built once and wired together: the settings, the triggers, the three senders, the reply poster, the subscriber mails, the
- * closer (the forum sync round, 2026-11-02: a topic closed or opened in the forum moves its ticket, and the ticket's status moves the topic).
+ * closer (the forum sync round, 2026-11-02: a topic closed or opened in the forum moves its ticket, and the ticket's status moves the topic),
+ * the answer's `posted` (the forum reply mails round, 2026-11-03).
  *
  * @package OmnaBase
  */
@@ -10,7 +11,9 @@ namespace OmnaBase\WordPress;
 
 use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Forum\Closer;
+use OmnaBase\WordPress\Forum\CustomerMail;
 use OmnaBase\WordPress\Forum\PostFields;
+use OmnaBase\WordPress\Forum\PostedAnswer;
 use OmnaBase\WordPress\Forum\ReplyAuthor;
 use OmnaBase\WordPress\Forum\ReplyPoster;
 use OmnaBase\WordPress\Forum\ReplySender;
@@ -36,6 +39,7 @@ final class Forums {
 	private readonly SubscriberMails $mails;
 	private readonly ReplyPoster $poster;
 	private readonly Closer $closer;
+	private readonly PostedAnswer $answer;
 
 	private static bool $backgroundRegistered = false;
 
@@ -51,7 +55,8 @@ final class Forums {
 		$this->triggers       = new Triggers( $data->queue, $this->settings );
 		$this->statusTriggers = new StatusTriggers( $data->queue );
 		$this->mails          = new SubscriberMails();
-		$this->poster         = new ReplyPoster( $this->settings, $this->mails, $connection, $fields, new ReplyAuthor( $this->settings ) );
+		$this->poster         = new ReplyPoster( $this->settings, $this->mails, $connection, $fields, new ReplyAuthor( $this->settings ), new CustomerMail( $this->settings ) );
+		$this->answer         = new PostedAnswer(); // the forum reply mails round: `posted` in the answer to OmnaBase
 		$this->closer         = new Closer( $this->settings );
 		$data->worker->add( new TopicSender( $this->settings, $connection, $fields ) );
 		$data->worker->add( new ReplySender( $this->settings, $data->table, $fields ) );
@@ -69,5 +74,6 @@ final class Forums {
 		$this->mails->register();
 		add_action( 'omnabase_webhook', array( $this->poster, 'handle' ), 10, 2 );
 		add_action( 'omnabase_webhook', array( $this->closer, 'handle' ), 10, 2 );
+		$this->answer->register();
 	}
 }

@@ -1,11 +1,12 @@
 <?php
 /**
  * The forum card's settings, each a row of the kit's (the label and its help on the left, the field on the right): the forums to send,
- * who answers on the forum, the line under each answer, who may send topics, closing on resolve. Included by the forum card.
+ * who answers on the forum, the line under each answer, who may send topics, closing on resolve, OmnaBase's mail to a topic's author.
+ * Included by the forum card.
  *
  * @package OmnaBase
  *
- * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool} $omnabase_forum
+ * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,customerMail:bool} $omnabase_forum
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -79,5 +80,14 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	<div class="ob-form-row__control">
 		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-in-step" name="omnabase_forum[in_step]" value="1" <?php checked( $omnabase_forum['inStep'] ); ?>>
+	</div>
+</div>
+<div class="ob-form-row">
+	<div class="ob-form-row__text">
+		<label class="ob-form-row__label" for="omnabase-customer-mail"><?php esc_html_e( 'OmnaBase mails the customer about answers', 'omnabase' ); ?></label>
+		<div class="ob-form-row__help"><?php esc_html_e( 'After an answer from OmnaBase is posted, OmnaBase mails the topic\'s author in your project\'s look. The forum\'s own subscription mail then leaves them out.', 'omnabase' ); ?></div>
+	</div>
+	<div class="ob-form-row__control">
+		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-customer-mail" name="omnabase_forum[customer_mail]" value="1" <?php checked( $omnabase_forum['customerMail'] ); ?>>
 	</div>
 </div>

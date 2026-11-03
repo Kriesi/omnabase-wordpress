@@ -5,6 +5,7 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.1 — unreleased =
 
+* Added: "OmnaBase mails the customer about answers" under Settings › OmnaBase › Forums (off by default): OmnaBase mails the topic's author each time your team's answer is posted, in your project's look with a button to the answer, and the forum's own subscription mail about it leaves them out; guests are never mailed.
 * Added: OmnaBase now learns a customer's billing country from WooCommerce or Easy Digital Downloads, when the shop knows one, so it shows in the customer's details beside every ticket; the suggested privacy text names it.
 * Changed: A team member's answer appears on the forum under their own forum account when they are a moderator there with the same email address; the support user posts the AI's answers and the rest.
 * Changed: Forum topics and their tickets stay in step both ways: closing a topic in the forum resolves its ticket in OmnaBase and reopening it opens the ticket; a ticket your team resolves closes its topic, and one set back to open or pending reopens it. The switch "Keep topics in step with tickets" under Settings › OmnaBase › Forums is on for every site after the update; the AI's automatic answers leave the topic open.

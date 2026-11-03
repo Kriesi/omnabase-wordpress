@@ -1,6 +1,7 @@
 <?php
 /**
- * The forum settings: which forums send their topics, the support user, the closing line, guests, keeping topics in step with tickets.
+ * The forum settings: which forums send their topics, the support user, the closing line, guests, keeping topics in step with tickets,
+ * OmnaBase's mail to a topic's author.
  *
  * @package OmnaBase
  */
@@ -16,7 +17,8 @@ defined( 'ABSPATH' ) || exit;
  * (the polish round, 2026-10-31: a few lines; an empty line or the old default "— {agent}, {workspace}" counts as not set), guests'
  * topics forwarded (the brief's default), topics kept in step with their tickets (`in_step`, the forum sync round of 2026-11-02: on when
  * missing; the earlier `close_resolved` is ignored and dropped at the next save), no post fields (the site-fields round: `fields`,
- * key ⇒ name, cleaned by `PostFields::cleanRows`). The support user must have bbPress's moderator
+ * key ⇒ name, cleaned by `PostFields::cleanRows`), OmnaBase not mailing topics' authors (`customer_mail`, the forum reply mails round of
+ * 2026-11-03: off when missing). The support user must have bbPress's moderator
  * rights (`moderate`: they can reply on closed topics); anyone else is never stored and never used.
  */
 final class Settings {
@@ -83,6 +85,11 @@ final class Settings {
 		return (bool) ( $this->all()['in_step'] ?? true );
 	}
 
+	/** Whether OmnaBase mails a topic's author about each answer it posts (the forum reply mails round: off when never stored). */
+	public function customerMail(): bool {
+		return (bool) ( $this->all()['customer_mail'] ?? false );
+	}
+
 	/**
 	 * Stores the administrator's choices: only existing forums, a support user only when they have moderator rights (else the earlier one
 	 * stays), the closing line as plain lines (nothing stored when it is the default, so a later default reaches the site).
@@ -92,19 +99,21 @@ final class Settings {
 	 * @param string $closing_line   The closing line.
 	 * @param bool   $guests         Whether guests' topics are forwarded.
 	 * @param bool   $in_step        Whether topics follow their tickets.
+	 * @param bool   $customer_mail  Whether OmnaBase mails the topic's author about answers.
 	 */
-	public function save( array $forums, int $support_user, string $closing_line, bool $guests, bool $in_step ): void {
+	public function save( array $forums, int $support_user, string $closing_line, bool $guests, bool $in_step, bool $customer_mail = false ): void {
 		$forums = array_values( array_unique( array_filter( array_map( 'intval', $forums ), array( self::class, 'isForum' ) ) ) );
 		$line   = self::cleanClosingLine( $closing_line );
 		update_option(
 			Options::FORUM,
 			array(
-				'forums'       => $forums,
-				'support_user' => self::canModerate( $support_user ) ? $support_user : (int) ( $this->all()['support_user'] ?? 0 ),
-				'closing_line' => self::DEFAULT_CLOSING_LINE === $line ? '' : $line,
-				'guests'       => $guests,
-				'in_step'      => $in_step,
-				'fields'       => $this->fields(),
+				'forums'        => $forums,
+				'support_user'  => self::canModerate( $support_user ) ? $support_user : (int) ( $this->all()['support_user'] ?? 0 ),
+				'closing_line'  => self::DEFAULT_CLOSING_LINE === $line ? '' : $line,
+				'guests'        => $guests,
+				'in_step'       => $in_step,
+				'customer_mail' => $customer_mail,
+				'fields'        => $this->fields(),
 			),
 			false
 		);

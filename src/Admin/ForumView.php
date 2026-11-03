@@ -1,6 +1,7 @@
 <?php
 /**
- * The settings screen's forum section: a tick per forum, the support user, the closing line, guests, closing on resolve.
+ * The settings screen's forum section: a tick per forum, the support user, the closing line, guests, closing on resolve, OmnaBase's mail
+ * to a topic's author.
  *
  * @package OmnaBase
  */
@@ -34,7 +35,7 @@ final class ForumView {
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,fieldRows:array<int,array{key:string,label:string}>,metaKeys:string[],fieldsMax:int,labelMax:int}
+	 * @return array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,customerMail:bool,fieldRows:array<int,array{key:string,label:string}>,metaKeys:string[],fieldsMax:int,labelMax:int}
 	 */
 	public function build(): array {
 		$active = function_exists( 'bbp_get_forum_post_type' );
@@ -46,6 +47,7 @@ final class ForumView {
 			'closingLine'   => $this->settings->closingLine(),
 			'guests'        => $this->settings->guests(),
 			'inStep'        => $this->settings->inStep(),
+			'customerMail'  => $this->settings->customerMail(),
 			'fieldRows'     => $this->fieldRows(),
 			'metaKeys'      => $active ? $this->fields->metaKeys() : array(),
 			'fieldsMax'     => PostFields::MAX,

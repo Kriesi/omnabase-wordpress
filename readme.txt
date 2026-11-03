@@ -94,6 +94,10 @@ Yes, with three hooks (named moments where a plugin's code runs):
 * `omnabase_forum_field_value( $value, $key, $post_id )` (filter): the value sent for a field of a topic or reply; return it from wherever you keep it.
 * `omnabase_forum_field_saved( $reply_id, $key, $value )` (action): runs after the team's value was saved as the forum reply's post meta, for example to store it elsewhere too.
 
+= Can OmnaBase email the customer when the team answers their topic? =
+
+Yes: switch on "OmnaBase mails the customer about answers" under Settings › OmnaBase › Forums (off by default). After each answer from OmnaBase is posted, OmnaBase emails the topic's author once, in your project's look with its logo, with the answer's words and a button "Read the answer in the forum", from your project's address; an answer to that email lands on the ticket. bbPress's own subscription email about that answer then leaves the author out, so nobody gets two emails; everyone else who follows the topic still gets bbPress's. Guests' topics and password-protected topics are never emailed by OmnaBase. The choice is made when the answer is posted, so turning the switch off or on later does not change answers already posted.
+
 = Whose name does a team answer appear under on the forum? =
 
 Under the team member's own forum account when the site has a user with their OmnaBase sign-in email address who is a forum moderator (keymasters are too). Otherwise, and for every answer the AI sends, under the support user chosen under Settings › OmnaBase › Forums. The closing line names the team member by their customer-facing name either way, and the AI's answers as your team ("The Kriesi team"); it can have several lines, up to five.
@@ -113,7 +117,7 @@ The Connection tab says "Disconnected in OmnaBase", and the site stops calling O
 This plugin connects to **OmnaBase** (https://app.omnabase.com), a support inbox run by Kriesi Media GmbH, Germany. Nothing is sent before you connect: the connection starts when an administrator clicks Connect and approves it on OmnaBase. From then on the plugin sends only what the features you turn on need:
 
 * **Connect and health:** the site's address and name when you connect; Check connection asks OmnaBase who the key is and to call the site back.
-* **Forum:** forum topics and replies in the forums you mark (title, text, the author's name and email address), when they are published.
+* **Forum:** forum topics and replies in the forums you mark (title, text, the author's name and email address), when they are published. While "OmnaBase mails the customer about answers" is on, the plugin also tells OmnaBase where it posted each team answer, and OmnaBase emails the topic's author about it.
 * **Contact form:** a page with `[omnabase_form]` loads OmnaBase's form script from app.omnabase.com in the visitor's browser, which sends the visitor's form messages straight to OmnaBase. For a signed-in customer the site asks OmnaBase for a short-lived note vouching for their email address, name, newest WooCommerce order number and licence key (when they hold exactly one).
 * **Message centre:** the signed-in customer's name, email address, the country of their billing address (when the shop knows one) and an id for their account, each time they open the message centre; their new questions and answers when they send them.
 * **Customer data:** when OmnaBase asks about a customer, their account (with the country of their billing address), orders, subscriptions and licences from the sources you switch on; licence changes when they happen.
@@ -126,6 +130,8 @@ The site receives the replies and status changes of its own tickets from OmnaBas
 == Privacy ==
 
 OmnaBase processes the data above on your behalf, as your processor. The plugin suggests a paragraph for your privacy policy under Settings › Privacy › Policy Guide, naming OmnaBase and what each feature sends.
+
+With "OmnaBase mails the customer about answers" on, OmnaBase emails a forum topic's author (a registered user, never a guest) each time your team's answer is posted there; the suggested privacy text says so.
 
 On your site the plugin stores, per customer: the id OmnaBase knows them by, whether OmnaBase knows them, and for the message centre a fingerprint of the name and address last sent, the times confirmation links were asked for, and the words of a question that could not be sent (for an hour). WordPress's Tools › Export Personal Data and Erase Personal Data include all of it. Forum topics keep their ticket numbers.
 

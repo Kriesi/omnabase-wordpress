@@ -13,7 +13,8 @@ defined( 'ABSPATH' ) || exit;
  * bbPress mails a topic's subscribers from its own form's moment, which a reply posted through `bbp_insert_reply` never fires; and mail can
  * be slow, while OmnaBase waits five seconds for the receiver's answer. So the poster leaves a one-off WP-Cron job (WordPress's timer)
  * `omnabase_forum_mails` with the reply's id, WP-Cron is woken at the end of the request, and the job hands the reply to bbPress's own
- * subscriber mail (which leaves out the reply's author and anyone who cannot read the topic).
+ * subscriber mail (which leaves out the reply's author and anyone who cannot read the topic). The forum reply mails round (2026-11-03): for a
+ * reply marked for OmnaBase's own mail to the topic's author, bbPress's list leaves the author out too (`CustomerMail`).
  */
 final class SubscriberMails {
 
@@ -49,7 +50,7 @@ final class SubscriberMails {
 			return;
 		}
 		$topic = Posts::topicOf( $reply );
-		bbp_notify_topic_subscribers( $reply->ID, $topic, Posts::forumOf( $topic ), array(), (int) $reply->post_author );
+		CustomerMail::aroundSubscriberMail( $reply->ID, $topic, static fn () => bbp_notify_topic_subscribers( $reply->ID, $topic, Posts::forumOf( $topic ), array(), (int) $reply->post_author ) );
 	}
 
 	/** At the end of a request that left a job, WP-Cron is woken (not from WP-Cron itself or the command line). */

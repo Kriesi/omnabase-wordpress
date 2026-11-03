@@ -30,6 +30,8 @@ defined( 'ABSPATH' ) || exit;
  * before it is marked as OmnaBase's (a redelivery that finds the mark posts nothing more), then `omnabase_forum_field_saved` fires.
  * The post-as-member round: the reply also keeps how its author was chosen (`_omnabase_posted_as`: `member` | `support`), and a poster who
  * was subscribed to the topic stays subscribed (bbPress before 2.6.20 drops the poster's subscription inside its insert).
+ * The forum reply mails round (2026-11-03): whether OmnaBase mails the topic's author is decided at posting (`CustomerMail`), and the
+ * answer's `posted` is added by `PostedAnswer`.
  */
 final class ReplyPoster {
 
@@ -44,8 +46,9 @@ final class ReplyPoster {
 	 * @param ConnectionInfo  $connection The workspace's name.
 	 * @param PostFields      $fields     The declared post fields.
 	 * @param ReplyAuthor     $author     Who posts a reply.
+	 * @param CustomerMail    $customer   Whether OmnaBase mails the topic's author.
 	 */
-	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author ) {}
+	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author, private CustomerMail $customer ) {}
 
 	/** Whether the plugin is posting OmnaBase's reply right now. */
 	public static function isPosting(): bool {
@@ -112,6 +115,7 @@ final class ReplyPoster {
 		}
 		PostFields::write( $reply, $message['fields'] ?? null, $this->fields->declared() );
 		Posts::markPostedAs( $reply, $poster === $this->settings->supportUser() ? Posts::POSTED_AS_SUPPORT : Posts::POSTED_AS_MEMBER );
+		$this->customer->decide( $reply, $topic ); // the forum reply mails round: decided once, before the echo mark
 		Posts::markPosted( $reply, (string) $message['id'] );
 		return $reply;
 	}

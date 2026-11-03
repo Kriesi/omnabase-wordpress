@@ -45,7 +45,8 @@ final class ForumActions {
 			absint( is_scalar( $posted['support_user'] ?? null ) ? $posted['support_user'] : 0 ),
 			is_scalar( $posted['closing_line'] ?? null ) ? (string) $posted['closing_line'] : '', // Cleaned once by the settings, keeping its lines.
 			! empty( $posted['guests'] ),
-			! empty( $posted['in_step'] )
+			! empty( $posted['in_step'] ),
+			! empty( $posted['customer_mail'] )
 		);
 		$fields = PostFields::cleanRows( $posted['fields'] ?? array() );
 		$this->settings->saveFields( $fields['fields'] );

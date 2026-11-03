@@ -5,7 +5,7 @@
  *
  * @package OmnaBase
  *
- * @var array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool} $omnabase_forum
+ * @var array{active:bool,forums:array<int,array{id:int,title:string,visibility:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,customerMail:bool} $omnabase_forum
  */
 
 defined( 'ABSPATH' ) || exit;

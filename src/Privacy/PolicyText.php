@@ -35,6 +35,7 @@ final class PolicyText {
 		$sentences = array(
 			__( 'We answer support questions with OmnaBase, a service of Kriesi Media GmbH, which acts as our processor and handles this data on our behalf.', 'omnabase' ),
 			__( 'When you post in our support forum, your forum topics and replies are sent to OmnaBase (app.omnabase.com) with your name and email address.', 'omnabase' ),
+			__( 'When our team answers your forum topic, OmnaBase may email you the answer from our support address.', 'omnabase' ),
 			__( 'When you write to us through our contact form, your browser loads the form from OmnaBase and sends what you enter there; when you are signed in, this site also tells OmnaBase your email address, name, newest order number and licence key so they show as checked.', 'omnabase' ),
 			__( 'When you are signed in, our message centre shows your support conversations; your name, email address, the country of your billing address and an id for your account are sent to OmnaBase.', 'omnabase' ),
 			__( 'When our team looks at a support question, OmnaBase asks this site for customer data such as your account, the country of your billing address, orders, subscriptions and licences; licence changes are sent when they happen.', 'omnabase' ),

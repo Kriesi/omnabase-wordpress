@@ -44,7 +44,8 @@ final class Options {
 
 	/**
 	 * The forum settings: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>, 'closing_line' => <text>, 'guests' => bool,
-	 * 'in_step' => bool, 'fields' => [ key => name ] ]`; read and written by `Forum\Settings` alone.
+	 * 'in_step' => bool, 'customer_mail' => bool, 'fields' => [ key => name ] ]` (`customer_mail`, the forum reply mails round: OmnaBase
+	 * mails a topic's author about answers, off when missing); read and written by `Forum\Settings` alone.
 	 */
 	public const FORUM = 'omnabase_forum';
 
@@ -122,6 +123,12 @@ final class Options {
 
 	/** Post meta (the forum sync round, 2026-11-02): the number (`seq`) of the newest status message applied to a topic. Removed at uninstall. */
 	public const STATUS_SEQ_META = '_omnabase_status_seq';
+
+	/**
+	 * Post meta (the forum reply mails round, 2026-11-03): `1` on a reply the plugin posted when OmnaBase mails the topic's author about it,
+	 * decided at posting; the subscriber mails then leave the author out. Removed at uninstall.
+	 */
+	public const CUSTOMER_MAIL_META = '_omnabase_customer_mail';
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';
