@@ -14,7 +14,7 @@ Connects your site to OmnaBase, the support inbox: forum topics, form messages a
 
 OmnaBase is a shared support inbox for small teams. This plugin connects your WordPress site to your OmnaBase workspace in one approval, with no key to copy, and brings what your site knows into every ticket.
 
-* **Customer data on every ticket.** When a customer writes in, your team sees what they bought on your site: their account, WooCommerce and Easy Digital Downloads orders, subscriptions and licences (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing, License Manager for WooCommerce). Every source stays off until you turn it on, and licence keys are always masked.
+* **Customer data on every ticket.** When a customer writes in, your team sees what they bought on your site: their account, WooCommerce and Easy Digital Downloads orders, subscriptions and licences (WooCommerce Subscriptions, EDD Recurring, EDD Software Licensing, License Manager for WooCommerce, or a licence code another plugin keeps in a user field). Every source stays off until you turn it on, and licence keys are always masked.
 * **bbPress forums.** Topics in the forums you tick become tickets; each team member's answer appears under their own forum account when they are a moderator there with the same email address, else under the support user you choose, with a closing line you can word (several lines, "Best regards" and the team member's customer-facing name by default). Moderators' replies reach the ticket too, and so do other forum members' replies on the topic, under their own name (never as the customer, never with their private data). Topics and tickets stay in step: closing a topic in the forum resolves its ticket and reopening it opens the ticket; a ticket your team resolves closes its topic, and one set back to open or pending reopens it.
 * **Private data and other post fields.** Name a topic's or reply's extra fields (post meta, such as a forum's "Private data" box) under Post fields: they travel with the message to OmnaBase, and your team can fill the same field on its forum reply.
 * **Your forms from OmnaBase.** Build forms in OmnaBase and put `[omnabase_form id="…"]` on any page: messages become tickets. Signed-in customers find their details filled in, and your team sees them as verified.
@@ -56,7 +56,7 @@ No. The plugin makes no call to OmnaBase until an administrator clicks Connect, 
 
 = Which customer data does my team see? =
 
-Only the sources you tick on the Customer data tab of Settings › OmnaBase: the profile (registered since, roles, the billing country and the user fields you pick), orders, subscriptions and licences. Passwords, tokens and keys are never sent, even when ticked.
+Only the sources you tick on the Customer data tab of Settings › OmnaBase: the profile (registered since, roles, the billing country and the user fields you pick), orders, subscriptions and licences, including a licence code kept in a user field (only its last four characters). Passwords, tokens and keys are never sent, even when ticked.
 
 = What happens when OmnaBase cannot be reached? =
 
@@ -120,7 +120,7 @@ This plugin connects to **OmnaBase** (https://app.omnabase.com), a support inbox
 * **Forum:** forum topics and replies in the forums you mark (title, text, the author's name and email address; for another member's reply on a customer's topic only their name), when they are published. While "OmnaBase mails the customer about answers" is on, the plugin also tells OmnaBase where it posted each team answer, and OmnaBase emails the topic's author about it.
 * **Contact form:** a page with `[omnabase_form]` loads OmnaBase's form script from app.omnabase.com in the visitor's browser, which sends the visitor's form messages straight to OmnaBase. For a signed-in customer the site asks OmnaBase for a short-lived note vouching for their email address, name, newest WooCommerce order number and licence key (when they hold exactly one).
 * **Message centre:** the signed-in customer's name, email address, the country of their billing address (when the shop knows one) and an id for their account, each time they open the message centre; their new questions and answers when they send them.
-* **Customer data:** when OmnaBase asks about a customer, their account (with the country of their billing address), orders, subscriptions and licences from the sources you switch on; licence changes when they happen.
+* **Customer data:** when OmnaBase asks about a customer, their account (with the country of their billing address), orders, subscriptions and licences from the sources you switch on, including a licence code kept in a user field (masked to its last four characters); licence changes when they happen.
 
 The site receives the replies and status changes of its own tickets from OmnaBase, OmnaBase's questions about a customer, and a test call when you check the connection. Each of these calls is signed by OmnaBase and checked by the plugin.
 

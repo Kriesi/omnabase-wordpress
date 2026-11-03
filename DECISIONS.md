@@ -1397,3 +1397,47 @@ thread", and such a post reopens the ticket ("people hijack older posts").
 - OmnaBase accepts `from: "other"` only on a ticket this site filed and leaves these posts out of the customer's message centre; the forum
   shows them as before.
 - Tests: `tests/Integration/ForumOtherRepliesTest.php` (new, the red team's) and `ForumRepliesTest.php` (adjusted by the red team, dated note).
+
+## 2026-11-03 — A licence kept in a user field, and why the user-field rule's banned words do not apply to it
+
+OmnaBase's brief `docs/briefs/licence-sources-round.md` part one, with its last section "After the red team's review" (the decisions there
+are final); the red team's report `docs/reviews/licence-sources-round-red-team-report.md` (findings 1 to 14), both in the OmnaBase
+repository. kriesi.at's forum keeps a member's Envato purchase code in the user field (usermeta: a value WordPress keeps per user under a
+name) `av_purchase_code` (written by the site's `avia-verifier.php` at registration and `avia-expiring-support.php` when a member enters a
+new code); no shop plugin runs there, so no source read it.
+
+- **The source "Licence in a user field"** (`Facts\Sources\UserMetaLicence`, id `user_meta_licence`) is the eighth source, available on
+  every site (it needs no other plugin), off until switched on. Its two settings live in the facts option beside the switches,
+  `omnabase_facts['licence_meta'] = [ 'key', 'product' ]` (no new option; uninstall removes it with the rest); `Switches::save()` takes them
+  as a fourth argument. One field this round (Q1); no status or expiry field.
+- **The answer.** A member whose field holds text (or a number) has one licence: the product name typed on the tab (empty: "Licence", Q-D),
+  the value masked to its last four characters (`••••` for four or fewer, so kriesi.at's old "1" rows read `••••`), status "active", no
+  version, expiry or sites. An empty field, or one holding a list or an object (old forum rows, Q-E), answers an empty list: "no licence
+  now", which revokes a stored one in OmnaBase. A guest, or the source on before a field is named, answers nothing, so nothing is revoked.
+- **Why the banned words do not apply to this field (the policy exception).** The user-field rule (`Facts\MetaPolicy`) bans any field
+  whose name holds `purchase`, `code`, `licen`, `key` and the rest from being ticked or sent as profile meta, and stays as strict as it was.
+  The licence field is a different thing: the administrator names it on purpose as the licence, and its value never leaves the site in
+  clear; only the masked last four characters do, inside the licences section, the way every shop's licence key is sent. kriesi.at's own
+  field holds two banned words, so without this exception the source could not exist. The exception is narrow:
+  - It applies to the one field named as the licence, never to the profile: the profile source skips that field and the user-field picker
+    never offers it, even when its name looks harmless (`enfold_buyer_ref`) and it was ticked before; saving drops it from the ticked fields.
+  - WordPress's own secrets and role fields are refused as the licence field (Q-F): `user_pass`, `session_tokens`,
+    `_two_factor_backup_codes`, any name ending in `capabilities` or `user_level`, and any name the rule's well-formed check refuses
+    (letters, digits, `_ - . :`, at most 64 characters). Naming one by mistake would make every logged-in user, or every member with a
+    role, a licence holder.
+- **A field no user has yet is accepted** (the site may fill it later); the tab notes it beside the field
+  (`ob-wp-settings__licence-meta-unused`), looking at the network's users for one row at most.
+- **The tab's sample (finding 8):** the product name's help shows a made-up example line ("Enfold ••••-1a2b, active"), never a real
+  member's data.
+- **Freshness.** `Sync\LicenceFieldHooks` hooks WordPress's three user-field moments (`added_user_meta`, `updated_user_meta`,
+  `deleted_user_meta`; hooks: named moments where a plugin's code runs): a change of the licence field, while the source is on, calls
+  `LicenceRefresh::changed`, under its usual guards (a user OmnaBase knows; one waiting row per user). `LicenceRefresh` counts the source as
+  a licence source. A user being deleted queues nothing (WordPress deletes their fields one by one first).
+- **On a network (finding 10),** user fields are shared by every site, but these moments fire only on the site that writes the field.
+  kriesi.at's verifier on the main site therefore queues no refresh on /support; OmnaBase's own write-through on every lookup (the
+  copy-and-charts round's part seven) covers it. Not solved this round.
+- **Later, not this round:** the support end date from `av_purchase_data['supported_until']` as the licence's expiry (finding 6), and
+  direct-shop buyers who have no `av_purchase_code` (finding 7).
+- Tests: `tests/Unit/UserMetaLicenceSourceTest.php`, `tests/Integration/UserMetaLicenceTest.php`,
+  `tests/Structure/LicenceSourcesStructureTest.php` (the red team's), and `RoundTwoScreenTest::test_a_switch_per_detected_source_all_off`
+  (adjusted by the red team, dated note).

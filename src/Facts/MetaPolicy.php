@@ -64,6 +64,22 @@ final class MetaPolicy {
 	}
 
 	/**
+	 * Whether a key may be named as the licence field (the licence-sources round, 2026-11-03): any well-formed name, the banned words
+	 * included (the administrator names the field as a licence on purpose, and only its masked form is sent), except WordPress's own secrets
+	 * and role fields, which every logged-in user or every member with a role holds: the three exact names and any name ending in
+	 * `capabilities` or `user_level` (`wp_capabilities`, `wp_2_user_level` …).
+	 *
+	 * @param string $key A usermeta key.
+	 */
+	public static function isLicenceField( string $key ): bool {
+		$name = strtolower( $key );
+		if ( ! self::isWellFormed( $key ) || in_array( $name, self::BANNED_NAMES, true ) ) {
+			return false;
+		}
+		return ! str_ends_with( $name, 'capabilities' ) && ! str_ends_with( $name, 'user_level' );
+	}
+
+	/**
 	 * Whether a key is a plain name OmnaBase can read: letters, digits, `_ - . :`, at most 64 characters.
 	 *
 	 * @param string $key A usermeta key.

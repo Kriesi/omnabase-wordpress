@@ -22,6 +22,7 @@ use OmnaBase\WordPress\Outbox\Table;
 use OmnaBase\WordPress\Outbox\Worker;
 use OmnaBase\WordPress\Security\Vault;
 use OmnaBase\WordPress\Sync\KnownUsers;
+use OmnaBase\WordPress\Sync\LicenceFieldHooks;
 use OmnaBase\WordPress\Sync\LicenceHooks;
 use OmnaBase\WordPress\Sync\LicenceRefresh;
 use OmnaBase\WordPress\Sync\SiteId;
@@ -31,7 +32,7 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Part of the hand-wired container (`Plugin`): what round two adds (its outbox, `queue` and `worker`, also carries round three's forum rows). `registerBackground()` hooks the outbox's timer, the shops' licence
- * events and the fresh start on a new connection; it runs once per request, however often the plugin is booted.
+ * events (and the licence field's changes) and the fresh start on a new connection; it runs once per request, however often the plugin is booted.
  */
 final class CustomerData {
 
@@ -68,6 +69,7 @@ final class CustomerData {
 			new Sources\EddRecurring(),
 			new Sources\EddSoftwareLicensing(),
 			new Sources\LicenseManager(),
+			new Sources\UserMetaLicence( $this->switches ),
 		);
 		$site_ids        = new SiteId();
 		$this->queue     = new Queue( $this->table, $this->schedule );
@@ -86,6 +88,7 @@ final class CustomerData {
 		$this->table->maybeInstall();
 		$this->schedule->register( $this->worker );
 		( new LicenceHooks( $this->refresh ) )->register();
+		( new LicenceFieldHooks( $this->refresh, $this->switches ) )->register();
 		add_action( 'omnabase_connected', array( $this, 'freshStart' ) );
 	}
 

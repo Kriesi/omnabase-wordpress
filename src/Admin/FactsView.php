@@ -19,7 +19,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Only the sources whose plugin is active are offered, each off until ticked, with "unsupported version" beside one whose plugin is older
  * than the source was built for. The picker offers the usermeta keys the newest users have (and any ticked before), never a private (`_…`)
- * or banned key. The last answer's left-out sections are named in words.
+ * or banned key, never the licence field. The licence field's settings come with a note when no user holds the field yet. The last
+ * answer's left-out sections are named in words.
  */
 final class FactsView {
 
@@ -43,7 +44,7 @@ final class FactsView {
 	/**
 	 * What the template shows.
 	 *
-	 * @return array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,last:?array}
+	 * @return array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,licence:array{key:string,product:string,unused:bool},last:?array}
 	 */
 	public function build(): array {
 		$sources = array();
@@ -52,13 +53,27 @@ final class FactsView {
 				$sources[] = array( 'id' => $source->id(), 'label' => $source->label(), 'on' => $this->switches->isOn( $source->id() ), 'unsupported' => $this->unsupported( $source->id() ) );
 			}
 		}
-		$ticked = $this->switches->meta();
-		$meta   = array_map( static fn ( $key ) => array( 'key' => $key, 'on' => in_array( $key, $ticked, true ) ), $this->offeredKeys( $ticked ) );
-		$last   = $this->log->all()[0] ?? null;
+		$ticked  = $this->switches->meta();
+		$licence = $this->switches->licenceMeta();
+		$meta    = array_map( static fn ( $key ) => array( 'key' => $key, 'on' => in_array( $key, $ticked, true ) ), $this->offeredKeys( $ticked, $licence['key'] ) );
+		$last    = $this->log->all()[0] ?? null;
 		if ( null !== $last ) {
 			$last['dropped'] = array_map( array( self::class, 'sectionWords' ), (array) $last['dropped'] );
 		}
-		return array( 'sources' => $sources, 'meta' => $meta, 'last' => $last );
+		return array( 'sources' => $sources, 'meta' => $meta, 'licence' => $licence + array( 'unused' => self::nobodyHolds( $licence['key'] ) ), 'last' => $last );
+	}
+
+	/**
+	 * Whether a named licence field is held by no user of the network yet (the tab notes it: a typo, or a field filled later).
+	 *
+	 * @param string $key The licence field's name, or ''.
+	 */
+	private static function nobodyHolds( string $key ): bool {
+		if ( '' === $key ) {
+			return false;
+		}
+		$query = array( 'number' => 1, 'fields' => 'ID', 'blog_id' => 0, 'count_total' => false, 'meta_key' => $key, 'meta_compare' => 'EXISTS' ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- one row at most, on the screen only; the usermeta table's key is indexed.
+		return array() === get_users( $query );
 	}
 
 	/**
@@ -89,18 +104,19 @@ final class FactsView {
 	}
 
 	/**
-	 * The keys the picker offers, sorted.
+	 * The keys the picker offers, sorted; never the field named as the licence, whatever its name.
 	 *
-	 * @param string[] $ticked The keys ticked already.
+	 * @param string[] $ticked  The keys ticked already.
+	 * @param string   $licence The licence field's name, or ''.
 	 * @return string[]
 	 */
-	private function offeredKeys( array $ticked ): array {
+	private function offeredKeys( array $ticked, string $licence ): array {
 		$keys = $ticked;
 		$ids  = get_users( array( 'number' => self::SAMPLE_USERS, 'orderby' => 'registered', 'order' => 'DESC', 'fields' => 'ID' ) );
 		foreach ( $ids as $id ) {
 			$keys = array_merge( $keys, array_map( 'strval', array_keys( (array) get_user_meta( (int) $id ) ) ) );
 		}
-		$keys = array_values( array_unique( array_filter( $keys, array( MetaPolicy::class, 'isOffered' ) ) ) );
+		$keys = array_values( array_unique( array_filter( $keys, static fn ( $key ) => $key !== $licence && MetaPolicy::isOffered( $key ) ) ) );
 		sort( $keys );
 		return $keys;
 	}

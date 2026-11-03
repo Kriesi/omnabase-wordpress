@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T00:03:13+00:00\n"
+"POT-Creation-Date: 2026-11-03T20:38:48+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -87,57 +87,57 @@ msgstr ""
 msgid "The builder sent something this site does not know: try again."
 msgstr ""
 
-#: src/Admin/DataActions.php:56
+#: src/Admin/DataActions.php:57
 msgid "Customer data settings saved."
 msgstr ""
 
-#: src/Admin/DataActions.php:64
+#: src/Admin/DataActions.php:65
 msgid "The call will be sent again within a minute."
 msgstr ""
 
-#: src/Admin/DataActions.php:64
+#: src/Admin/DataActions.php:65
 msgid "That call no longer needs attention."
 msgstr ""
 
-#: src/Admin/DataActions.php:72
+#: src/Admin/DataActions.php:73
 msgid "The call was discarded: it will not be sent."
 msgstr ""
 
-#: src/Admin/DataActions.php:72
+#: src/Admin/DataActions.php:73
 msgid "That call is no longer on its way."
 msgstr ""
 
-#: src/Admin/DataActions.php:80
+#: src/Admin/DataActions.php:81
 msgid "The call is being sent now."
 msgstr ""
 
-#: src/Admin/DataActions.php:80
+#: src/Admin/DataActions.php:81
 msgid "That call is no longer waiting."
 msgstr ""
 
 #. translators: 1: the installed version, 2: the oldest supported version.
-#: src/Admin/FactsView.php:72
+#: src/Admin/FactsView.php:87
 #, php-format
 msgid "unsupported version %1$s; needs %2$s or newer"
 msgstr ""
 
-#: src/Admin/FactsView.php:82
+#: src/Admin/FactsView.php:97
 msgid "profile"
 msgstr ""
 
-#: src/Admin/FactsView.php:83
+#: src/Admin/FactsView.php:98
 msgid "orders"
 msgstr ""
 
-#: src/Admin/FactsView.php:84
+#: src/Admin/FactsView.php:99
 msgid "subscriptions"
 msgstr ""
 
-#: src/Admin/FactsView.php:85
+#: src/Admin/FactsView.php:100
 msgid "licences"
 msgstr ""
 
-#: src/Admin/FactsView.php:86
+#: src/Admin/FactsView.php:101
 msgid "licences (the oldest)"
 msgstr ""
 
@@ -195,7 +195,7 @@ msgid "Contact support"
 msgstr ""
 
 #: src/Admin/PageMaker.php:57
-#: src/Forum/ReplySender.php:145
+#: src/Forum/ReplySender.php:166
 #: src/Portal/MyAccountLink.php:51
 #: src/Portal/MyAccountLink.php:55
 msgid "Support"
@@ -476,8 +476,18 @@ msgstr ""
 msgid "License Manager for WooCommerce licences"
 msgstr ""
 
-#: src/Facts/Sources/Profile.php:38
+#: src/Facts/Sources/Profile.php:39
 msgid "Profile: registered since, roles, billing country and the ticked user fields"
+msgstr ""
+
+#: src/Facts/Sources/UserMetaLicence.php:41
+#: templates/admin/partials/facts-licence.php:17
+msgid "Licence in a user field"
+msgstr ""
+
+#: src/Facts/Sources/UserMetaLicence.php:85
+#: templates/admin/partials/facts-licence.php:14
+msgid "Licence"
 msgstr ""
 
 #: src/Facts/Sources/WooCommerce.php:29
@@ -569,10 +579,6 @@ msgstr ""
 msgid "Not sent: the reply was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/ReplySender.php:152
-msgid "Forum member"
-msgstr ""
-
 #: src/Forum/ReplySender.php:98
 msgid "Not sent: the reply came from OmnaBase."
 msgstr ""
@@ -584,6 +590,10 @@ msgstr ""
 #: src/Forum/ReplySender.php:104
 #: src/Forum/TopicSender.php:96
 msgid "Not sent: its forum is no longer marked."
+msgstr ""
+
+#: src/Forum/ReplySender.php:152
+msgid "Forum member"
 msgstr ""
 
 #: src/Forum/StatusSender.php:35
@@ -873,7 +883,7 @@ msgstr ""
 msgid "This call can no longer be made: the user it is about was deleted."
 msgstr ""
 
-#: src/Sync/LicenceRefresh.php:56
+#: src/Sync/LicenceRefresh.php:57
 msgid "Licence refresh"
 msgstr ""
 
@@ -1114,6 +1124,32 @@ msgstr ""
 msgid "Disconnect"
 msgstr ""
 
+#: templates/admin/partials/facts-licence.php:18
+msgid "A licence code another plugin keeps for each user, such as a purchase code checked at registration; your team sees only its last four characters."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:21
+msgid "Field name"
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:22
+msgid "The name the code is stored under for each user, such as av_purchase_code."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:24
+msgid "No user has this field yet: check the name, or wait until the first code is saved."
+msgstr ""
+
+#: templates/admin/partials/facts-licence.php:33
+msgid "Product name"
+msgstr ""
+
+#. translators: %s: the product's name, as the team sees it beside a made-up masked code.
+#: templates/admin/partials/facts-licence.php:37
+#, php-format
+msgid "Shown beside the licence in OmnaBase, for example: %s ••••-1a2b, active."
+msgstr ""
+
 #: templates/admin/partials/facts.php:18
 msgid "What this site tells your team about a customer when a ticket opens; every source stays off until you turn it on."
 msgstr ""
@@ -1124,48 +1160,48 @@ msgstr ""
 msgid "The answer at %1$s left out: %2$s (too large or not readable by OmnaBase)."
 msgstr ""
 
-#: templates/admin/partials/facts.php:45
-#: templates/admin/partials/facts.php:64
+#: templates/admin/partials/facts.php:46
+#: templates/admin/partials/facts.php:65
 msgid "User fields"
 msgstr ""
 
-#: templates/admin/partials/facts.php:46
+#: templates/admin/partials/facts.php:47
 msgid "Extra fields other plugins keep for each user, such as a phone number; the ticked ones go with the customer's profile."
 msgstr ""
 
-#: templates/admin/partials/facts.php:48
+#: templates/admin/partials/facts.php:49
 msgid "Choose user fields"
 msgstr ""
 
-#: templates/admin/partials/facts.php:50
+#: templates/admin/partials/facts.php:51
 msgid "Never offered or sent:"
 msgstr ""
 
-#: templates/admin/partials/facts.php:52
+#: templates/admin/partials/facts.php:53
 msgid "Passwords"
 msgstr ""
 
-#: templates/admin/partials/facts.php:53
+#: templates/admin/partials/facts.php:54
 msgid "Tokens"
 msgstr ""
 
-#: templates/admin/partials/facts.php:54
+#: templates/admin/partials/facts.php:55
 msgid "Keys and other secrets"
 msgstr ""
 
-#: templates/admin/partials/facts.php:55
+#: templates/admin/partials/facts.php:56
 msgid "Private fields (their names start with an underscore)"
 msgstr ""
 
-#: templates/admin/partials/facts.php:58
+#: templates/admin/partials/facts.php:59
 msgid "No user fields found yet."
 msgstr ""
 
-#: templates/admin/partials/facts.php:61
+#: templates/admin/partials/facts.php:62
 msgid "Fields to send"
 msgstr ""
 
-#: templates/admin/partials/facts.php:78
+#: templates/admin/partials/facts.php:79
 #: templates/admin/partials/forum.php:36
 #: templates/admin/tabs/appearance.php:78
 #: templates/admin/tabs/pages.php:27

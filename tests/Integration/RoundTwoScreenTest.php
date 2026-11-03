@@ -83,15 +83,20 @@ final class RoundTwoScreenTest extends RoundTwoTestCase {
 	 * What it checks: The screen offers a switch for every customer-data source it finds on the site, each off until the administrator turns
 	 *   it on.
 	 * Passes when: the customer-data section has one checkbox for each of profile, WooCommerce, WooCommerce Subscriptions, EDD, EDD Recurring,
-	 *   EDD Software Licensing and License Manager for WooCommerce (all present here), and none is checked.
+	 *   EDD Software Licensing and License Manager for WooCommerce (all present here), plus "Licence in a user field" (it needs no other
+	 *   plugin, so every site has it), and none is checked.
 	 * Fails when: an administrator cannot choose what is shared, or a source starts out shared without their say.
+	 *
+	 * Adjusted, not weakened (the licence-sources round, the red team, 2026-11-03; OmnaBase's brief docs/briefs/licence-sources-round.md part
+	 * one): the eighth source, `user_meta_licence`, is available on every site, so it is offered here too. Every source checked before is still
+	 * checked, still off.
 	 */
 	public function test_a_switch_per_detected_source_all_off(): void {
 		$html = $this->openTab( 'data' );
 
 		$offered = self::values( $html, '//*[contains(@class,"ob-wp-settings__facts")]//input[@type="checkbox" and @name="omnabase_facts[sources][]"]' );
 		$checked = self::values( $html, '//*[contains(@class,"ob-wp-settings__facts")]//input[@type="checkbox" and @name="omnabase_facts[sources][]" and @checked]' );
-		$this->assertEqualsCanonicalizing( self::ALL_SOURCES, $offered );
+		$this->assertEqualsCanonicalizing( array_merge( self::ALL_SOURCES, array( 'user_meta_licence' ) ), $offered );
 		$this->assertSame( array(), $checked );
 	}
 

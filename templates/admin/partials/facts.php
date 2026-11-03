@@ -1,11 +1,11 @@
 <?php
 /**
- * Settings › OmnaBase: the Customer data tab's save form, two cards: the sources (a switch per detected source) and the user fields (behind
- * "Choose user fields"). Included by the Customer data tab.
+ * Settings › OmnaBase: the Customer data tab's save form, three cards: the sources (a switch per detected source), the licence kept in a
+ * user field (its field's and product's names) and the user fields (behind "Choose user fields"). Included by the Customer data tab.
  *
  * @package OmnaBase
  *
- * @var array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,last:?array} $omnabase_facts
+ * @var array{sources:array<int,array{id:string,label:string,on:bool,unsupported:string}>,meta:array<int,array{key:string,on:bool}>,licence:array{key:string,product:string,unused:bool},last:?array} $omnabase_facts
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -41,6 +41,7 @@ defined( 'ABSPATH' ) || exit;
 			</p>
 		<?php endif; ?>
 	</section>
+	<?php require __DIR__ . '/facts-licence.php'; ?>
 	<section class="ob-form__section ob-wp-settings__profile">
 		<div class="ob-form__head"><h2 class="ob-form__title"><?php esc_html_e( 'User fields', 'omnabase' ); ?></h2></div>
 		<div class="ob-form__intro"><?php esc_html_e( 'Extra fields other plugins keep for each user, such as a phone number; the ticked ones go with the customer\'s profile.', 'omnabase' ); ?></div>

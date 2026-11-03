@@ -7,6 +7,7 @@
 
 namespace OmnaBase\WordPress\Sync;
 
+use OmnaBase\WordPress\Facts\Sources\UserMetaLicence;
 use OmnaBase\WordPress\Facts\Switches;
 use OmnaBase\WordPress\Outbox\Job;
 use OmnaBase\WordPress\Outbox\Queue;
@@ -23,7 +24,7 @@ final class LicenceRefresh implements Job {
 
 	public const KIND = 'licence_refresh';
 
-	private const LICENCE_SOURCES = array( 'edd_software_licensing', 'lmfw' );
+	private const LICENCE_SOURCES = array( 'edd_software_licensing', 'lmfw', UserMetaLicence::ID );
 
 	/**
 	 * Builds the refresh.
@@ -36,7 +37,7 @@ final class LicenceRefresh implements Job {
 	public function __construct( private Queue $queue, private SiteId $site_ids, private KnownUsers $known, private Switches $switches ) {}
 
 	/**
-	 * A shop event changed a user's licences, orders or subscriptions.
+	 * A shop event (or the licence field) changed a user's licences, orders or subscriptions.
 	 *
 	 * @param int $user_id The user (0: a guest, nothing to refresh).
 	 */

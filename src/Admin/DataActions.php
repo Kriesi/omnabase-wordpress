@@ -44,14 +44,15 @@ final class DataActions {
 		add_action( 'admin_post_' . self::SEND_NOW, array( $this, 'sendNow' ) );
 	}
 
-	/** Stores exactly the ticked sources and user fields. */
+	/** Stores exactly the ticked sources and user fields, and the licence field's settings. */
 	public function saveFacts(): void {
 		Guard::check( self::SAVE_FACTS );
 		$posted = isset( $_POST['omnabase_facts'] ) && is_array( $_POST['omnabase_facts'] ) ? wp_unslash( $_POST['omnabase_facts'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- the nonce is checked by Guard::check() above; each list is sanitised below.
 		$this->switches->save(
 			array_map( static fn ( FactsSource $s ) => $s->id(), $this->sources ),
 			self::keys( $posted['sources'] ?? array() ),
-			self::keys( $posted['meta'] ?? array() )
+			self::keys( $posted['meta'] ?? array() ),
+			self::licence( $posted['licence_meta'] ?? array() )
 		);
 		$this->flash->set( get_current_user_id(), 'success', __( 'Customer data settings saved.', 'omnabase' ) );
 		Guard::backToScreen( Tabs::DATA );
@@ -84,6 +85,20 @@ final class DataActions {
 	/** The posted row id (the nonce was checked by the caller). */
 	private static function row(): int {
 		return isset( $_POST['row'] ) ? absint( wp_unslash( $_POST['row'] ) ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked by Guard::check() in the calling handler.
+	}
+
+	/**
+	 * The posted licence field's settings, as plain strings (the switches check the name).
+	 *
+	 * @param mixed $posted The posted pair.
+	 * @return array{key:string,product:string}
+	 */
+	private static function licence( $posted ): array {
+		$posted = is_array( $posted ) ? $posted : array();
+		return array(
+			'key'     => sanitize_text_field( is_scalar( $posted['key'] ?? null ) ? (string) $posted['key'] : '' ),
+			'product' => sanitize_text_field( is_scalar( $posted['product'] ?? null ) ? (string) $posted['product'] : '' ),
+		);
 	}
 
 	/**
