@@ -56,13 +56,14 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 
 	/**
 	 * What it checks: A moderator's answer on the forum is recorded on the ticket as the team's answer, already delivered, shown under the
-	 *   support user's name, never as a hidden note.
-	 * Passes when: Nina's (a moderator's) reply makes one call from the team, delivered, with siteAuthor named "Kriesi Support" (the support
-	 *   user's display name), her text and "reply-<id>"; it carries no customer and is not a note.
-	 * Fails when: the ticket keeps waiting on the team although a moderator answered, the customer gets the answer again by mail, or it hides
-	 *   in an internal note.
+	 *   moderator's own name, never as a hidden note. (Adjusted 2026-11-03: until then the name was the support user's, so every moderator
+	 *   read as the support user in OmnaBase; the founder saw "Günter" on every forum answer of ticket 252.)
+	 * Passes when: Nina's (a moderator's) reply makes one call from the team, delivered, with siteAuthor named "Nina Moderator" (her own
+	 *   display name) and her address, her text and "reply-<id>"; it carries no customer and is not a note.
+	 * Fails when: the ticket keeps waiting on the team although a moderator answered, the answer shows under the support user's name, the
+	 *   customer gets the answer again by mail, or it hides in an internal note.
 	 */
-	public function test_a_moderators_reply_is_a_delivered_team_message_under_the_support_users_name(): void {
+	public function test_a_moderators_reply_is_a_delivered_team_message_under_the_moderators_own_name(): void {
 		$topic = $this->filedTopic();
 		$this->calls = array();
 		$reply = $this->reply( $topic, $this->moderator, 'Please clear the cache.' );
@@ -74,7 +75,8 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 		$body = self::bodyOf( $calls[0] );
 		$this->assertSame( 'team', $body['from'] ?? null );
 		$this->assertTrue( $body['delivered'] ?? null );
-		$this->assertSame( 'Kriesi Support', $body['siteAuthor']['name'] ?? null );
+		$this->assertSame( 'Nina Moderator', $body['siteAuthor']['name'] ?? null );
+		$this->assertSame( 'nina@shop.example.org', $body['siteAuthor']['email'] ?? null );
 		$this->assertStringContainsString( 'Please clear the cache.', (string) ( $body['body'] ?? '' ) );
 		$this->assertSame( array( 'id' => 'reply-' . $reply ), $body['external'] ?? null );
 		$this->assertArrayNotHasKey( 'customer', $body );

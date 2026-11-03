@@ -132,16 +132,16 @@ final class ReplySender implements Job {
 	}
 
 	/**
-	 * The team member as the site names them: the support user's name (the name the forum shows OmnaBase's answers under), the moderator's
-	 * own address (OmnaBase shows the answer as that member when the address is a member's) and their forum role.
+	 * The team member as the site names them: the moderator's own forum display name (since 2026-11-03; until then the support user's name,
+	 * which made every moderator read as the support user in OmnaBase), their own address (OmnaBase shows the answer as that member when the
+	 * address is a member's) and their forum role.
 	 *
 	 * @param int $author The moderator.
 	 * @return array{name:string,email?:string,role?:string}
 	 */
 	private function siteAuthor( int $author ): array {
 		$moderator = get_userdata( $author );
-		$support   = get_userdata( $this->settings->supportUser() );
-		$name      = trim( (string) ( $support ? $support->display_name : ( $moderator ? $moderator->display_name : '' ) ) );
+		$name      = trim( (string) ( $moderator ? $moderator->display_name : '' ) );
 		$out       = array( 'name' => mb_substr( '' !== $name ? $name : __( 'Support', 'omnabase' ), 0, self::NAME_MAX ) );
 		if ( $moderator && is_email( $moderator->user_email ) ) {
 			$out['email'] = (string) $moderator->user_email;

@@ -1366,3 +1366,16 @@ founder chose "option 1" on 2026-11-02 night.
   dropping the topic's author, and removes it in a `finally`. Every other subscriber is still mailed; with the switch off nothing changes.
 - **Cleaned up**: the mark is on `Options::CUSTOMER_MAIL_META` and removed by uninstall.php; the readme's FAQ, external services and
   privacy sections and the suggested privacy text say that OmnaBase may email a topic's author about answers.
+
+## 2026-11-03 — A moderator's forum answer carries the moderator's own name
+
+The founder read ticket 252's forum answers in OmnaBase: every one showed "Günter", the support user, although Rikard and a keymaster had
+written them. The M13 forum round had pinned the support user's display name as `siteAuthor.name` for every moderator's reply (the brief's
+"<support user's name>"); OmnaBase shows that name as "<name> on <host>" whenever the moderator's address is not a member's. So every
+non-member moderator read as the support user.
+
+- **`siteAuthor.name` is now the moderator's own forum display name** (`ReplySender::siteAuthor`); the address and the role are unchanged.
+  OmnaBase still shows the answer as the member whose address it is, else as "<name> on <host>", now "Rikard on kriesi.at · Moderator".
+- The support user's own forum posts are still never sent (unchanged), so the support user's name never travels this way.
+- Stored messages keep the name they were recorded with (development stage, no backfill).
+- Test: `ForumRepliesTest::test_a_moderators_reply_is_a_delivered_team_message_under_the_moderators_own_name` (adjusted, dated note).
