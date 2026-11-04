@@ -15,7 +15,10 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The outbox row `forum_reply` (one per reply). When its turn comes the reply is read again (review S3: decided here, not in the hook):
- * - gone, unpublished, posted by the plugin itself (`_omnabase_message_id`) or by the support user, in a forum no longer marked → nothing;
+ * - gone, unpublished, posted by the plugin itself (OmnaBase's sign: the message id `_omnabase_message_id` or the posted-as mark
+ *   `_omnabase_posted_as`, written in the reply's own save), in a forum no longer marked → nothing. Since the support user replies round
+ *   (2026-11-04) the sign alone says "came from OmnaBase": a reply the support user wrote by hand is a moderator's answer like any other
+ *   (until then every support-user post was skipped, and ticket 253 lost such remarks);
  * - its topic has no ticket yet: while the topic's own row waits (say for OmnaBase's daily limit) or needs attention, the reply waits and
  *   goes after it; a topic that was never sent (published before its forum was marked) takes its replies with it: nothing;
  * - by the topic's author → the customer's message (`from: customer`);
@@ -67,7 +70,7 @@ final class ReplySender implements Job {
 	/** {@inheritDoc} */
 	public function request( array $row ): Step {
 		$reply = get_post( (int) $row['subject_id'] );
-		$skip  = $this->whyNot( $reply );
+		$skip  = self::whyNot( $reply, $this->settings );
 		if ( null !== $skip ) {
 			return Step::skip( $skip );
 		}
@@ -81,27 +84,35 @@ final class ReplySender implements Job {
 		return Step::send( 'POST', '/tickets/' . $number . '/messages', $this->body( $reply, $topic ), 15, true );
 	}
 
-	/** {@inheritDoc} */
-	public function sent( array $row, ?array $answer ): void {}
+	/**
+	 * OmnaBase accepted the reply: it is marked delivered (the support user replies round), so a resend answers "already sent" after the
+	 * outbox has forgotten the row.
+	 *
+	 * @param array<string,mixed>      $row    The row.
+	 * @param array<string,mixed>|null $answer OmnaBase's answer.
+	 */
+	public function sent( array $row, ?array $answer ): void {
+		Posts::markDelivered( (int) $row['subject_id'] );
+	}
 
 	/**
-	 * Why a reply is not sent, in words; null when it may be.
+	 * Why a reply is not sent, in words; null when it may be. Shared with the resend (`Resend`): one rule, two doors.
 	 *
-	 * @param \WP_Post|null $reply The reply.
+	 * @param \WP_Post|null $reply    The reply.
+	 * @param Settings      $settings The forum settings.
 	 */
-	private function whyNot( ?\WP_Post $reply ): ?string {
+	public static function whyNot( ?\WP_Post $reply, Settings $settings ): ?string {
 		if ( ! Posts::isReply( $reply ) || bbp_get_public_status_id() !== $reply->post_status ) {
 			return __( 'Not sent: the reply was removed or unpublished before its turn.', 'omnabase' );
 		}
-		$support = $this->settings->supportUser();
-		if ( '' !== Posts::messageOf( $reply->ID ) || ( $support > 0 && (int) $reply->post_author === $support ) ) {
+		if ( '' !== Posts::messageOf( $reply->ID ) || '' !== Posts::postedAsOf( $reply->ID ) ) {
 			return __( 'Not sent: the reply came from OmnaBase.', 'omnabase' );
 		}
 		$topic = get_post( Posts::topicOf( $reply ) );
 		if ( ! Posts::isTopic( $topic ) || 'trash' === $topic->post_status ) {
 			return __( 'Not sent: its topic was removed.', 'omnabase' );
 		}
-		return $this->settings->isMarked( Posts::forumOf( $topic->ID ) ) ? null : __( 'Not sent: its forum is no longer marked.', 'omnabase' );
+		return $settings->isMarked( Posts::forumOf( $topic->ID ) ) ? null : __( 'Not sent: its forum is no longer marked.', 'omnabase' );
 	}
 
 	/**

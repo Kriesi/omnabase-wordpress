@@ -6,7 +6,7 @@
  *
  * @package OmnaBase
  *
- * @var array{version:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string,link:?array{url:string,label:string}},tab:string,tabs:array<int,array{slug:string,label:string,url:string,active:bool,count:int}>} $view
+ * @var array{version:string,build:string,apiUrl:?string,appUrl:?string,notice:?array{type:string,message:string,link:?array{url:string,label:string}},tab:string,tabs:array<int,array{slug:string,label:string,url:string,active:bool,count:int}>} $view
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -34,8 +34,8 @@ defined( 'ABSPATH' ) || exit;
 
 	<p class="ob-wp-settings__version">
 		<?php
-		/* translators: %s: the plugin's version. */
-		echo esc_html( sprintf( __( 'OmnaBase Connector %s', 'omnabase' ), $view['version'] ) );
+		/* translators: 1: the plugin's version, 2: the build the zip was made from (a short code and a day, or "dev"). */
+		echo esc_html( sprintf( __( 'OmnaBase Connector %1$s · build %2$s', 'omnabase' ), $view['version'], $view['build'] ) );
 		?>
 	</p>
 </div>

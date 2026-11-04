@@ -21,6 +21,14 @@ defined( 'ABSPATH' ) || exit;
 // The version, kept equal to the header above (bin/check-version.sh and the structure guard compare them).
 define( 'OMNABASE_VERSION', '0.2.1' );
 
+// The build stamp bin/build-dist.sh writes into the zip (the short commit and the day); a copy linked from the repository has none.
+if ( is_readable( __DIR__ . '/build.php' ) ) {
+	require __DIR__ . '/build.php';
+}
+if ( ! defined( 'OMNABASE_BUILD' ) ) {
+	define( 'OMNABASE_BUILD', '' );
+}
+
 // The PSR-4 autoloader comes from Composer (`composer install` in a checkout; `--no-dev -o` in the release zip).
 if ( ! is_readable( __DIR__ . '/vendor/autoload.php' ) ) {
 	add_action(

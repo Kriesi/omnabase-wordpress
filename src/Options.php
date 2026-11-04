@@ -118,8 +118,17 @@ final class Options {
 	/** Post meta: OmnaBase's message id on a reply the plugin posted (the echo marker: a reply carrying it is never sent back). */
 	public const MESSAGE_META = '_omnabase_message_id';
 
-	/** Post meta (the post-as-member round): how a reply the plugin posted got its author, `member` or `support`. Removed at uninstall. */
+	/**
+	 * Post meta (the post-as-member round): how a reply the plugin posted got its author, `member` or `support`; written in the reply's save and
+	 * read as OmnaBase's sign beside the message id (the support user replies round). Removed at uninstall.
+	 */
 	public const POSTED_AS_META = '_omnabase_posted_as';
+
+	/**
+	 * Post meta (the support user replies round, 2026-11-04): when OmnaBase accepted a forum reply (unix time); a resend answers "already sent"
+	 * from it, also after the outbox forgot its sent row. Removed at uninstall.
+	 */
+	public const DELIVERED_META = '_omnabase_delivered';
 
 	/** Post meta (the forum sync round, 2026-11-02): the number (`seq`) of the newest status message applied to a topic. Removed at uninstall. */
 	public const STATUS_SEQ_META = '_omnabase_status_seq';

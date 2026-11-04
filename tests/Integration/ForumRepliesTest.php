@@ -1,5 +1,9 @@
 <?php
 /**
+ * Adjusted, not weakened (the support user replies round, the red team, 2026-11-04; OmnaBase brief docs/briefs/support-user-replies-round.md
+ * part one): the support user's hand-written reply is now sent as the team's answer under the support user's own name; the marked reply is
+ * still never sent and another member's still goes as other. The test checks more than before, nothing less.
+ *
  * Adjusted, not weakened (the composer-and-fixes round, the red team, 2026-11-03; OmnaBase brief docs/briefs/composer-and-fixes-round.md
  * rule 11): another member's reply is now sent as `from: "other"`; the "never sent" test keeps the support user's and the marked replies and
  * checks Ben's goes as other, never as the customer. Everything else unchanged.
@@ -88,29 +92,38 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 	}
 
 	/**
-	 * What it checks: Replies by the support user, or carrying the plugin's own marker, are never sent, so OmnaBase's answers never come back to
-	 *   the ticket; another member's reply goes as "other", never as the customer's. (Adjusted 2026-11-03, the composer-and-fixes round, rule 11:
-	 *   until then another member's reply was not sent at all; ticket 395 lost such an answer. The founder: "another members replys should ofc
-	 *   also show in a thread".)
+	 * What it checks: Replies carrying the plugin's own marker are never sent, so OmnaBase's answers never come back to the ticket; a reply
+	 *   the support user typed on the forum is the team's answer under the support user's own name; another member's reply goes as "other",
+	 *   never as the customer's. (Adjusted 2026-11-04, the support user replies round, part one: until then the support user's hand-written
+	 *   reply was never sent either; ticket 253 lost Günter's remarks that way. Adjusted 2026-11-03, the composer-and-fixes round, rule 11:
+	 *   until then another member's reply was not sent at all; ticket 395 lost such an answer.)
 	 * Passes when: of Ben's reply on Ada's topic, a reply the support user typed on the forum, and Nina's reply that carries OmnaBase's message
-	 *   id (written after the post was saved, as the plugin's own insert does), only Ben's makes a call, from "other" and not from the customer;
+	 *   id (written after the post was saved, as the plugin's own insert does), Ben's and the support user's make one call each: Ben's from
+	 *   "other" and not from the customer, the support user's from the team, delivered, under "Kriesi Support"; Nina's marked reply makes none;
 	 *   no row needs attention.
-	 * Fails when: a stranger's post lands on Ada's ticket as hers, or the team's answer appears twice on the ticket (sent, then echoed back).
+	 * Fails when: a stranger's post lands on Ada's ticket as hers, the team's answer appears twice on the ticket (sent, then echoed back), or
+	 *   the support user's own answer on the forum never reaches the ticket.
 	 */
-	public function test_the_support_user_and_marked_replies_are_never_sent_and_another_member_goes_as_other(): void {
+	public function test_marked_replies_are_never_sent_the_support_users_own_is_the_team_and_another_member_is_other(): void {
 		$topic = $this->filedTopic();
 		$this->calls = array();
-		$this->reply( $topic, $this->ben, 'Same here!' );
-		$this->reply( $topic, $this->support, 'Typed by hand as the support user.' );
-		$marked = $this->reply( $topic, $this->moderator, 'Posted from OmnaBase.' );
+		$ben     = $this->reply( $topic, $this->ben, 'Same here!' );
+		$support = $this->reply( $topic, $this->support, 'Typed by hand as the support user.' );
+		$marked  = $this->reply( $topic, $this->moderator, 'Posted from OmnaBase.' );
 		update_post_meta( $marked, self::MESSAGE_META, 'msg-from-omnabase' );
 
 		$this->sendEverything();
 
-		$calls = $this->messageCalls();
-		$this->assertCount( 1, $calls, 'only Ben\'s reply is sent' );
-		$this->assertSame( 'other', self::bodyOf( $calls[0] )['from'] ?? null, 'as another participant, never as the customer' );
-		$this->assertStringContainsString( 'Same here!', (string) ( self::bodyOf( $calls[0] )['body'] ?? '' ) );
+		$bodies = array();
+		foreach ( $this->messageCalls() as $call ) {
+			$bodies[ (string) ( self::bodyOf( $call )['external']['id'] ?? '' ) ] = self::bodyOf( $call );
+		}
+		$this->assertSame( array( 'reply-' . $ben, 'reply-' . $support ), array_keys( $bodies ), 'Ben\'s and the support user\'s replies are sent, the marked one is not' );
+		$this->assertSame( 'other', $bodies[ 'reply-' . $ben ]['from'] ?? null, 'as another participant, never as the customer' );
+		$this->assertStringContainsString( 'Same here!', (string) ( $bodies[ 'reply-' . $ben ]['body'] ?? '' ) );
+		$this->assertSame( 'team', $bodies[ 'reply-' . $support ]['from'] ?? null, 'the support user speaks as the team' );
+		$this->assertTrue( $bodies[ 'reply-' . $support ]['delivered'] ?? null );
+		$this->assertSame( 'Kriesi Support', $bodies[ 'reply-' . $support ]['siteAuthor']['name'] ?? null );
 		$this->assertSame( array(), array_values( array_filter( $this->forumRows( 'reply' ), static fn ( $r ) => 'attention' === $r['state'] ) ) );
 	}
 

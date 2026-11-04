@@ -60,7 +60,7 @@ final class RoundSixStructureTest extends TestCase {
 	 * is a stored template the site owner edits in the Forums tab (the red team's structure test pins it as one constant, which cannot call
 	 * a translation function); it is named here alone, like the message centre's cache tag.
 	 */
-	private const TECHNICAL = array( '/^(SELECT|UPDATE|DELETE|INSERT|CREATE|DROP)\b/', '/no-store/', '/^Bearer $/', '/^put your unique phrase here$/', '/^OmnaBase message centre$/', '/^Best regards\\\\?n\{agent\}, \{workspace\}$/' );
+	private const TECHNICAL = array( '/^(SELECT|UPDATE|DELETE|INSERT|CREATE|DROP)\b/', '/no-store/', '/^Bearer $/', '/^put your unique phrase here$/', '/^OmnaBase message centre$/', '/^Best regards\\\\?n\{agent\}, \{workspace\}$/', '/^omnabase forum$/' );
 
 	/** Sentences the `.pot` must hold: one per part of the plugin (the screen, the form, the message centre, the outbox, the header). */
 	private const POT_SAMPLE = array( 'This site is not connected to OmnaBase yet.', 'On its way to OmnaBase', 'Retry', 'Discard', 'Message centre', 'Shortcodes', 'Forms and messages', 'What OmnaBase sent here', 'Disconnected in OmnaBase', 'Save' );
@@ -136,8 +136,8 @@ final class RoundSixStructureTest extends TestCase {
 	/**
 	 * What it checks: Words meant for people that are built in src/ (labels kept and shown later) go through translation too.
 	 * Passes when: every string in src/ that reads as prose (two words or more, or one capitalised word) sits inside a translation call, is an
-	 *   array key, or is one of the named technical strings (SQL, header values, WordPress's placeholder salt, LiteSpeed's tag); the plugin
-	 *   header's field names (src/PluginInfo.php) are exempt.
+	 *   array key, or is one of the named technical strings (SQL, header values, WordPress's placeholder salt, LiteSpeed's tag, the name of
+	 *   the plugin's command for WordPress's command line, added 2026-11-04); the plugin header's field names (src/PluginInfo.php) are exempt.
 	 * Fails when: a label such as the facts summary's "licences (the oldest)" reaches the settings screen in English on every site.
 	 */
 	public function test_prose_in_src_goes_through_translation(): void {

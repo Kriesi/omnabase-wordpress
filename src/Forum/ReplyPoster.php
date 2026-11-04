@@ -9,6 +9,7 @@ namespace OmnaBase\WordPress\Forum;
 
 use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Look\MessageHtml;
+use OmnaBase\WordPress\Options;
 use OmnaBase\WordPress\Rest\Refusal;
 
 defined( 'ABSPATH' ) || exit;
@@ -29,7 +30,9 @@ defined( 'ABSPATH' ) || exit;
  * The site-fields round: the message's `fields` whose keys are declared now are written as the reply's post meta right after it exists and
  * before it is marked as OmnaBase's (a redelivery that finds the mark posts nothing more), then `omnabase_forum_field_saved` fires.
  * The post-as-member round: the reply also keeps how its author was chosen (`_omnabase_posted_as`: `member` | `support`), and a poster who
- * was subscribed to the topic stays subscribed (bbPress before 2.6.20 drops the poster's subscription inside its insert).
+ * was subscribed to the topic stays subscribed (bbPress before 2.6.20 drops the poster's subscription inside its insert). Since the support
+ * user replies round (2026-11-04) that mark is written in the save itself (`meta_input`, before WordPress's publish moment) and counts as
+ * OmnaBase's sign beside the message id, so a posting cut off before its message id never comes back as a forum post.
  * The forum reply mails round (2026-11-03): whether OmnaBase mails the topic's author is decided at posting (`CustomerMail`), and the
  * answer's `posted` is added by `PostedAnswer`.
  */
@@ -101,6 +104,7 @@ final class ReplyPoster {
 			'post_title'   => sprintf( /* translators: %s: the topic's title. */ __( 'Reply To: %s', 'omnabase' ), $topic->post_title ),
 			'post_content' => $this->content( $message, $workspace ),
 			'post_status'  => bbp_get_public_status_id(),
+			'meta_input'   => array( Options::POSTED_AS_META => $this->postedAs( $poster ) ), // OmnaBase's sign, there before the publish moment
 		);
 		$subscribed = bbp_is_user_subscribed( $poster, $topic->ID );
 		self::$posting = true;
@@ -114,10 +118,18 @@ final class ReplyPoster {
 			throw new Refusal( 500, esc_html__( 'WordPress did not save the reply; OmnaBase will try again.', 'omnabase' ) );
 		}
 		PostFields::write( $reply, $message['fields'] ?? null, $this->fields->declared() );
-		Posts::markPostedAs( $reply, $poster === $this->settings->supportUser() ? Posts::POSTED_AS_SUPPORT : Posts::POSTED_AS_MEMBER );
 		$this->customer->decide( $reply, $topic ); // the forum reply mails round: decided once, before the echo mark
 		Posts::markPosted( $reply, (string) $message['id'] );
 		return $reply;
+	}
+
+	/**
+	 * How the poster was chosen, for the posted-as mark: the support user, or a member's own moderator account.
+	 *
+	 * @param int $poster The user the reply is posted under.
+	 */
+	private function postedAs( int $poster ): string {
+		return $poster === $this->settings->supportUser() ? Posts::POSTED_AS_SUPPORT : Posts::POSTED_AS_MEMBER;
 	}
 
 	/**

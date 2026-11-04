@@ -1483,3 +1483,43 @@ repository. "Licence in a user field" learns a condition on the value and an opt
 - Tests: `tests/Unit/LicenceConditionExpiryTest.php`, `tests/Structure/LicenceConditionExpiryStructureTest.php`,
   `tests/Integration/LicenceConditionExpiryTest.php` (the red team's), and `UserMetaLicenceSourceTest.php` /
   `LicenceSourcesStructureTest.php` (adjusted by the red team, dated notes).
+
+## 2026-11-04 — The support user's replies: the echo guard is OmnaBase's mark alone; resend, delivered mark and build stamp
+
+OmnaBase's brief `docs/briefs/support-user-replies-round.md` with its final section "After the red team's review" (final), and the red
+team's report `docs/reviews/support-user-replies-round-red-team-report.md`, both in the OmnaBase repository. Ticket 253: the support user's
+own remarks on the forum never reached the ticket; another member's post was lost by an older build on kriesi.at.
+
+- **The echo guard is the mark alone (part one).** A reply is "came from OmnaBase" only when it carries OmnaBase's sign: the message id
+  (`_omnabase_message_id`) or the posted-as mark (`_omnabase_posted_as`). Both the reply job's skip rule (`ReplySender::whyNot`) and the
+  publish hook (`Triggers::reply`) dropped the support-user comparison. Why: the comparison was the first days' echo guard, from before the
+  mark existed (every OmnaBase answer was posted under the support user); since the mark exists on every posted reply (round three,
+  2026-10-09, before the first release) it only lost the support user's hand-written answers. The support user is a moderator by the
+  setting's own rule, so such a reply goes as the team's answer (`from: team`, delivered) under the support user's own name, address and
+  forum role (Q1).
+- **The posted-as mark is written in the save itself (Q6).** `ReplyPoster` passes it as `meta_input` to bbPress's insert, so WordPress
+  writes it before its "status changed to published" moment; the hook and the job read it as OmnaBase's sign beside the message id. An
+  interrupted posting (stopped between the save and the message id) can therefore never come back as a duplicate team answer. The
+  "posting right now" switch stays as the hook's first guard. Not this round: OmnaBase's retry of such a posting still posts a second forum
+  reply (`Posts::postedFor` reads only the message id).
+- **The resend (part two, Q2).** `wp omnabase forum resend <reply id>`, one id per call, registered only while WP-CLI runs
+  (`Cli\ForumCommand`), a thin door to `Forum\Resend`. It answers one line and a status: *sent* (the delivered mark is there: nothing to
+  do), *refused* (the reply job's own words from `whyNot`, shared, not copied; or "its topic is no ticket at OmnaBase" when no topic row is
+  on its way), *waiting* (a waiting row is made due now, never doubled), *queued* (a row needing attention is retried with a fresh key, as
+  the Activity tab's Retry; else a new row). A refusal exits non-zero. On the command line WordPress's timer is not woken, so the line says
+  it goes with the next outbox run; `wp cron event run omnabase_outbox` sends it at once. A late resend is written at its arrival and moves
+  the ticket's status like a new post (Q5, accepted; the founder sets it back by hand). The wp-admin door (Q4) is not this round.
+- **The delivered mark (Q3).** On a 2xx the reply job writes `Options::DELIVERED_META` (`_omnabase_delivered`, the time) on the reply;
+  uninstall removes it. "Already sent" is read from it, not from the idempotency key: sent rows are purged after seven days and a new row
+  gets a new key. Replies delivered before this version carry no mark; a resend of one goes again and OmnaBase's own check of the site's
+  `reply-<id>` answers with the first message (no duplicate). Looking for an old sent row as well was left out (the outbox's table is at
+  its size budget, and OmnaBase's check covers it).
+- **The build stamp (Q7).** `bin/build-dist.sh` writes `build.php` into the zip, defining `OMNABASE_BUILD` as the short commit and the day,
+  with " +changes" when the working copy holds unsaved or untracked edits; omnabase.php loads it, else defines it empty. `PluginInfo::build()`
+  reads the value without running the file (letters, digits, spaces and `.:+-`, at most 60). The settings screen's bottom line, shown on
+  every tab, reads "OmnaBase Connector 0.2.1 · build 128bbca 2026-11-03" ("build dev" for a copy without the stamp), and every call to
+  OmnaBase carries `User-Agent: OmnaBase-Connector/<version> (build <build>)`. No `wp omnabase version` command.
+- Tests: `tests/Unit/SupportUserReplyTest.php`, `tests/Unit/PluginBuildTest.php`, `tests/Structure/SupportUserRepliesStructureTest.php`,
+  `tests/Integration/ForumSupportUserRepliesTest.php`, `ForumResendTest.php`, `ForumMissingReplyTest.php` (the red team's);
+  `ForumRepliesTest.php` and `ForumOtherRepliesTest.php` adjusted by the red team; `RoundSixStructureTest`'s list of technical strings
+  takes the command's name `omnabase forum` (the builder; it is a command name, not prose).

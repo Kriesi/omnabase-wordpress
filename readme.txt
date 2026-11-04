@@ -104,6 +104,14 @@ Under the team member's own forum account when the site has a user with their Om
 
 A developer can choose another poster with the filter `omnabase_forum_reply_author( $user_id, $message, $topic )`: it gets the poster chosen so far, OmnaBase's message and the topic, and returns a user id. A user without moderator rights is replaced by the support user.
 
+= A forum reply never reached its ticket. Can I send it again? =
+
+Yes, with WordPress's command line on your server (WP-CLI): `wp omnabase forum resend <reply id>`, one reply per call. The reply id is the number after `#post-` in the reply's link; on a multisite network add `--url=` with the site's address. The command prints one line: queued for the ticket, already waiting, already sent (nothing is sent twice), or why the reply cannot go. It goes with the next outbox run; `wp cron event run omnabase_outbox` sends it at once. A reply the old version skipped arrives on the ticket at the moment it is sent, after any newer messages.
+
+= Which version and build does my site run? =
+
+The line at the bottom of Settings › OmnaBase names both, for example "OmnaBase Connector 0.2.1 · build 128bbca 2026-11-03": the version and the code and day the zip was made from. A copy without that stamp says "build dev".
+
 = What happens when I delete the plugin? =
 
 It stops the site's key at OmnaBase and removes everything it stored on your site: its settings, what was waiting to be sent, its notes on users and posts, its scheduled jobs and the key file that protects its stored connection. On a multisite network it does this on every site. Your tickets stay in OmnaBase.

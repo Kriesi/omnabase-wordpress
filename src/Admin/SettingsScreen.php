@@ -40,7 +40,7 @@ final class SettingsScreen {
 	/**
 	 * Builds the screen.
 	 *
-	 * @param PluginInfo                     $info      The header fields (the version shown in the footer line).
+	 * @param PluginInfo                     $info      The header fields (the version and the build shown in the footer line).
 	 * @param Flash                          $flash     The message from the last action.
 	 * @param Actions                        $actions   The way back's handler.
 	 * @param array<string,callable():array> $sections  Each section's view by name (see `TAB_SECTIONS`).
@@ -88,6 +88,7 @@ final class SettingsScreen {
 		$tab  = Tabs::current();
 		$view = array(
 			'version' => $this->info->version(),
+			'build'   => '' !== $this->info->build() ? $this->info->build() : 'dev',
 			'apiUrl'  => ApiUrl::override(),
 			'appUrl'  => ApiUrl::appOverride(),
 			'notice'  => $this->flash->take( get_current_user_id() ),

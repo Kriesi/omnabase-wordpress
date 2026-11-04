@@ -5,6 +5,9 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.1 — unreleased =
 
+* Fixed: A forum reply the support user writes by hand now reaches the ticket in OmnaBase as your team's answer under the support user's own name; until now only the answers sent from OmnaBase appeared under that account.
+* Added: A forum reply that never reached its ticket can be sent again from WordPress's command line: `wp omnabase forum resend <reply id>`; a reply already sent is never sent twice.
+* Added: The bottom of Settings › OmnaBase shows which build of the plugin the site runs next to its version, and OmnaBase sees it too.
 * Fixed: "Send a test call" in OmnaBase no longer leaves a call needing attention on your site when the team member who pressed it has an account there.
 * Added: "Licence in a user field" can count only the values that equal or contain a text you choose, read the code from a key inside a stored list, and show the licence's end date from an expiry field, so your team sees it as active or expired with its day.
 * Added: "Licence in a user field" under Settings › OmnaBase › Customer data (off by default): a licence code another plugin keeps for each user, such as a purchase code checked at registration, shows in OmnaBase as a licence of the product you name, with only its last four characters; a changed or removed code reaches OmnaBase on its own.

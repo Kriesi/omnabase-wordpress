@@ -7,13 +7,14 @@
 
 namespace OmnaBase\WordPress\Api;
 
+use OmnaBase\WordPress\PluginInfo;
 use OmnaBase\WordPress\Security\Vault;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Every call goes to the pinned host with the vault's key in the Authorization header (the exchange alone carries none: the site has no
- * key yet), certificates checked, no redirect followed. An answer is an array, or a `WP_Error` naming what went wrong in words; the key and
+ * key yet), certificates checked, no redirect followed, a User-Agent naming the version and the build. An answer is an array, or a `WP_Error` naming what went wrong in words; the key and
  * the secrets never appear in an error, and OmnaBase's raw answer is never echoed (only its `error.message`). OmnaBase's 401 to a call with
  * the key means someone disconnected the site there: the vault is marked, and no further call with the key is made until Connect.
  */
@@ -179,7 +180,7 @@ final class Client {
 	 * @return array<string,mixed>
 	 */
 	private static function args( string $method, ?string $key, $body, int $timeout ): array {
-		$headers = array( 'Accept' => 'application/json' );
+		$headers = array( 'Accept' => 'application/json', 'User-Agent' => self::userAgent() );
 		if ( null !== $key ) {
 			$headers['Authorization'] = 'Bearer ' . $key;
 		}
@@ -195,6 +196,15 @@ final class Client {
 			$args['body']                    = (string) wp_json_encode( $body );
 		}
 		return $args;
+	}
+
+	/**
+	 * The plugin and its build, so OmnaBase's logs name each site's build (the support user replies round): `OmnaBase-Connector/0.2.1
+	 * (build 128bbca 2026-11-03)`, "dev" for a copy without the zip's stamp.
+	 */
+	private static function userAgent(): string {
+		$build = PluginInfo::cleanBuild( defined( 'OMNABASE_BUILD' ) ? (string) OMNABASE_BUILD : '' );
+		return 'OmnaBase-Connector/' . ( defined( 'OMNABASE_VERSION' ) ? OMNABASE_VERSION : '' ) . ' (build ' . ( '' !== $build ? $build : 'dev' ) . ')';
 	}
 
 	/**

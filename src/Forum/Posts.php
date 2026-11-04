@@ -138,14 +138,32 @@ final class Posts {
 	}
 
 	/**
-	 * Marks how a posted reply's author was chosen (the post-as-member round): `member` (the member's own moderator account, or the filter's
-	 * moderator) or `support` (the support user). Read by nothing yet but tests and diagnosis.
+	 * How a reply the plugin posted got its author (the post-as-member round): `member`, `support`, or an empty string for any other reply.
+	 * Written in the reply's own save since the support user replies round (2026-11-04), so it is there before bbPress publishes the reply,
+	 * and read as OmnaBase's sign beside the message id: a posting cut off before its message id never comes back as a forum post.
 	 *
-	 * @param int    $reply_id The reply.
-	 * @param string $as       `member` or `support`.
+	 * @param int $reply_id The reply.
 	 */
-	public static function markPostedAs( int $reply_id, string $as ): void {
-		update_post_meta( $reply_id, Options::POSTED_AS_META, $as );
+	public static function postedAsOf( int $reply_id ): string {
+		return (string) get_post_meta( $reply_id, Options::POSTED_AS_META, true );
+	}
+
+	/**
+	 * Whether a reply reached OmnaBase (the support user replies round): the delivered mark the reply job writes once OmnaBase accepted it.
+	 *
+	 * @param int $reply_id The reply.
+	 */
+	public static function isDelivered( int $reply_id ): bool {
+		return '' !== (string) get_post_meta( $reply_id, Options::DELIVERED_META, true );
+	}
+
+	/**
+	 * Marks a reply as delivered to OmnaBase, with the time (kept on the reply after the outbox forgets its sent row, seven days on).
+	 *
+	 * @param int $reply_id The reply.
+	 */
+	public static function markDelivered( int $reply_id ): void {
+		update_post_meta( $reply_id, Options::DELIVERED_META, (string) time() );
 	}
 
 	/**

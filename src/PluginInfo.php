@@ -79,6 +79,27 @@ final class PluginInfo {
 		return $this->fields['version'] ?? '';
 	}
 
+	/**
+	 * The build the zip was made from (the support user replies round, 2026-11-04): the short commit and the day `bin/build-dist.sh` wrote
+	 * into `build.php` beside the main file ("128bbca 2026-11-03", "+changes" for unsaved edits), read without running it; an empty string
+	 * for a copy linked from the repository or a file holding nothing usable.
+	 */
+	public function build(): string {
+		$file = $this->dir() . 'build.php';
+		$text = is_readable( $file ) ? (string) file_get_contents( $file, false, null, 0, 4096 ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a local file of the plugin's own, read like the header.
+		return preg_match( "/define\(\s*'OMNABASE_BUILD',\s*'([^']*)'\s*\)/", $text, $m ) ? self::cleanBuild( $m[1] ) : '';
+	}
+
+	/**
+	 * A build stamp fit for the screen and a request header: letters, digits, spaces and `.:+-` only, trimmed, at most 60 characters.
+	 *
+	 * @param string $build The stamp as written.
+	 */
+	public static function cleanBuild( string $build ): string {
+		$clean = trim( (string) preg_replace( '/\s+/', ' ', (string) preg_replace( '/[^A-Za-z0-9 .:+\-]/', '', $build ) ) );
+		return trim( substr( $clean, 0, 60 ) );
+	}
+
 	/** The `Requires PHP` header. */
 	public function requiresPhp(): string {
 		return $this->fields['requiresPhp'] ?? '';

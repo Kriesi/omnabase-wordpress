@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T22:50:39+00:00\n"
+"POT-Creation-Date: 2026-11-04T11:29:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -39,7 +39,7 @@ msgstr ""
 msgid "https://omnabase.com"
 msgstr ""
 
-#: omnabase.php:30
+#: omnabase.php:38
 msgid "OmnaBase is missing its vendor folder. Please reinstall the plugin from its zip."
 msgstr ""
 
@@ -216,7 +216,7 @@ msgid "Contact support"
 msgstr ""
 
 #: src/Admin/PageMaker.php:57
-#: src/Forum/ReplySender.php:166
+#: src/Forum/ReplySender.php:177
 #: src/Portal/MyAccountLink.php:51
 #: src/Portal/MyAccountLink.php:55
 msgid "Support"
@@ -297,7 +297,7 @@ msgid "OmnaBase"
 msgstr ""
 
 #. translators: %d: how many calls to OmnaBase need the administrator.
-#: src/Admin/SettingsScreen.php:124
+#: src/Admin/SettingsScreen.php:125
 #, php-format
 msgid "%d call needs attention"
 msgid_plural "%d calls need attention"
@@ -381,33 +381,33 @@ msgstr ""
 msgid "Activity"
 msgstr ""
 
-#: src/Api/Client.php:114
+#: src/Api/Client.php:115
 msgid "The stored connection can no longer be read: connect the site again."
 msgstr ""
 
-#: src/Api/Client.php:115
+#: src/Api/Client.php:116
 #: templates/admin/partials/connection.php:77
 msgid "This site is not connected to OmnaBase yet."
 msgstr ""
 
-#: src/Api/Client.php:129
+#: src/Api/Client.php:130
 #: templates/admin/partials/connection.php:57
 msgid "Someone disconnected this site in OmnaBase. Click Connect to connect it again."
 msgstr ""
 
-#: src/Api/Client.php:146
+#: src/Api/Client.php:147
 msgid "This site is not connected to OmnaBase."
 msgstr ""
 
 #. translators: %s: the network error.
-#: src/Api/Client.php:227
+#: src/Api/Client.php:237
 #: src/Outbox/Policy.php:132
 #, php-format
 msgid "OmnaBase could not be reached: %s"
 msgstr ""
 
 #. translators: 1: the HTTP status, 2: OmnaBase's message.
-#: src/Api/Client.php:235
+#: src/Api/Client.php:245
 #, php-format
 msgid "OmnaBase answered %1$d. %2$s"
 msgstr ""
@@ -551,65 +551,98 @@ msgstr ""
 msgid "Only administrators see this note."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:78
+#: src/Forum/ReplyPoster.php:81
 msgid "The topic of this ticket is no longer on the forum."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:82
+#: src/Forum/ReplyPoster.php:85
 msgid "No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet."
 msgstr ""
 
 #. translators: %s: the topic's title.
-#: src/Forum/ReplyPoster.php:101
+#: src/Forum/ReplyPoster.php:104
 #, php-format
 msgid "Reply To: %s"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:114
+#: src/Forum/ReplyPoster.php:118
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
 #. translators: %s: the workspace's name, e.g. "Kriesi".
-#: src/Forum/ReplyPoster.php:163
+#: src/Forum/ReplyPoster.php:175
 #, php-format
 msgid "The %s team"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:165
+#: src/Forum/ReplyPoster.php:177
 msgid "the team"
 msgstr ""
 
-#: src/Forum/ReplySender.php:57
+#: src/Forum/ReplySender.php:60
 msgid "Forum reply to ticket"
 msgstr ""
 
-#: src/Forum/ReplySender.php:78
+#: src/Forum/ReplySender.php:81
 msgid "Waiting for its topic to become a ticket."
 msgstr ""
 
-#: src/Forum/ReplySender.php:79
+#: src/Forum/ReplySender.php:82
 msgid "Not sent: its topic was never sent to OmnaBase (published before its forum was marked)."
 msgstr ""
 
-#: src/Forum/ReplySender.php:94
+#: src/Forum/ReplySender.php:106
 msgid "Not sent: the reply was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/ReplySender.php:98
+#: src/Forum/ReplySender.php:109
 msgid "Not sent: the reply came from OmnaBase."
 msgstr ""
 
-#: src/Forum/ReplySender.php:102
+#: src/Forum/ReplySender.php:113
 msgid "Not sent: its topic was removed."
 msgstr ""
 
-#: src/Forum/ReplySender.php:104
+#: src/Forum/ReplySender.php:115
 #: src/Forum/TopicSender.php:96
 msgid "Not sent: its forum is no longer marked."
 msgstr ""
 
-#: src/Forum/ReplySender.php:152
+#: src/Forum/ReplySender.php:163
 msgid "Forum member"
+msgstr ""
+
+#. translators: %d: the ticket's number.
+#: src/Forum/Resend.php:48
+#, php-format
+msgid "Already sent to ticket #%d: nothing to do."
+msgstr ""
+
+#: src/Forum/Resend.php:57
+msgid "Not sent: its topic is no ticket at OmnaBase."
+msgstr ""
+
+#. translators: %s: where the reply goes ("ticket #253").
+#: src/Forum/Resend.php:74
+#, php-format
+msgid "Already waiting for %s: now due, it goes with the next outbox run."
+msgstr ""
+
+#. translators: %s: where the reply goes ("ticket #253").
+#: src/Forum/Resend.php:82
+#, php-format
+msgid "Queued for %s: it goes with the next outbox run."
+msgstr ""
+
+#. translators: %d: the ticket's number.
+#: src/Forum/Resend.php:93
+#, php-format
+msgid "ticket #%d"
+msgstr ""
+
+#. translators: %d: the ticket's number.
+#: src/Forum/Resend.php:93
+msgid "its topic's ticket, once the topic is sent"
 msgstr ""
 
 #: src/Forum/StatusSender.php:35
@@ -1653,10 +1686,10 @@ msgstr ""
 msgid "OmnaBase settings"
 msgstr ""
 
-#. translators: %s: the plugin's version.
+#. translators: 1: the plugin's version, 2: the build the zip was made from (a short code and a day, or "dev").
 #: templates/admin/settings.php:38
 #, php-format
-msgid "OmnaBase Connector %s"
+msgid "OmnaBase Connector %1$s · build %2$s"
 msgstr ""
 
 #: templates/admin/tabs/appearance.php:24

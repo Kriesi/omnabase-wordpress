@@ -74,19 +74,22 @@ final class Triggers {
 	}
 
 	/**
-	 * A reply was published: queued when its topic's forum is marked and it is neither the plugin's own posting nor the support user's.
+	 * A reply was published: queued when its topic's forum is marked and it is not the plugin's own posting. The support user replies round
+	 * (2026-11-04): OmnaBase's sign alone (the message id, or the posted-as mark written in the reply's own save) says a reply is the plugin's;
+	 * the support user's hand-written reply is queued like any moderator's. The "posting right now" switch stays as the first guard.
 	 *
 	 * @param int|mixed $reply_id The reply.
 	 */
 	public function reply( $reply_id ): void {
 		$reply = get_post( (int) $reply_id );
-		if ( ReplyPoster::isPosting() || ! Posts::isReply( $reply ) || bbp_get_public_status_id() !== $reply->post_status || '' !== Posts::messageOf( $reply->ID ) ) {
-			return; // the post-as-member round: a reply the plugin posted carries its mark, whoever it was posted under
-		}
-		$support = $this->settings->supportUser();
-		if ( ( $support > 0 && (int) $reply->post_author === $support ) || ! $this->settings->isMarked( Posts::forumOf( Posts::topicOf( $reply ) ) ) ) {
+		if ( ReplyPoster::isPosting() || ! Posts::isReply( $reply ) || bbp_get_public_status_id() !== $reply->post_status ) {
 			return;
 		}
-		$this->queue->add( ReplySender::KIND, $reply->ID );
+		if ( '' !== Posts::messageOf( $reply->ID ) || '' !== Posts::postedAsOf( $reply->ID ) ) {
+			return; // a reply the plugin posted carries OmnaBase's sign, whoever it was posted under
+		}
+		if ( $this->settings->isMarked( Posts::forumOf( Posts::topicOf( $reply ) ) ) ) {
+			$this->queue->add( ReplySender::KIND, $reply->ID );
+		}
 	}
 }

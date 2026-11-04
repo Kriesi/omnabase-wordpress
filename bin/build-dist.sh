@@ -14,6 +14,10 @@
 #   - the syntax check must run on PHP 8.1, the oldest version the header promises (inside wp-env's cli container, so wp-env must be up).
 # A development build checks syntax with the PHP on this machine and says which one.
 #
+# The build stamp (the support user replies round, 2026-11-04): every zip carries build.php defining OMNABASE_BUILD as the short commit
+# and the day ("128bbca 2026-11-03"), with " +changes" when the working copy holds unsaved edits (as development zips usually do); the
+# settings screen shows it next to the version and every call to OmnaBase names it in its User-Agent.
+#
 # Round four (M13) and M14 round four: the shortcode form's and the settings screen's stylesheets are built first from OmnaBase's kit
 # tokens (bin/build-css.php) when the OmnaBase repository is beside this one (or OMNABASE_REPO); otherwise the committed assets/form.css
 # and assets/admin.css go in as they are.
@@ -60,6 +64,25 @@ for item in "${RUNTIME[@]}"; do
 	[[ -e "$item" ]] && cp -Rf "$item" "$TREE/"
 done
 find "$TREE" -name '.DS_Store' -delete -o -name '.gitkeep' -delete
+
+echo "==> Build stamp"
+BUILD="$(git rev-parse --short HEAD 2>/dev/null || echo unknown) $(date +%Y-%m-%d)"
+if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+	BUILD="$BUILD +changes"
+fi
+cat > "$TREE/build.php" <<PHP
+<?php
+/**
+ * Which build of the plugin this zip holds, written by bin/build-dist.sh: the short commit and the day the zip was made.
+ *
+ * @package OmnaBase
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'OMNABASE_BUILD', '${BUILD}' );
+PHP
+echo "    ${BUILD}"
 
 echo "==> Composer (no dev packages, optimised autoloader)"
 composer install --working-dir="$TREE" --no-dev --optimize-autoloader --no-interaction --no-progress --quiet

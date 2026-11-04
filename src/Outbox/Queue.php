@@ -51,4 +51,17 @@ final class Queue {
 		}
 		return $due;
 	}
+
+	/**
+	 * A row needing attention waits again, due now, with a fresh idempotency key (the Activity tab's Retry), and the one-off run is woken.
+	 *
+	 * @param int $id The row.
+	 */
+	public function retry( int $id ): bool {
+		$due = $this->table->retry( $id, time() );
+		if ( $due ) {
+			$this->schedule->soon();
+		}
+		return $due;
+	}
 }

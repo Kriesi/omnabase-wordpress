@@ -16,8 +16,9 @@
  * Shapes the red team pins (the builder may rename and tell the red team): the body is
  * `{ from: "other", participant: { name }, body, external: { id: "reply-<id>" } }` with an Idempotency-Key; the name is the user's display
  * name, a guest's anonymous name; no `customer`, `member`, `siteAuthor`, `delivered`, `kind`, `email` or `fields` key (chosen, finding 20:
- * another person's private data never reaches the customer's ticket). The support user's replies and the plugin's own (marked) replies are
- * still never sent (guard, in ForumRepliesTest).
+ * another person's private data never reaches the customer's ticket). The plugin's own (marked) replies are still never sent (guard, in
+ * ForumRepliesTest). (Adjusted 2026-11-04, the support user replies round, the red team; comment only: the support user's hand-written
+ * replies are now sent as the team's answer, pinned in ForumRepliesTest and ForumSupportUserRepliesTest.)
  *
  * Why these fail today: `ReplySender::body()` returns null for anyone but the topic's author and moderators, so the reply is skipped with
  * "Not sent: only the topic's author and moderators speak on the ticket".
@@ -107,7 +108,7 @@ final class ForumOtherRepliesTest extends RoundThreeTestCase {
 			array( 'forum_id' => $forum, 'topic_id' => $topic, 'anonymous_name' => 'Gast Gerda', 'anonymous_email' => 'gerda@example.org' )
 		);
 		$this->assertGreaterThan( 0, $id );
-		do_action( 'bbp_new_reply', $id, $topic, $forum, array( 'bbp_anonymous_name' => 'Gast Gerda', 'bbp_anonymous_email' => 'gerda@example.org', 'bbp_anonymous_website' => '' ), 0, false, 0 );
+		do_action( 'bbp_new_reply', $id, $topic, $forum, array( 'bbp_anonymous_name' => 'Gast Gerda', 'bbp_anonymous_email' => 'gerda@example.org', 'bbp_anonymous_website' => '' ), 0, false, 0 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- bbPress's own moment, fired as bbPress fires it
 
 		$this->workOutbox();
 
