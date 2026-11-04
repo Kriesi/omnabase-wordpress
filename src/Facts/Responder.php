@@ -14,7 +14,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Nothing is shared until a source is switched on (`{}`). Then: who the call is about (the site id first, else the address), each
  * switched-on source's records, shaped to the contract, the log line. A user OmnaBase named by site id counts as known; a user found only by
- * address gets the link queued (once), so later calls and the licence refreshes carry the site's id.
+ * address gets the link queued (once), so later calls and the licence refreshes carry the site's id. A test call (`test: true`, a team
+ * member's "Send a test call" in OmnaBase about their own address) is answered the same way but links nobody: OmnaBase refuses a team
+ * member's address as a customer, and the refused link would wait on the site as a call needing attention.
  */
 final class Responder {
 
@@ -33,7 +35,7 @@ final class Responder {
 	/**
 	 * The answer to send.
 	 *
-	 * @param array<string,mixed> $call The call as OmnaBase sent it: `{ v, project, customer { email, external }, ticket, sentAt }`.
+	 * @param array<string,mixed> $call The call as OmnaBase sent it: `{ v, project, customer { email, external }, ticket, sentAt, test? }`.
 	 */
 	public function respond( array $call ): object {
 		if ( ! $this->switches->anyOn() ) {
@@ -42,7 +44,7 @@ final class Responder {
 		$customer = is_array( $call['customer'] ?? null ) ? $call['customer'] : array();
 		$person   = $this->identity->resolve( is_string( $customer['email'] ?? null ) ? $customer['email'] : '', is_string( $customer['external'] ?? null ) ? $customer['external'] : null );
 		$facts    = null === $person ? array() : $this->collect( $person );
-		if ( null !== $person && $person->isUser() ) {
+		if ( null !== $person && $person->isUser() && true !== ( $call['test'] ?? false ) ) {
 			$this->links->met( (int) $person->userId, $person->byExternal );
 		}
 		$shaped = $this->shaper->shape( $facts );
