@@ -12,7 +12,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Listens to the events receiver's answer filter (`omnabase_webhook_answer`): for a `message.sent` the plugin posted, the 200 answer gains
  * `posted: { id: "reply-<reply id>", url: <the reply's address> }`, and `mail: "omnabase"` when the reply is marked for OmnaBase's mail to
- * the topic's author. The answer is read from the posted reply itself, so a repeated delivery (the same delivery id, or the same message
+ * the topic's author, and `rating: "ask"` when OmnaBase may ask the topic's author for a rating (the customer rating round, 2026-11-17).
+ * The answer is read from the posted reply itself, so a repeated delivery (the same delivery id, or the same message
  * under a new one) answers the same `posted` as the first time and a retry after a slow first answer never loses the mail.
  */
 final class PostedAnswer {
@@ -45,6 +46,9 @@ final class PostedAnswer {
 		$posted = array( 'id' => 'reply-' . $reply, 'url' => bbp_get_reply_url( $reply ) );
 		if ( CustomerMail::isMarked( $reply ) ) {
 			$posted['mail'] = 'omnabase';
+		}
+		if ( RatingAsk::isMarked( $reply ) ) {
+			$posted['rating'] = 'ask';
 		}
 		return array( 'posted' => $posted ) + $body;
 	}

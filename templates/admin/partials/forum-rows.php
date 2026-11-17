@@ -6,7 +6,7 @@
  *
  * @package OmnaBase
  *
- * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,customerMail:bool} $omnabase_forum
+ * @var array{forums:array<int,array{id:int,title:string,public:bool,marked:bool}>,moderators:array<int,array{id:int,name:string}>,supportUser:int,closingLine:string,guests:bool,inStep:bool,customerMail:bool,askRating:bool} $omnabase_forum
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -89,5 +89,14 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	<div class="ob-form-row__control">
 		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-customer-mail" name="omnabase_forum[customer_mail]" value="1" <?php checked( $omnabase_forum['customerMail'] ); ?>>
+	</div>
+</div>
+<div class="ob-form-row">
+	<div class="ob-form-row__text">
+		<label class="ob-form-row__label" for="omnabase-ask-rating"><?php esc_html_e( 'OmnaBase asks the customer for a rating', 'omnabase' ); ?></label>
+		<div class="ob-form-row__help"><?php esc_html_e( 'Whether OmnaBase mails a topic\'s author one rating question after their ticket is resolved.', 'omnabase' ); ?></div>
+	</div>
+	<div class="ob-form-row__control">
+		<input type="checkbox" role="switch" class="ob-switch" id="omnabase-ask-rating" name="omnabase_forum[ask_rating]" value="1" <?php checked( $omnabase_forum['askRating'] ); ?>>
 	</div>
 </div>

@@ -44,8 +44,9 @@ final class Options {
 
 	/**
 	 * The forum settings: `[ 'forums' => [ <forum id>, … ], 'support_user' => <user id>, 'closing_line' => <text>, 'guests' => bool,
-	 * 'in_step' => bool, 'customer_mail' => bool, 'fields' => [ key => name ] ]` (`customer_mail`, the forum reply mails round: OmnaBase
-	 * mails a topic's author about answers, off when missing); read and written by `Forum\Settings` alone.
+	 * 'in_step' => bool, 'customer_mail' => bool, 'ask_rating' => bool, 'fields' => [ key => name ] ]` (`customer_mail`, the forum reply
+	 * mails round: OmnaBase mails a topic's author about answers, off when missing; `ask_rating`, the customer rating round: OmnaBase may ask
+	 * a topic's author for a rating, on when missing); read and written by `Forum\Settings` alone.
 	 */
 	public const FORUM = 'omnabase_forum';
 
@@ -145,6 +146,12 @@ final class Options {
 	 * decided at posting; the subscriber mails then leave the author out. Removed at uninstall.
 	 */
 	public const CUSTOMER_MAIL_META = '_omnabase_customer_mail';
+
+	/**
+	 * Post meta (the customer rating round, 2026-11-17): `1` on a reply the plugin posted when OmnaBase may ask the topic's author for a
+	 * rating, decided at posting; answered to OmnaBase as `rating: "ask"`. Removed at uninstall.
+	 */
+	public const RATING_ASK_META = '_omnabase_rating_ask';
 
 	/**
 	 * Post meta (the forum reply pictures round, 2026-11-17): OmnaBase's file id on a picture the plugin saved into the media library for a

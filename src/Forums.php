@@ -19,7 +19,9 @@ use OmnaBase\WordPress\Forum\PictureLog;
 use OmnaBase\WordPress\Forum\PictureSaver;
 use OmnaBase\WordPress\Forum\PostFields;
 use OmnaBase\WordPress\Forum\PostedAnswer;
+use OmnaBase\WordPress\Forum\RatingAsk;
 use OmnaBase\WordPress\Forum\ReplyAuthor;
+use OmnaBase\WordPress\Forum\ReplyMarks;
 use OmnaBase\WordPress\Forum\ReplyPictures;
 use OmnaBase\WordPress\Forum\ReplyPoster;
 use OmnaBase\WordPress\Forum\ReplySender;
@@ -67,7 +69,7 @@ final class Forums {
 		$this->statusTriggers = new StatusTriggers( $data->queue );
 		$this->mails          = new SubscriberMails();
 		$this->pictures       = new ReplyPictures( new PictureSaver( new Client( $vault ) ), new PictureLog() ); // the forum reply pictures round
-		$this->poster         = new ReplyPoster( $this->settings, $this->mails, $connection, $fields, new ReplyAuthor( $this->settings ), new CustomerMail( $this->settings ), $this->pictures );
+		$this->poster         = new ReplyPoster( $this->settings, $this->mails, $connection, $fields, new ReplyAuthor( $this->settings ), new ReplyMarks( new CustomerMail( $this->settings ), new RatingAsk( $this->settings ) ), $this->pictures );
 		$this->answer         = new PostedAnswer(); // the forum reply mails round: `posted` in the answer to OmnaBase
 		$this->closer         = new Closer( $this->settings );
 		$this->resend         = new Resend( $this->settings, $data->queue, $data->table ); // the support user replies round: a skipped reply again

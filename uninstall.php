@@ -89,6 +89,7 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 	delete_post_meta_by_key( '_omnabase_posted_as' );
 	delete_post_meta_by_key( '_omnabase_status_seq' );
 	delete_post_meta_by_key( '_omnabase_customer_mail' );
+	delete_post_meta_by_key( '_omnabase_rating_ask' ); // the customer rating round
 
 	// Every forum reply's delivered mark (the support user replies round: `_omnabase_delivered`), by its name on the plugin's list when the
 	// plugin's classes can be loaded.

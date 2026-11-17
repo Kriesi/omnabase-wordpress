@@ -34,7 +34,8 @@ defined( 'ABSPATH' ) || exit;
  * user replies round (2026-11-04) that mark is written in the save itself (`meta_input`, before WordPress's publish moment) and counts as
  * OmnaBase's sign beside the message id, so a posting cut off before its message id never comes back as a forum post.
  * The forum reply mails round (2026-11-03): whether OmnaBase mails the topic's author is decided at posting (`CustomerMail`), and the
- * answer's `posted` is added by `PostedAnswer`.
+ * answer's `posted` is added by `PostedAnswer`; since the customer rating round (2026-11-17) the same moment decides whether OmnaBase may
+ * ask the author for a rating (`RatingAsk`), both through `ReplyMarks`.
  * The forum reply pictures round (OmnaBase, 2026-11-17): the pictures OmnaBase lists with the reply are fetched and saved into the media
  * library before the reply is inserted, within a budget (`ReplyPictures`, which also finishes the rest later); the marked paragraphs of the
  * saved pictures become pictures before the fence, which then admits exactly those (`body()`).
@@ -52,10 +53,10 @@ final class ReplyPoster {
 	 * @param ConnectionInfo  $connection The workspace's name.
 	 * @param PostFields      $fields     The declared post fields.
 	 * @param ReplyAuthor     $author     Who posts a reply.
-	 * @param CustomerMail    $customer   Whether OmnaBase mails the topic's author.
+	 * @param ReplyMarks      $marks      Whether OmnaBase mails the topic's author and may ask them for a rating.
 	 * @param ReplyPictures   $pictures   The pictures of the reply's text (the forum reply pictures round).
 	 */
-	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author, private CustomerMail $customer, private ReplyPictures $pictures ) {}
+	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author, private ReplyMarks $marks, private ReplyPictures $pictures ) {}
 
 	/** Whether the plugin is posting OmnaBase's reply right now. */
 	public static function isPosting(): bool {
@@ -127,7 +128,7 @@ final class ReplyPoster {
 			throw new Refusal( 500, esc_html__( 'WordPress did not save the reply; OmnaBase will try again.', 'omnabase' ) );
 		}
 		PostFields::write( $reply, $message['fields'] ?? null, $this->fields->declared() );
-		$this->customer->decide( $reply, $topic ); // the forum reply mails round: decided once, before the echo mark
+		$this->marks->decide( $reply, $topic ); // the forum reply mails round and the customer rating round: decided once, before the echo mark
 		Posts::markPosted( $reply, (string) $message['id'] );
 		$this->pictures->afterPosting( $reply, $set, $message, $closing, Posts::ticketOf( $topic->ID ) );
 		return $reply;

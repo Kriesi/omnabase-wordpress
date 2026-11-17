@@ -1584,3 +1584,29 @@ report `docs/reviews/forum-reply-pictures-round-red-team-report.md`, both in the
 - **Left as it is:** `ReplyPoster`'s constructor now takes seven collaborators (the picture part joined); grouping them is left for a later
   visit, as it would change the poster's wiring beyond this round.
 - Tests: `tests/Integration/ForumReplyPicturesTest.php` and `tests/Structure/ForumReplyPicturesStructureTest.php` (the red team's).
+
+## 2026-11-17 — OmnaBase may ask a forum topic's author for a rating (the customer rating round, part C)
+
+OmnaBase's brief `docs/briefs/customer-rating-round.md` (with "After the red team's review"), the red team's report
+`docs/reviews/customer-rating-round-red-team-report.md` (findings C1 to C6) and the builder's report
+`docs/reviews/customer-rating-round-builder-report.md`, all in the OmnaBase repository.
+
+- **The switch.** "OmnaBase asks the customer for a rating" on the Forum tab, right after "OmnaBase mails the customer about answers", with
+  the sentence "Whether OmnaBase mails a topic's author one rating question after their ticket is resolved.". It is the key `ask_rating`
+  inside the forum option (`omnabase_forum`), **on when never stored** (the founder's decision 2: forum customers are asked by default). It
+  only has an effect while the workspace's own switch in OmnaBase is on.
+- **Decided per reply, at posting (C1).** Like the answer mail's mark: a reply the plugin posts gets the post meta `_omnabase_rating_ask`
+  = `1` (post meta: a named value WordPress keeps beside a post) when the switch is on, the topic's author has an account and the topic has no
+  password; the answer to OmnaBase's `message.sent` then carries `posted.rating: "ask"`. Guests and password-protected topics are never
+  marked: OmnaBase cannot tell them apart on its own, so a site that says nothing gets nobody asked (C2). A switch flipped later never
+  changes replies already posted.
+- **The posting's marks in one place.** `Forum\ReplyMarks` decides both marks (`CustomerMail`, `RatingAsk`) for `ReplyPoster`, which keeps
+  its seven collaborators (the mail part's slot now holds the pair).
+- **Saving the Forum tab keeps the switch (C4).** `Settings::save` takes the tab's switches as one list (`guests`, `in_step`,
+  `customer_mail`, `ask_rating`) instead of a growing row of true/false arguments; a key the list forgets would be lost at the next save,
+  and the structure test pins `ask_rating` there.
+- **Uninstall** removes the new post meta; no new option. The suggested privacy text gains one sentence about the rating question; readme.txt
+  names the switch (a FAQ entry, the data list, the privacy paragraph); the 0.2.1 section has its line.
+- **Nothing in the topic.** No question appears in the forum; the AI's automatic answer leaves the topic open by design, and its author is
+  still asked after the waiting time because the ticket is resolved in OmnaBase (C6).
+- Tests: `tests/Unit/RatingSwitchTest.php` and `tests/Structure/RatingSwitchStructureTest.php` (the red team's).

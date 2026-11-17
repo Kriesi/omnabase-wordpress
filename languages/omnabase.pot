@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-17T01:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-17T14:05:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -162,12 +162,12 @@ msgstr ""
 msgid "licences (the oldest)"
 msgstr ""
 
-#: src/Admin/ForumActions.php:65
+#: src/Admin/ForumActions.php:68
 msgid "Forum settings saved."
 msgstr ""
 
 #. translators: %s: the post fields not saved, separated by commas.
-#: src/Admin/ForumActions.php:68
+#: src/Admin/ForumActions.php:71
 #, php-format
 msgid "Forum settings saved. These post fields were left out (a key is lower-case letters, digits, _ and -, with a name of up to 60 characters, at most 10 fields): %s"
 msgstr ""
@@ -556,31 +556,31 @@ msgstr ""
 msgid "Picture"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:86
+#: src/Forum/ReplyPoster.php:87
 msgid "The topic of this ticket is no longer on the forum."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:90
+#: src/Forum/ReplyPoster.php:91
 msgid "No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet."
 msgstr ""
 
 #. translators: %s: the topic's title.
-#: src/Forum/ReplyPoster.php:113
+#: src/Forum/ReplyPoster.php:114
 #, php-format
 msgid "Reply To: %s"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:127
+#: src/Forum/ReplyPoster.php:128
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
 #. translators: %s: the workspace's name, e.g. "Kriesi".
-#: src/Forum/ReplyPoster.php:199
+#: src/Forum/ReplyPoster.php:200
 #, php-format
 msgid "The %s team"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:201
+#: src/Forum/ReplyPoster.php:202
 msgid "the team"
 msgstr ""
 
@@ -889,35 +889,39 @@ msgid "When our team answers your forum topic, OmnaBase may email you the answer
 msgstr ""
 
 #: src/Privacy/PolicyText.php:39
-msgid "When you write to us through our contact form, your browser loads the form from OmnaBase and sends what you enter there; when you are signed in, this site also tells OmnaBase your email address, name, newest order number and licence key so they show as checked."
+msgid "After your support question is resolved, OmnaBase may email you one question about the help you got and keeps your answer; every such email has a link to stop them."
 msgstr ""
 
 #: src/Privacy/PolicyText.php:40
-msgid "When you are signed in, our message centre shows your support conversations; your name, email address, the country of your billing address and an id for your account are sent to OmnaBase."
+msgid "When you write to us through our contact form, your browser loads the form from OmnaBase and sends what you enter there; when you are signed in, this site also tells OmnaBase your email address, name, newest order number and licence key so they show as checked."
 msgstr ""
 
 #: src/Privacy/PolicyText.php:41
-msgid "When our team looks at a support question, OmnaBase asks this site for customer data such as your account, the country of your billing address, orders, subscriptions and licences; licence changes are sent when they happen."
+msgid "When you are signed in, our message centre shows your support conversations; your name, email address, the country of your billing address and an id for your account are sent to OmnaBase."
 msgstr ""
 
 #: src/Privacy/PolicyText.php:42
-msgid "This site receives the replies and status changes of its own tickets from OmnaBase."
+msgid "When our team looks at a support question, OmnaBase asks this site for customer data such as your account, the country of your billing address, orders, subscriptions and licences; licence changes are sent when they happen."
 msgstr ""
 
 #: src/Privacy/PolicyText.php:43
+msgid "This site receives the replies and status changes of its own tickets from OmnaBase."
+msgstr ""
+
+#: src/Privacy/PolicyText.php:44
 msgid "OmnaBase keeps your support conversations; to see or delete them, ask us and we do so in OmnaBase."
 msgstr ""
 
-#: src/Privacy/PolicyText.php:45
+#: src/Privacy/PolicyText.php:46
 msgid "This site uses OmnaBase for customer support. Keep the sentences for the features you turned on."
 msgstr ""
 
-#: src/Privacy/PolicyText.php:46
+#: src/Privacy/PolicyText.php:47
 msgid "Suggested text:"
 msgstr ""
 
 #. translators: %s: the address of OmnaBase's privacy policy.
-#: src/Privacy/PolicyText.php:48
+#: src/Privacy/PolicyText.php:49
 #, php-format
 msgid "OmnaBase's privacy policy: %s"
 msgstr ""
@@ -1414,6 +1418,14 @@ msgstr ""
 
 #: templates/admin/partials/forum-rows.php:88
 msgid "After an answer from OmnaBase is posted, OmnaBase mails the topic's author in your project's look. The forum's own subscription mail then leaves them out."
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:96
+msgid "OmnaBase asks the customer for a rating"
+msgstr ""
+
+#: templates/admin/partials/forum-rows.php:97
+msgid "Whether OmnaBase mails a topic's author one rating question after their ticket is resolved."
 msgstr ""
 
 #: templates/admin/partials/forum.php:16

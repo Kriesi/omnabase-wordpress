@@ -112,10 +112,34 @@ final class ForumReplyMailsTest extends RoundThreeTestCase {
 	}
 
 	/**
+	 * What it checks: The rating switch (the customer rating round) is on until the owner turns it off, and saving the Forum tab keeps the
+	 *   owner's choice; a reply posted while it is off carries no "ask".
+	 * Passes when: with nothing stored the answer carries `rating: "ask"`; saving the tab with the box ticked stores `ask_rating` true,
+	 *   saving it unticked stores false, and the next answer then carries no `rating`.
+	 * Fails when: every save of the Forum tab quietly switches the rating question back on or off, or OmnaBase is told to ask although the
+	 *   owner switched it off.
+	 */
+	public function test_the_rating_switch_is_on_by_default_and_kept_by_the_form(): void {
+		list( $response ) = $this->answered( $this->filedTopic(), 'msg-rate-default', 'dlv-rate-default' );
+		$this->assertSame( 'ask', self::body( $response )['posted']['rating'] ?? null, 'on when nothing is stored' );
+
+		$this->save( array( 'forums' => array( (string) $this->publicForum ), 'support_user' => (string) $this->support, 'in_step' => '1', 'ask_rating' => '1' ) );
+		$this->assertTrue( (bool) ( ( (array) get_option( self::FORUM_OPTION, array() ) )['ask_rating'] ?? false ), 'ticked: stored on' );
+
+		$this->save( array( 'forums' => array( (string) $this->publicForum ), 'support_user' => (string) $this->support, 'in_step' => '1' ) );
+		$saved = (array) get_option( self::FORUM_OPTION, array() );
+		$this->assertArrayHasKey( 'ask_rating', $saved, 'unticked is stored as off' );
+		$this->assertFalse( (bool) $saved['ask_rating'] );
+		list( $off ) = $this->answered( $this->filedTopic(), 'msg-rate-off', 'dlv-rate-off' );
+		$this->assertArrayNotHasKey( 'rating', self::body( $off )['posted'] ?? array(), 'off: no ask' );
+	}
+
+	/**
 	 * What it checks: The plugin tells OmnaBase, with each posted answer, where it posted it, and asks for the mail only while the switch is on.
 	 * Passes when: with the switch on the answer is `ok: true` with `posted.id` "reply-<the new reply's id>", `posted.url` the reply's own
 	 *   address in the forum and `posted.mail` "omnabase", and the reply is marked for OmnaBase's mail; with the switch off the same shape
-	 *   without `mail` and without the mark.
+	 *   without `mail` and without the mark (since the customer rating round both also carry `rating: "ask"`, the rating switch being on by
+	 *   default).
 	 * Fails when: OmnaBase cannot link the customer to the answer, mails although the site said no, or never mails although it said yes.
 	 */
 	public function test_the_answer_carries_posted_and_mail_only_when_on(): void {
@@ -124,13 +148,15 @@ final class ForumReplyMailsTest extends RoundThreeTestCase {
 		list( $response, $reply ) = $this->answered( $on, 'msg-on', 'dlv-on' );
 		$body                     = self::body( $response );
 		$this->assertTrue( (bool) ( $body['ok'] ?? false ) );
-		$this->assertSame( array( 'id' => 'reply-' . $reply, 'url' => bbp_get_reply_url( $reply ), 'mail' => 'omnabase' ), $body['posted'] ?? null );
+		// Adjusted 2026-11-17 by the builder (the customer rating round), not weakened: the rating switch is on by default and the topic's
+		// author has an account, so the same answer also carries `rating: "ask"`; `mail` still follows its own switch alone.
+		$this->assertSame( array( 'id' => 'reply-' . $reply, 'url' => bbp_get_reply_url( $reply ), 'mail' => 'omnabase', 'rating' => 'ask' ), $body['posted'] ?? null );
 		$this->assertSame( '1', (string) get_post_meta( $reply, self::META, true ), 'the reply remembers that OmnaBase mails its topic\'s author' );
 
 		$this->customerMail( false );
 		$off                       = $this->filedTopic();
 		list( $response2, $reply2 ) = $this->answered( $off, 'msg-off', 'dlv-off' );
-		$this->assertSame( array( 'id' => 'reply-' . $reply2, 'url' => bbp_get_reply_url( $reply2 ) ), self::body( $response2 )['posted'] ?? null );
+		$this->assertSame( array( 'id' => 'reply-' . $reply2, 'url' => bbp_get_reply_url( $reply2 ), 'rating' => 'ask' ), self::body( $response2 )['posted'] ?? null );
 		$this->assertSame( '', (string) get_post_meta( $reply2, self::META, true ) );
 	}
 

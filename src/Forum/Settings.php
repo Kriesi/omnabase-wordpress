@@ -18,7 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * topics forwarded (the brief's default), topics kept in step with their tickets (`in_step`, the forum sync round of 2026-11-02: on when
  * missing; the earlier `close_resolved` is ignored and dropped at the next save), no post fields (the site-fields round: `fields`,
  * key ⇒ name, cleaned by `PostFields::cleanRows`), OmnaBase not mailing topics' authors (`customer_mail`, the forum reply mails round of
- * 2026-11-03: off when missing). The support user must have bbPress's moderator
+ * 2026-11-03: off when missing), OmnaBase asking topics' authors for a rating (`ask_rating`, the customer rating round of 2026-11-17: on
+ * when missing, the founder's decision 2). The support user must have bbPress's moderator
  * rights (`moderate`: they can reply on closed topics); anyone else is never stored and never used.
  */
 final class Settings {
@@ -90,18 +91,22 @@ final class Settings {
 		return (bool) ( $this->all()['customer_mail'] ?? false );
 	}
 
+	/** Whether OmnaBase may ask this site's forum customers for a rating (the customer rating round: on when never stored). */
+	public function askRating(): bool {
+		return (bool) ( $this->all()['ask_rating'] ?? true );
+	}
+
 	/**
 	 * Stores the administrator's choices: only existing forums, a support user only when they have moderator rights (else the earlier one
-	 * stays), the closing line as plain lines (nothing stored when it is the default, so a later default reaches the site).
+	 * stays), the closing line as plain lines (nothing stored when it is the default, so a later default reaches the site), and the tab's
+	 * switches as one list (the customer rating round, the red team's finding C4: a switch this list forgets is lost at the next save).
 	 *
-	 * @param int[]  $forums         The ticked forums.
-	 * @param int    $support_user   The chosen support user.
-	 * @param string $closing_line   The closing line.
-	 * @param bool   $guests         Whether guests' topics are forwarded.
-	 * @param bool   $in_step        Whether topics follow their tickets.
-	 * @param bool   $customer_mail  Whether OmnaBase mails the topic's author about answers.
+	 * @param int[]               $forums       The ticked forums.
+	 * @param int                 $support_user The chosen support user.
+	 * @param string              $closing_line The closing line.
+	 * @param array<string,mixed> $switches     `guests`, `in_step`, `customer_mail`, `ask_rating`: each on when truthy.
 	 */
-	public function save( array $forums, int $support_user, string $closing_line, bool $guests, bool $in_step, bool $customer_mail = false ): void {
+	public function save( array $forums, int $support_user, string $closing_line, array $switches ): void {
 		$forums = array_values( array_unique( array_filter( array_map( 'intval', $forums ), array( self::class, 'isForum' ) ) ) );
 		$line   = self::cleanClosingLine( $closing_line );
 		update_option(
@@ -110,9 +115,10 @@ final class Settings {
 				'forums'        => $forums,
 				'support_user'  => self::canModerate( $support_user ) ? $support_user : (int) ( $this->all()['support_user'] ?? 0 ),
 				'closing_line'  => self::DEFAULT_CLOSING_LINE === $line ? '' : $line,
-				'guests'        => $guests,
-				'in_step'       => $in_step,
-				'customer_mail' => $customer_mail,
+				'guests'        => ! empty( $switches['guests'] ),
+				'in_step'       => ! empty( $switches['in_step'] ),
+				'customer_mail' => ! empty( $switches['customer_mail'] ),
+				'ask_rating'    => ! empty( $switches['ask_rating'] ),
 				'fields'        => $this->fields(),
 			),
 			false
