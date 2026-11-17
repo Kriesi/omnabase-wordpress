@@ -203,7 +203,7 @@ final class ForumResendTest extends RoundThreeTestCase {
 	 * What it checks: A reply that must not or cannot go is refused in the reply job's own words, and nothing is queued.
 	 * Passes when: each case answers "refused" and leaves the outbox empty: OmnaBase's own posted reply ("Not sent: the reply came from
 	 *   OmnaBase."), a reply in an unticked forum ("Not sent: its forum is no longer marked."), a trashed reply ("Not sent: the reply was
-	 *   removed or unpublished before its turn."), a reply on a topic that is no ticket (words naming the ticket), a topic's id and an id
+	 *   removed or unpublished before its turn."), a moderator's reply on a topic that is no ticket (words naming the ticket), a topic's id and an id
 	 *   that is no post at all.
 	 * Fails when: the command pushes OmnaBase's own answer back to its ticket, sends from a forum the owner unticked, or quietly does
 	 *   nothing with an id that is not a reply.
@@ -217,7 +217,10 @@ final class ForumResendTest extends RoundThreeTestCase {
 		wp_trash_post( $trashed );
 		$fresh = $this->topic( $this->publicForum, $this->ben, 'Never sent' );
 		$this->clearOutbox(); // the fresh topic never became a ticket
-		$unfiled = $this->reply( $fresh, $this->ben, 'Bump.' );
+		// Adjusted 2026-11-16, the old-topics-and-undelivered round (brief part A, rule 11: the resend follows the reply hook's rule): the
+		// topic author's own reply on a topic that is no ticket now files the topic first, so the refused case is a moderator's reply, which
+		// never starts an old topic. Still refused, still in words naming the ticket, still nothing queued.
+		$unfiled = $this->reply( $fresh, $this->moderator, 'Bump.' );
 		$this->clearOutbox();
 
 		$this->assertRefused( 'Not sent: the reply came from OmnaBase.', $this->resend( $marked ) );

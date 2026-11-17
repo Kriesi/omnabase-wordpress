@@ -10,6 +10,7 @@ namespace OmnaBase\WordPress\Forum;
 use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Outbox\Job;
 use OmnaBase\WordPress\Outbox\Step;
+use OmnaBase\WordPress\Outbox\Table;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -20,7 +21,9 @@ defined( 'ABSPATH' ) || exit;
  * post as plain text, the site's reference `topic-<id>` with the topic's address, replies back to the site, `public` for every forum but a
  * hidden one, on the `api` channel, with the row's idempotency key. OmnaBase's answer (201, or 200 for the topic it filed already) gives the
  * ticket number, kept on the topic. The site-fields round: a forum with declared post fields also sends `replyFields` (every declared field)
- * and `fields` (those with a value on the topic); a forum without any sends today's body.
+ * and `fields` (those with a value on the topic); a forum without any sends today's body. The old-topics-and-undelivered round
+ * (2026-11-16): a topic with earlier replies (an old topic filed at its next reply) also sends its own date and its history
+ * (`TopicHistory`), and once accepted every earlier reply that travelled is marked delivered.
  */
 final class TopicSender implements Job {
 
@@ -35,8 +38,9 @@ final class TopicSender implements Job {
 	 * @param Settings       $settings   The forum settings.
 	 * @param ConnectionInfo $connection The connection's projects.
 	 * @param PostFields     $fields     The declared post fields.
+	 * @param Table          $table      The outbox's table (which replies still have their own row).
 	 */
-	public function __construct( private Settings $settings, private ConnectionInfo $connection, private PostFields $fields ) {}
+	public function __construct( private Settings $settings, private ConnectionInfo $connection, private PostFields $fields, private Table $table ) {}
 
 	/** {@inheritDoc} */
 	public function kind(): string {
@@ -75,8 +79,15 @@ final class TopicSender implements Job {
 	/** {@inheritDoc} */
 	public function sent( array $row, ?array $answer ): void {
 		$number = (int) ( $answer['number'] ?? 0 );
-		if ( $number > 0 ) {
-			Posts::rememberTicket( (int) $row['subject_id'], $number );
+		if ( $number < 1 ) {
+			return;
+		}
+		Posts::rememberTicket( (int) $row['subject_id'], $number );
+		$topic = get_post( (int) $row['subject_id'] );
+		if ( $topic instanceof \WP_Post ) {
+			foreach ( ( new TopicHistory( $this->table ) )->travelling( $topic ) as $reply ) {
+				Posts::markDelivered( $reply->ID );
+			}
 		}
 	}
 
@@ -128,7 +139,7 @@ final class TopicSender implements Job {
 			'public'   => Posts::isPublicForum( Posts::forumOf( $topic->ID ) ),
 			'channel'  => 'api',
 		);
-		return $body + $this->fieldsOf( $topic->ID );
+		return $body + $this->fieldsOf( $topic->ID ) + ( new TopicHistory( $this->table ) )->fieldsOf( $topic );
 	}
 
 	/**

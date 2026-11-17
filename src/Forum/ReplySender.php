@@ -20,7 +20,8 @@ defined( 'ABSPATH' ) || exit;
  *   (2026-11-04) the sign alone says "came from OmnaBase": a reply the support user wrote by hand is a moderator's answer like any other
  *   (until then every support-user post was skipped, and ticket 253 lost such remarks);
  * - its topic has no ticket yet: while the topic's own row waits (say for OmnaBase's daily limit) or needs attention, the reply waits and
- *   goes after it; a topic that was never sent (published before its forum was marked) takes its replies with it: nothing;
+ *   goes after it (since the old-topics-and-undelivered round, 2026-11-16, the reply hook queues an old topic's row first when the reply
+ *   is the customer's, another member's or a guest's: `OldTopic`); otherwise (a moderator's reply on an old topic) nothing;
  * - by the topic's author → the customer's message (`from: customer`);
  * - by someone with moderator rights → the team's answer already on the forum (`from: team`, `delivered: true`, `siteAuthor` with the
  *   support user's name, the moderator's address, which OmnaBase matches to a member, and their forum role): never mailed, never a note;
@@ -37,9 +38,6 @@ final class ReplySender implements Job {
 
 	/** How long a reply waits for its topic's ticket before it looks again. */
 	private const TOPIC_WAIT_SECONDS = 300;
-
-	private const NAME_MAX = 120;
-	private const ROLE_MAX = 60;
 
 	/**
 	 * Builds the sender.
@@ -79,7 +77,7 @@ final class ReplySender implements Job {
 		if ( $number < 1 ) {
 			return $this->table->isOpen( TopicSender::KIND . ':' . $topic->ID )
 				? Step::wait( self::TOPIC_WAIT_SECONDS, __( 'Waiting for its topic to become a ticket.', 'omnabase' ) )
-				: Step::skip( __( 'Not sent: its topic was never sent to OmnaBase (published before its forum was marked).', 'omnabase' ) );
+				: Step::skip( __( 'Not sent: its topic is no ticket yet. It becomes one when the customer or another member replies.', 'omnabase' ) );
 		}
 		return Step::send( 'POST', '/tickets/' . $number . '/messages', $this->body( $reply, $topic ), 15, true );
 	}
@@ -133,9 +131,9 @@ final class ReplySender implements Job {
 		}
 		$author = (int) $reply->post_author;
 		if ( Settings::canModerate( $author ) ) {
-			return array( 'from' => 'team', 'delivered' => true, 'siteAuthor' => $this->siteAuthor( $author ) ) + $base + $this->fieldsOf( $reply );
+			return array( 'from' => 'team', 'delivered' => true, 'siteAuthor' => ReplyWriter::siteAuthor( $author ) ) + $base + $this->fieldsOf( $reply );
 		}
-		return array( 'from' => 'other', 'participant' => array( 'name' => $this->participantName( $reply ) ) ) + $base;
+		return array( 'from' => 'other', 'participant' => array( 'name' => ReplyWriter::participantName( $reply ) ) ) + $base;
 	}
 
 	/**
@@ -147,41 +145,5 @@ final class ReplySender implements Job {
 	private function fieldsOf( \WP_Post $reply ): array {
 		$values = $this->fields->valuesOf( $reply->ID );
 		return array() !== $values ? array( 'fields' => $values ) : array();
-	}
-
-	/**
-	 * Another participant's name as the forum shows it (the composer-and-fixes round): a member's display name (else their login), a guest's
-	 * name as given (bbPress keeps it on the reply); never an address or a role.
-	 *
-	 * @param \WP_Post $reply The reply.
-	 */
-	private function participantName( \WP_Post $reply ): string {
-		$author = (int) $reply->post_author;
-		$user   = $author > 0 ? get_userdata( $author ) : false;
-		$name   = $user ? ( '' !== trim( (string) $user->display_name ) ? $user->display_name : $user->user_login ) : get_post_meta( $reply->ID, '_bbp_anonymous_name', true );
-		$name   = trim( wp_strip_all_tags( (string) $name ) );
-		return mb_substr( '' !== $name ? $name : __( 'Forum member', 'omnabase' ), 0, self::NAME_MAX );
-	}
-
-	/**
-	 * The team member as the site names them: the moderator's own forum display name (since 2026-11-03; until then the support user's name,
-	 * which made every moderator read as the support user in OmnaBase), their own address (OmnaBase shows the answer as that member when the
-	 * address is a member's) and their forum role.
-	 *
-	 * @param int $author The moderator.
-	 * @return array{name:string,email?:string,role?:string}
-	 */
-	private function siteAuthor( int $author ): array {
-		$moderator = get_userdata( $author );
-		$name      = trim( (string) ( $moderator ? $moderator->display_name : '' ) );
-		$out       = array( 'name' => mb_substr( '' !== $name ? $name : __( 'Support', 'omnabase' ), 0, self::NAME_MAX ) );
-		if ( $moderator && is_email( $moderator->user_email ) ) {
-			$out['email'] = (string) $moderator->user_email;
-		}
-		$role = function_exists( 'bbp_get_user_display_role' ) ? trim( wp_strip_all_tags( (string) bbp_get_user_display_role( $author ) ) ) : '';
-		if ( '' !== $role ) {
-			$out['role'] = mb_substr( $role, 0, self::ROLE_MAX );
-		}
-		return $out;
 	}
 }

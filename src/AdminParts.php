@@ -99,6 +99,7 @@ final class AdminParts {
 			'connection' => array( new ConnectionView( $vault, $client, $info, $site ), 'build' ),
 			'health'     => array( $health, 'view' ),
 			'deliveries' => static fn () => array( 'rows' => $log->recent() ),
+			'pictures'   => static fn () => array( 'rows' => ( new Forum\PictureLog() )->recent() ), // the forum reply pictures round
 		) + $this->settingsSections( $data, $forum, $portal, $display );
 		( new SettingsScreen( $this->info, $flash, $actions, $sections, array( $data->table, 'attentionCount' ) ) )->register();
 		( new PluginLinks( plugin_basename( $this->info->mainFile() ) ) )->register();

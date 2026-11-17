@@ -17,7 +17,9 @@ defined( 'ABSPATH' ) || exit;
  * One reply per call, the doors' shared service (today the WP-CLI command `wp omnabase forum resend <id>`). It answers a status and one
  * line of words:
  * - `sent`: the reply carries the delivered mark (OmnaBase accepted it): nothing to do;
- * - `refused`: the reply job's own skip rule says no (`ReplySender::whyNot`, the same words), or its topic is no ticket and none is on its way;
+ * - `refused`: the reply job's own skip rule says no (`ReplySender::whyNot`, the same words), or its topic is no ticket, none is on its way
+ *   and the reply does not start it (a moderator's; since the old-topics-and-undelivered round, 2026-11-16, a customer's, another member's
+ *   or a guest's reply queues its topic first, as the reply hook does);
  * - `waiting`: a row for it waits already: made due now (the Activity tab's Send now), never a second row;
  * - `queued`: a row needing attention is tried again with a fresh key (the Activity tab's Retry), else a new row waits, due now.
  * A queued row goes with the next outbox run: on the command line WordPress's timer is not woken (`Schedule::wake`), so it waits for the next
@@ -53,8 +55,11 @@ final class Resend {
 		}
 		$topic  = Posts::topicOf( $reply );
 		$number = Posts::ticketOf( $topic );
+		if ( $number < 1 ) {
+			( new OldTopic( $this->settings, $this->queue ) )->fileTopicOf( $reply ); // the old-topics round: the topic first, as the reply hook does
+		}
 		if ( $number < 1 && ! $this->table->isOpen( TopicSender::KIND . ':' . $topic ) ) {
-			return self::answer( 'refused', __( 'Not sent: its topic is no ticket at OmnaBase.', 'omnabase' ) );
+			return self::answer( 'refused', __( 'Not sent: its topic is no ticket yet. It becomes one when the customer or another member replies.', 'omnabase' ) );
 		}
 		return $this->queueFor( $reply->ID, $number );
 	}

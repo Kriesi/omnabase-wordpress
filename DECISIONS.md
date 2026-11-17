@@ -1523,3 +1523,64 @@ own remarks on the forum never reached the ticket; another member's post was los
   `tests/Integration/ForumSupportUserRepliesTest.php`, `ForumResendTest.php`, `ForumMissingReplyTest.php` (the red team's);
   `ForumRepliesTest.php` and `ForumOtherRepliesTest.php` adjusted by the red team; `RoundSixStructureTest`'s list of technical strings
   takes the command's name `omnabase forum` (the builder; it is a command name, not prose).
+
+## 2026-11-16 — Old topics become tickets at their next reply
+
+OmnaBase's brief `docs/briefs/old-topics-and-undelivered-round.md` (its final section "After the red team's review" wins) and the red
+team's report `docs/reviews/old-topics-and-undelivered-round-red-team-report.md`, both in the OmnaBase repository. Part A of that round.
+
+- **One rule, two doors (`Forum\OldTopic`).** The reply hook and the resend command queue the topic's own row before the reply's when the
+  topic is no ticket, none is on its way (waiting or needing attention), its forum is marked, the topic job would send it (shown, a guest's
+  topic only with guests on), and the writer is the topic's author, another member, or a guest where guests are on. A moderator's reply never
+  starts it (question 4): the reply job skips it with "Not sent: its topic is no ticket yet. It becomes one when the customer or another
+  member replies.", the resend refuses it in the same words. The reply then waits behind its topic through the reply job's existing wait.
+- **The history (`Forum\TopicHistory`).** The topic job reads the topic's published replies (`get_posts`, oldest first) and keeps those older
+  than the oldest reply that still has its own outbox row, never one with OmnaBase's sign; the newest 30 travel as `earlier`, the rest as
+  `earlierLeftOut`. Each post is plain text cut to 10,000 characters with "…" (question 7), its GMT date, `reply-<id>`, and its writer:
+  `customer`, `team` with `siteAuthor` (the moderator's own name, address and forum role, as the reply job sends it), `other` with
+  `participant`. No fields, no files. `postedAt` (the topic's GMT date) goes only together with a history: a new topic sends today's body.
+  Every reply on the topic is read once per call; an old topic is rare, so no paging.
+- **Delivered marks.** When OmnaBase accepts the topic, the same list is read again and every reply that travelled gets the delivered mark,
+  so a resend answers "already sent". The starting reply keeps its own row.
+- **Shared writer names (`Forum\ReplyWriter`).** The moderator's site author and another participant's name moved out of the reply job so
+  the history names writers exactly the same way.
+- **Tests.** `tests/Unit/OldTopicReplyTest.php` (the red team's). `tests/Integration/ForumResendTest.php` adjusted (dated note): its
+  "refused for a topic that is no ticket" case is now a moderator's reply, since the topic author's own reply now files the topic. The
+  unit bootstrap defines WordPress's `ARRAY_A`, which the outbox's table passes to the database. The `.pot` was edited by hand (one sentence
+  replaces two; references moved), as wp-env was not started for this build.
+
+## 2026-11-17 — The team's pictures in forum replies
+
+OmnaBase's brief `docs/briefs/forum-reply-pictures-round.md` (its final section "After the red team's review" wins) and the red team's
+report `docs/reviews/forum-reply-pictures-round-red-team-report.md`, both in the OmnaBase repository. Part B of that round.
+
+- **The pieces.** `Api\Client::picture()` (the key, the pinned host, no redirect, streamed into a temporary file with WordPress's download
+  cap `limit_response_size` at 10 MB and one byte; never `download_url`, `media_sideload_image` or `wp_safe_remote_get`).
+  `Forum\PictureMarks` reads OmnaBase's `pictures` list (only UUID ids, the first ten; the entry's `url` is never used) and turns the marked
+  paragraphs into `<p><img src alt width></p>` for saved pictures, into their words for every other mark. `Forum\PictureType` reads the type
+  from the first bytes (JPEG, PNG, GIF, WebP). `Forum\PictureSaver` fetches, checks and saves one picture (`wp_handle_sideload` with
+  WordPress's own type check, `wp_insert_attachment`, the mark `_omnabase_file_id`; a picture already marked is reused). `Forum\ReplyPictures`
+  runs the budget while posting and the later job. `Forum\PictureLog` keeps the Activity tab's lines. `ReplyPoster` gains three calls and
+  its `body()` (the place-then-fence step, shared with the later job).
+- **The budget's clock.** Three seconds from `REQUEST_TIME_FLOAT`, saving included; on the command line (WP-CLI, the test runner), where no
+  web request is waited on, from the moment the delivery is handled. A download starts only with at least 0.75 s left and may take only
+  what is left. While posting, only the file and its attachment row are written; the thumbnails are made by the later job.
+- **The fence.** `MessageHtml::forReply()` admits a picture only when its address is one of the attachments saved for this reply, with
+  `src`, `alt` and a whole-number `width`. The two passes around `wp_kses` (before: refused pictures leave; after: the address checked once
+  more, a bad width taken off) moved from `PortalPictures` into `Look\PictureFence`, shared by the message centre and the forum.
+- **Final or later.** Final (never tried again, logged "left out"): not one of the four types by its bytes, announced or downloaded over
+  10 MB, a 404, the upload folder cannot be written (also checked before any download) or WordPress's own upload check refuses it.
+  Later: no answer, 429, any other status (a redirect is never followed). The later job runs at once (WP-Cron is woken by the subscriber
+  mails at the end of the request), then after 5, 15 and 40 minutes; then the waiting pictures are left out with "OmnaBase did not answer in
+  time".
+- **The later edit.** The job keeps OmnaBase's HTML, text and the closing paragraph as posted on the reply (`_omnabase_pictures`, gone once
+  finished) and writes the reply's content again with every saved picture, through `wp_update_post` with `wp_revisions_to_keep` at 0 for that
+  post (no revision, so bbPress prints no "This reply was modified"). When the reply's content changed since the plugin wrote it (a
+  moderator's edit), the plugin no longer writes into it and logs the pictures as left out.
+- **The log.** An option `omnabase_picture_log`, the last 20 lines, shown on the Activity tab under "What OmnaBase sent here" only when it has
+  lines: when, the ticket, "N pictures saved later" or "N pictures left out: <reason>".
+- **Uninstall and switching off.** The job's hook is cleared on deactivation and uninstall; uninstall removes the option, the mark and the
+  job's state, never the pictures (forum posts show them).
+- **Left as it is:** `ReplyPoster`'s constructor now takes seven collaborators (the picture part joined); grouping them is left for a later
+  visit, as it would change the poster's wiring beyond this round.
+- Tests: `tests/Integration/ForumReplyPicturesTest.php` and `tests/Structure/ForumReplyPicturesStructureTest.php` (the red team's).

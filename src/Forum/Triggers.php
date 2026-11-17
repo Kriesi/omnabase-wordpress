@@ -89,6 +89,7 @@ final class Triggers {
 			return; // a reply the plugin posted carries OmnaBase's sign, whoever it was posted under
 		}
 		if ( $this->settings->isMarked( Posts::forumOf( Posts::topicOf( $reply ) ) ) ) {
+			( new OldTopic( $this->settings, $this->queue ) )->fileTopicOf( $reply ); // the old-topics round: the topic first, when the reply starts it
 			$this->queue->add( ReplySender::KIND, $reply->ID );
 		}
 	}

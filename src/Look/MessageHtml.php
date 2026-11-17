@@ -22,8 +22,9 @@ defined( 'ABSPATH' ) || exit;
  * The pictures-in-the-text round (OmnaBase, 2026-10-29): in the message centre (`$pictures` true) a team reply's own picture stays where the
  * team put it, but only when its address starts with exactly OmnaBase's signed portal path (`ApiUrl::publicApi( '/portal/files/' )`)
  * followed by one token; it keeps `src`, `alt` and a whole-number `width`, nothing else. Every other picture still goes: another host, another
- * path, a look-alike host, a climbing path, an embedded picture. The forum's reply never takes a picture: a portal address is made for one
- * signed-in visitor and must not reach a public page.
+ * path, a look-alike host, a climbing path, an embedded picture. The forum's reply never takes a portal picture: a portal address is made
+ * for one signed-in visitor and must not reach a public page. The forum reply pictures round (OmnaBase, 2026-11-17): the forum's reply
+ * (`forReply()`) keeps only the pictures the plugin saved for this reply into the site's media library, with the same three attributes.
  * The one place in the plugin that names the allow-list; the template echoes through `wp_kses( …, MessageHtml::allowed( true ) )`.
  */
 final class MessageHtml {
@@ -35,7 +36,7 @@ final class MessageHtml {
 	/**
 	 * The tags and attributes a message may keep, in `wp_kses`'s shape (no `h1`/`h2`: they arrive as `h3`).
 	 *
-	 * @param bool $pictures Whether the portal's own pictures may stay (the message centre, never the forum).
+	 * @param bool $pictures Whether pictures may stay (the message centre's portal pictures, the forum reply's saved ones).
 	 * @return array<string,array<string,bool>>
 	 */
 	public static function allowed( bool $pictures = false ): array {
@@ -57,14 +58,63 @@ final class MessageHtml {
 	 * @param bool        $pictures Whether the portal's own pictures may stay (the message centre, never the forum).
 	 */
 	public static function of( ?string $html, string $text, bool $pictures = false ): string {
-		$source = self::lowerHeadings( self::withoutBlocks( (string) $html ) );
-		if ( $pictures ) {
-			$source = PortalPictures::onlyPortal( $source );
+		return self::fenced( $html, $text, $pictures ? PortalPictures::rule() : null );
+	}
+
+	/**
+	 * The HTML to print for OmnaBase's reply in the forum (the forum reply pictures round, 2026-11-17): only the pictures the plugin saved for
+	 * this reply into the media library stay, each with `src`, `alt` and a whole-number `width`; every other picture goes.
+	 *
+	 * @param string|null $html  OmnaBase's HTML with the saved pictures already in place.
+	 * @param string      $text  OmnaBase's plain text, the fallback.
+	 * @param string[]    $saved The saved pictures' addresses.
+	 */
+	public static function forReply( ?string $html, string $text, array $saved ): string {
+		return self::fenced( $html, $text, static fn ( string $src ): bool => '' !== $src && in_array( $src, $saved, true ) );
+	}
+
+	/**
+	 * The fence with a picture rule (null: no picture at all).
+	 *
+	 * @param string|null                $html The HTML.
+	 * @param string                     $text The fallback text.
+	 * @param (callable(string):bool)|null $ok  Whether a picture's address may stay.
+	 */
+	private static function fenced( ?string $html, string $text, ?callable $ok ): string {
+		if ( null === $ok ) {
+			return self::orText( self::cleaned( self::source( $html ), false ), $text, false );
 		}
-		$clean = self::fenceLinks( wp_kses( $source, self::allowed( $pictures ), self::PROTOCOLS ) );
-		if ( $pictures ) {
-			$clean = PortalPictures::settle( $clean );
-		}
+		$clean = PictureFence::settle( self::cleaned( PictureFence::only( self::source( $html ), $ok ), true ), $ok );
+		return self::orText( $clean, $text, true );
+	}
+
+	/**
+	 * The HTML without script and style blocks, its top headings lowered.
+	 *
+	 * @param string|null $html The HTML.
+	 */
+	private static function source( ?string $html ): string {
+		return self::lowerHeadings( self::withoutBlocks( (string) $html ) );
+	}
+
+	/**
+	 * The HTML through `wp_kses` with the allow-list and its links settled.
+	 *
+	 * @param string $source   The HTML.
+	 * @param bool   $pictures Whether pictures may stay.
+	 */
+	private static function cleaned( string $source, bool $pictures ): string {
+		return self::fenceLinks( wp_kses( $source, self::allowed( $pictures ), self::PROTOCOLS ) );
+	}
+
+	/**
+	 * The cleaned HTML, or the text as paragraphs when it has neither words nor (where allowed) a picture.
+	 *
+	 * @param string $clean    The cleaned HTML.
+	 * @param string $text     The fallback text.
+	 * @param bool   $pictures Whether a picture alone is enough.
+	 */
+	private static function orText( string $clean, string $text, bool $pictures ): string {
 		return self::hasWords( $clean ) || ( $pictures && str_contains( $clean, '<img' ) ) ? $clean : wpautop( esc_html( $text ) );
 	}
 

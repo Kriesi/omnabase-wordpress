@@ -4,12 +4,14 @@
  *
  * @package OmnaBase
  *
- * @var array{outbox:array<string,mixed>,deliveries:array{rows:array<int,array<string,mixed>>}} $view
+ * @var array{outbox:array<string,mixed>,deliveries:array{rows:array<int,array<string,mixed>>},pictures:array{rows:array<int,array<string,mixed>>}} $view
  */
 
 defined( 'ABSPATH' ) || exit;
 
 $omnabase_outbox     = $view['outbox'];
 $omnabase_deliveries = $view['deliveries']['rows'];
+$omnabase_pictures   = $view['pictures']['rows'] ?? array();
 require dirname( __DIR__ ) . '/partials/outbox.php';
 require dirname( __DIR__ ) . '/partials/deliveries.php';
+require dirname( __DIR__ ) . '/partials/pictures.php';

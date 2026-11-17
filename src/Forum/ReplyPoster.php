@@ -35,6 +35,9 @@ defined( 'ABSPATH' ) || exit;
  * OmnaBase's sign beside the message id, so a posting cut off before its message id never comes back as a forum post.
  * The forum reply mails round (2026-11-03): whether OmnaBase mails the topic's author is decided at posting (`CustomerMail`), and the
  * answer's `posted` is added by `PostedAnswer`.
+ * The forum reply pictures round (OmnaBase, 2026-11-17): the pictures OmnaBase lists with the reply are fetched and saved into the media
+ * library before the reply is inserted, within a budget (`ReplyPictures`, which also finishes the rest later); the marked paragraphs of the
+ * saved pictures become pictures before the fence, which then admits exactly those (`body()`).
  */
 final class ReplyPoster {
 
@@ -50,8 +53,9 @@ final class ReplyPoster {
 	 * @param PostFields      $fields     The declared post fields.
 	 * @param ReplyAuthor     $author     Who posts a reply.
 	 * @param CustomerMail    $customer   Whether OmnaBase mails the topic's author.
+	 * @param ReplyPictures   $pictures   The pictures of the reply's text (the forum reply pictures round).
 	 */
-	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author, private CustomerMail $customer ) {}
+	public function __construct( private Settings $settings, private SubscriberMails $mails, private ConnectionInfo $connection, private PostFields $fields, private ReplyAuthor $author, private CustomerMail $customer, private ReplyPictures $pictures ) {}
 
 	/** Whether the plugin is posting OmnaBase's reply right now. */
 	public static function isPosting(): bool {
@@ -66,6 +70,7 @@ final class ReplyPoster {
 	 * @throws Refusal When the reply cannot be posted now.
 	 */
 	public function handle( $type, $payload ): void {
+		$started  = ReplyPictures::clockStart();
 		$data     = is_array( $payload['data'] ?? null ) ? $payload['data'] : array();
 		$message  = is_array( $data['message'] ?? null ) ? $data['message'] : array();
 		$topic_id = Posts::topicFromReference( $data['ticket']['external']['id'] ?? null );
@@ -84,7 +89,9 @@ final class ReplyPoster {
 		if ( 0 === $poster ) {
 			throw new Refusal( 503, esc_html__( 'No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet.', 'omnabase' ) );
 		}
-		$this->mails->later( $this->post( $topic, $poster, $message, $this->workspace( $payload ) ) );
+		$ticket = Posts::ticketOf( $topic->ID );
+		$set    = $this->pictures->whilePosting( $message, $ticket, $started );
+		$this->mails->later( $this->post( $topic, $poster, $message, $this->workspace( $payload ), $set ) );
 	}
 
 	/**
@@ -94,15 +101,17 @@ final class ReplyPoster {
 	 * @param int                 $poster    The user it is posted under.
 	 * @param array<string,mixed> $message   OmnaBase's message.
 	 * @param string              $workspace The workspace's name.
+	 * @param array               $set       The pictures fetched while posting (`ReplyPictures::whilePosting()`).
 	 * @return int The reply.
 	 * @throws Refusal When WordPress did not save it.
 	 */
-	private function post( \WP_Post $topic, int $poster, array $message, string $workspace ): int {
-		$data = array(
+	private function post( \WP_Post $topic, int $poster, array $message, string $workspace, array $set ): int {
+		$closing = $this->closing( $message, $workspace );
+		$data    = array(
 			'post_parent'  => $topic->ID,
 			'post_author'  => $poster,
 			'post_title'   => sprintf( /* translators: %s: the topic's title. */ __( 'Reply To: %s', 'omnabase' ), $topic->post_title ),
-			'post_content' => $this->content( $message, $workspace ),
+			'post_content' => self::body( is_string( $message['bodyHtml'] ?? null ) ? $message['bodyHtml'] : null, (string) ( $message['bodyText'] ?? '' ), $set['entries'], $set['saved'] ) . $closing,
 			'post_status'  => bbp_get_public_status_id(),
 			'meta_input'   => array( Options::POSTED_AS_META => $this->postedAs( $poster ) ), // OmnaBase's sign, there before the publish moment
 		);
@@ -120,6 +129,7 @@ final class ReplyPoster {
 		PostFields::write( $reply, $message['fields'] ?? null, $this->fields->declared() );
 		$this->customer->decide( $reply, $topic ); // the forum reply mails round: decided once, before the echo mark
 		Posts::markPosted( $reply, (string) $message['id'] );
+		$this->pictures->afterPosting( $reply, $set, $message, $closing, Posts::ticketOf( $topic->ID ) );
 		return $reply;
 	}
 
@@ -147,18 +157,32 @@ final class ReplyPoster {
 	}
 
 	/**
-	 * The reply's HTML: OmnaBase's HTML through the plugin's fence (no pictures, inline styles or classes; its text when it has none), then
-	 * the closing line as one paragraph, its lines joined by `<br>` (no raw line break inside, so a theme's automatic paragraphs cannot double
-	 * it), each line escaped, empty lines left out.
+	 * The reply's body: OmnaBase's HTML with the marked paragraphs of the saved pictures as those pictures (every other mark as its words),
+	 * through the plugin's fence, which keeps only those pictures (no other picture, inline style or class; its text when it has none). Also
+	 * the later picture job's, which puts late pictures into the posted reply.
+	 *
+	 * @param string|null                                                  $html    OmnaBase's HTML.
+	 * @param string                                                       $text    OmnaBase's text.
+	 * @param array<int,array{id:string,name:string,size:int,width:?int}> $entries The listed pictures.
+	 * @param array<string,int>                                            $saved   The saved pictures' attachments by OmnaBase's file id.
+	 */
+	public static function body( ?string $html, string $text, array $entries, array $saved ): string {
+		$addresses = array_filter( array_map( static fn ( int $attachment ) => (string) wp_get_attachment_url( $attachment ), $saved ) );
+		$placed    = null !== $html ? PictureMarks::place( $html, $entries, $addresses ) : null;
+		return MessageHtml::forReply( $placed, $text, array_values( $addresses ) );
+	}
+
+	/**
+	 * The closing line as one paragraph after the body, its lines joined by `<br>` (no raw line break inside, so a theme's automatic
+	 * paragraphs cannot double it), each line escaped, empty lines left out.
 	 *
 	 * @param array<string,mixed> $message   OmnaBase's message.
 	 * @param string              $workspace The workspace's name.
 	 */
-	private function content( array $message, string $workspace ): string {
-		$body = MessageHtml::of( is_string( $message['bodyHtml'] ?? null ) ? $message['bodyHtml'] : null, (string) ( $message['bodyText'] ?? '' ) );
+	private function closing( array $message, string $workspace ): string {
 		$ai   = 'ai' === ( $message['kind'] ?? null ) && '' !== trim( $workspace );
 		$line = strtr( self::template( $this->settings->closingLine(), $ai ), array( '{agent}' => self::agent( $message, $workspace, $ai ), '{workspace}' => $workspace ) );
-		return $body . "\n\n<p>" . self::lines( $line ) . '</p>';
+		return "\n\n<p>" . self::lines( $line ) . '</p>';
 	}
 
 	/**

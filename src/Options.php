@@ -65,6 +65,12 @@ final class Options {
 	 */
 	public const APPEARANCE = 'omnabase_appearance';
 
+	/**
+	 * The forum reply pictures round (2026-11-17): the last 20 lines of the Activity tab's "Pictures in forum replies", each a reply's picture
+	 * saved later or left out, with the ticket number and the reason (never the picture). Read and written by `Forum\PictureLog` alone.
+	 */
+	public const PICTURE_LOG = 'omnabase_picture_log';
+
 	/** The settings screen's setup line (M14): `[ 'dismissed' => <time> ]` once the administrator dismissed it. Read and written by `Admin\SetupLine` alone. */
 	public const SETUP = 'omnabase_setup';
 
@@ -86,6 +92,7 @@ final class Options {
 		self::DISPLAY,
 		self::APPEARANCE,
 		self::SETUP,
+		self::PICTURE_LOG,
 	);
 
 	/** User meta: an administrator's pending connect (the state, the sealed verifier, the time), one per administrator. */
@@ -138,6 +145,18 @@ final class Options {
 	 * decided at posting; the subscriber mails then leave the author out. Removed at uninstall.
 	 */
 	public const CUSTOMER_MAIL_META = '_omnabase_customer_mail';
+
+	/**
+	 * Post meta (the forum reply pictures round, 2026-11-17): OmnaBase's file id on a picture the plugin saved into the media library for a
+	 * forum reply, so it is found again and never saved twice. Removed at uninstall; the pictures themselves stay, forum posts show them.
+	 */
+	public const FILE_META = '_omnabase_file_id';
+
+	/**
+	 * Post meta (the same round): on a forum reply whose pictures are not all in yet, what the later job needs to finish it (OmnaBase's HTML
+	 * and text, the closing line, the listed pictures, those saved and waiting, the tries, the content as posted). Gone once it is finished.
+	 */
+	public const PICTURES_META = '_omnabase_pictures';
 
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';

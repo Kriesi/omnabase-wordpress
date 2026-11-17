@@ -26,6 +26,8 @@ final class Client {
 	private const PING_TIMEOUT_SECONDS = 15;
 	// A signed-in visitor's page waits for the prefill token; a slower OmnaBase leaves the form unverified.
 	private const PREFILL_TIMEOUT_SECONDS = 3;
+	// A picture of a reply's text (the forum reply pictures round): 10 MB and one byte, so a file larger than 10 MB shows by its length.
+	public const PICTURE_CAP = 10485761;
 
 	/**
 	 * Builds the client.
@@ -154,6 +156,41 @@ final class Client {
 			$this->vault->markRevoked();
 		}
 		return $outcome;
+	}
+
+	/**
+	 * The forum reply pictures round (OmnaBase, 2026-11-17): one picture of a team reply's text, streamed into a file the caller made, never
+	 * read whole into memory. The address is built here from the ticket's number and the two ids (the caller checked each is OmnaBase's id
+	 * form); the download stops at `PICTURE_CAP` bytes (WordPress's `limit_response_size`), so the caller can tell a file that reached the cap
+	 * from one that fits. Answers the status (null when no answer came) and the network error in words.
+	 *
+	 * @param int    $ticket  The ticket's number.
+	 * @param string $message OmnaBase's message id.
+	 * @param string $file    OmnaBase's file id.
+	 * @param string $into    The file the bytes are written to.
+	 * @param float  $timeout Seconds for the whole call.
+	 * @return array{status:?int,error:?string}
+	 */
+	public function picture( int $ticket, string $message, string $file, string $into, float $timeout ): array {
+		$credentials = $this->vault->read();
+		if ( null === $credentials || $this->vault->isRevoked() ) {
+			return array( 'status' => null, 'error' => __( 'This site is not connected to OmnaBase.', 'omnabase' ) );
+		}
+		$args                      = self::args( 'GET', $credentials['key'], null, 1 );
+		$args['timeout']           = $timeout;
+		$args['headers']['Accept'] = 'image/*';
+		$args['stream']            = true;
+		$args['filename']          = $into;
+		$args['limit_response_size'] = self::PICTURE_CAP;
+		$response = wp_remote_request( ApiUrl::publicApi( sprintf( '/tickets/%d/messages/%s/pictures/%s', $ticket, rawurlencode( $message ), rawurlencode( $file ) ) ), $args );
+		if ( is_wp_error( $response ) ) {
+			return array( 'status' => null, 'error' => $response->get_error_message() );
+		}
+		$status = (int) wp_remote_retrieve_response_code( $response );
+		if ( 401 === $status ) {
+			$this->vault->markRevoked();
+		}
+		return array( 'status' => $status, 'error' => null );
 	}
 
 	/**

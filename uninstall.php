@@ -22,7 +22,9 @@
  * post fields themselves live in the forum settings, and the values on forum replies are the site's own post meta, which stay. The
  * post-as-member round: the mark on every posted reply of how its author was chosen (`_omnabase_posted_as`, post meta). The forum sync
  * round (2026-11-02): the number of the newest status message applied to every topic (`_omnabase_status_seq`, post meta). The support
- * user replies round (2026-11-04): the delivered mark on every forum reply that reached OmnaBase (`_omnabase_delivered`, post meta).
+ * user replies round (2026-11-04): the delivered mark on every forum reply that reached OmnaBase (`_omnabase_delivered`, post meta). The
+ * forum reply pictures round (2026-11-17): the Activity tab's picture lines (option), the file id on every saved picture and the later job's
+ * state on a reply (post meta), the later picture jobs; the saved pictures stay in the media library.
  *
  * @package OmnaBase
  */
@@ -67,6 +69,7 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 		'omnabase_display',
 		'omnabase_appearance',
 		'omnabase_setup',
+		'omnabase_picture_log',
 	);
 	foreach ( $options as $option ) {
 		delete_option( $option );
@@ -91,10 +94,16 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 	// plugin's classes can be loaded.
 	delete_post_meta_by_key( $can_call ? \OmnaBase\WordPress\Options::DELIVERED_META : '_omnabase_delivered' );
 
+	// The forum reply pictures round (2026-11-17): OmnaBase's file id on every picture saved for a forum reply and the later job's state on
+	// a reply still waiting for pictures. The pictures themselves stay in the media library: forum posts show them.
+	delete_post_meta_by_key( '_omnabase_file_id' );
+	delete_post_meta_by_key( '_omnabase_pictures' );
+
 	// The outbox's timer (the job every minute and the one-off run after a new row) and the forum's waiting subscriber mails.
 	wp_clear_scheduled_hook( 'omnabase_outbox' );
 	wp_clear_scheduled_hook( 'omnabase_outbox_now' );
 	wp_unschedule_hook( 'omnabase_forum_mails' );
+	wp_unschedule_hook( 'omnabase_forum_pictures' );
 
 	// The screen's one-time messages (`omnabase_notice_<user id>` and their timeouts), whoever they were for.
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall: transients by prefix, no API for that, nothing to cache.

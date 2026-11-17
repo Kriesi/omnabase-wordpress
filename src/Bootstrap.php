@@ -50,7 +50,8 @@ final class Bootstrap {
 	}
 
 	/**
-	 * Deactivation: the outbox's timer and the forum's waiting mail jobs are cleared (the rows and settings stay), on this site or, turned
+	 * Deactivation: the outbox's timer, the forum's waiting mail jobs and its later picture jobs are cleared (the rows and settings stay), on
+	 * this site or, turned
 	 * off for a whole network, on every site of it.
 	 *
 	 * @param bool $network_wide Whether WordPress turns the plugin off for every site of a network.
@@ -61,6 +62,7 @@ final class Bootstrap {
 			static function () {
 				Outbox\Schedule::clear();
 				Forum\SubscriberMails::clear();
+				Forum\ReplyPictures::clear();
 			}
 		);
 	}

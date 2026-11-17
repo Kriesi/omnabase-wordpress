@@ -40,6 +40,15 @@ final class Queue {
 	}
 
 	/**
+	 * Whether a call waits or needs attention already (the old-topics-and-undelivered round: a topic is queued once).
+	 *
+	 * @param string $dedupe The call's key, `<kind>:<subject>`.
+	 */
+	public function isOpen( string $dedupe ): bool {
+		return $this->table->isOpen( $dedupe );
+	}
+
+	/**
 	 * A waiting row goes now: due at once, and the outbox's one-off run is woken.
 	 *
 	 * @param int $id The row.

@@ -17,3 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! defined( 'OMNABASE_REPO' ) ) {
 	define( 'OMNABASE_REPO', dirname( __DIR__ ) );
 }
+
+// WordPress's name for "rows as named arrays" (the old-topics-and-undelivered round, 2026-11-16): the outbox's table passes it to the
+// database object, which unit tests fake; without it a test that reads open rows only runs after another test has defined it.
+if ( ! defined( 'ARRAY_A' ) ) {
+	define( 'ARRAY_A', 'ARRAY_A' );
+}

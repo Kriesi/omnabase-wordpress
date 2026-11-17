@@ -31,7 +31,7 @@ final class SettingsScreen {
 		Tabs::FORUMS     => array( 'forum' ),
 		Tabs::PAGES      => array( 'forms', 'portal', 'shortcodes', 'builder' ),
 		Tabs::APPEARANCE => array( 'appearance' ),
-		Tabs::ACTIVITY   => array( 'outbox', 'deliveries' ),
+		Tabs::ACTIVITY   => array( 'outbox', 'deliveries', 'pictures' ),
 	);
 
 	/** @var callable():int How many outbox rows need attention. */

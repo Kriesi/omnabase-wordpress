@@ -42,7 +42,7 @@ final class Plugin {
 		$ping  = new LastPing();
 		$door  = new SignedCall( $vault );
 		$data  = new CustomerData( $vault );
-		$forum = new Forums( $data );
+		$forum = new Forums( $data, $vault );
 		$data->registerBackground();
 		$forum->registerBackground();
 		$forms = new Forms( $this->info, $vault );

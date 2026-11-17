@@ -5,6 +5,10 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.1 — unreleased =
 
+* Added: A screenshot your team pastes into an answer now shows in the forum reply where they put it, saved into your site's media library; a picture that cannot be fetched in time follows a little later, and the Activity tab says when a picture was left out and why.
+* Added: When the customer or another forum member replies on an older topic that never became a ticket, the topic now becomes one, with up to 30 earlier posts as its history (each long post shortened); before, such a reply was dropped.
+* Changed: A moderator's reply alone still never turns an older topic into a ticket; the Activity tab now says so in plain words.
+* Changed: The forum resend command brings in a customer's or member's reply on an older topic by filing its topic first.
 * Fixed: A forum reply the support user writes by hand now reaches the ticket in OmnaBase as your team's answer under the support user's own name; until now only the answers sent from OmnaBase appeared under that account.
 * Added: A forum reply that never reached its ticket can be sent again from WordPress's command line: `wp omnabase forum resend <reply id>`; a reply already sent is never sent twice.
 * Added: The bottom of Settings › OmnaBase shows which build of the plugin the site runs next to its version, and OmnaBase sees it too.
