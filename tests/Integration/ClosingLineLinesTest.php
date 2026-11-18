@@ -38,29 +38,31 @@ final class ClosingLineLinesTest extends RoundThreeTestCase {
 	/**
 	 * What it checks: A site that never set the line signs forum answers the way the founder asked: "Best regards" on one line, the person and
 	 *   the workspace on the next.
-	 * Passes when: with no line stored, the reply OmnaBase hands over for Ada ends with one paragraph "Best regards<br>Ada, Team Kriesi" and
-	 *   that paragraph holds no raw line break.
-	 * Fails when: the forum post still ends "— Ada, Team Kriesi", or both lines run together, or a theme doubles the break.
+	 * Passes when: with no line stored, the reply OmnaBase hands over for Ada ends with an empty line, "Best regards", a line break and
+	 *   "Ada, Team Kriesi", and holds no paragraph or line-break tag (adjusted 2026-11-18: the forum's own shape).
+	 * Fails when: the forum post still ends "— Ada, Team Kriesi", or both lines run together, also after an edit in the forum.
 	 */
 	public function test_the_default_is_two_lines(): void {
 		$topic = $this->filedTopic();
 		$this->deliverEvent( 'message.sent', 'dlv-cl-default', $this->teamReply( $topic, 'msg-cl-default' ) );
 		$content = $this->lastReply( $topic );
-		$this->assertMatchesRegularExpression( '#<p>Best regards<br\s*/?>Ada, Team Kriesi</p>\s*$#', $content );
-		$this->assertDoesNotMatchRegularExpression( "#<p>Best regards[^<]*\n#", $content, 'no raw line break inside the closing paragraph' );
+		// adjusted 2026-11-18 (the small fix round, DECISIONS "A forum reply is stored the way the forum stores a post"), not weakened: the closing line is no longer a paragraph with a line-break tag, which an edit in the forum removed (the lines ran together); it is an empty line and then each line on its own line
+		$this->assertMatchesRegularExpression( '#\n\nBest regards\nAda, Team Kriesi$#', $content );
+		$this->assertDoesNotMatchRegularExpression( '#</?p\b|<br\b#i', $content, 'no paragraph or line-break tag, so an edit in the forum cannot remove one' );
 	}
 
 	/**
 	 * What it checks: An owner's own line of several lines appears line by line, empty lines left out, and a name can never become HTML.
 	 * Passes when: with the stored line "Cheers,", an empty line, "{agent} from {workspace}", the reply for an agent named "Ada <b>&" ends with
-	 *   "Cheers,<br>Ada &lt;b&gt;&amp; from Team Kriesi" in one paragraph.
+	 *   "Cheers," and, on the next line, "Ada &lt;b&gt;&amp; from Team Kriesi" (adjusted 2026-11-18: lines, not a paragraph with a tag).
 	 * Fails when: the forum shows an empty line, a raw tag, or loses the second line.
 	 */
 	public function test_an_own_line_of_several_lines_is_printed_line_by_line(): void {
 		$topic = $this->filedTopic();
 		$this->markForums( array( $this->publicForum ), array( 'closing_line' => "Cheers,\n\n{agent} from {workspace}" ) );
 		$this->deliverEvent( 'message.sent', 'dlv-cl-own', $this->teamReply( $topic, 'msg-cl-own', 'Ada <b>&' ) );
-		$this->assertMatchesRegularExpression( '#<p>Cheers,<br\s*/?>Ada &lt;b&gt;&amp;(?:amp;)? from Team Kriesi</p>\s*$#', $this->lastReply( $topic ) );
+		// adjusted 2026-11-18 (the small fix round, DECISIONS "A forum reply is stored the way the forum stores a post"), not weakened: the closing line is no longer a paragraph with a line-break tag, which an edit in the forum removed (the lines ran together); it is an empty line and then each line on its own line
+		$this->assertMatchesRegularExpression( '#\n\nCheers,\nAda &lt;b&gt;&amp;(?:amp;)? from Team Kriesi$#', $this->lastReply( $topic ) );
 	}
 
 	/**
@@ -103,21 +105,22 @@ final class ClosingLineLinesTest extends RoundThreeTestCase {
 
 	/**
 	 * What it checks: (chosen, question 7) A site still holding the old default gets the new one, without anyone re-typing it.
-	 * Passes when: with the stored line "— {agent}, {workspace}", the reply for Ada ends with "Best regards<br>Ada, Team Kriesi".
+	 * Passes when: with the stored line "— {agent}, {workspace}", the reply for Ada ends with "Best regards" and, on the next line, "Ada, Team Kriesi".
 	 * Fails when: the founder updates kriesi.at and still reads "— Günter, Kriesi" under every answer, and thinks the change did not ship.
 	 */
 	public function test_the_old_default_counts_as_not_set(): void {
 		$topic = $this->filedTopic();
 		$this->markForums( array( $this->publicForum ), array( 'closing_line' => '— {agent}, {workspace}' ) );
 		$this->deliverEvent( 'message.sent', 'dlv-cl-old', $this->teamReply( $topic, 'msg-cl-old' ) );
-		$this->assertMatchesRegularExpression( '#<p>Best regards<br\s*/?>Ada, Team Kriesi</p>\s*$#', $this->lastReply( $topic ) );
+		// adjusted 2026-11-18 (the small fix round, DECISIONS "A forum reply is stored the way the forum stores a post"), not weakened: the closing line is no longer a paragraph with a line-break tag, which an edit in the forum removed (the lines ran together); it is an empty line and then each line on its own line
+		$this->assertMatchesRegularExpression( '#\n\nBest regards\nAda, Team Kriesi$#', $this->lastReply( $topic ) );
 	}
 
 	/**
 	 * What it checks: (the founder's decision of 2026-10-31, overturning the pinned default "AI") The AI's own forum answers sign off as the
 	 *   workspace's team, not as "AI".
-	 * Passes when: with no line stored, an answer OmnaBase's AI wrote (kind "ai", author "AI") ends with "Best regards<br>The Team Kriesi team",
-	 *   without a repeated ", Team Kriesi"; a person's answer still ends "Best regards<br>Ada, Team Kriesi" (the default test above).
+	 * Passes when: with no line stored, an answer OmnaBase's AI wrote (kind "ai", author "AI") ends with "Best regards" and, on the next line,
+	 *   "The Team Kriesi team", without a repeated ", Team Kriesi"; a person's answer still ends "Ada, Team Kriesi" (the default test above).
 	 * Fails when: forum visitors read "Best regards / AI, Kriesi" under the automatic answers, or "The Kriesi team, Kriesi".
 	 * Added 2026-10-31 by the builder on the founder's decision (question 8 overturned; no red-team test had pinned "AI, Kriesi").
 	 */
@@ -127,7 +130,8 @@ final class ClosingLineLinesTest extends RoundThreeTestCase {
 		$event['message']['kind'] = 'ai';
 		$this->deliverEvent( 'message.sent', 'dlv-cl-ai', $event );
 		$content = $this->lastReply( $topic );
-		$this->assertMatchesRegularExpression( '#<p>Best regards<br\s*/?>The Team Kriesi team</p>\s*$#', $content );
+		// adjusted 2026-11-18 (the small fix round, DECISIONS "A forum reply is stored the way the forum stores a post"), not weakened: the closing line is no longer a paragraph with a line-break tag, which an edit in the forum removed (the lines ran together); it is an empty line and then each line on its own line
+		$this->assertMatchesRegularExpression( '#\n\nBest regards\nThe Team Kriesi team$#', $content );
 		$this->assertStringNotContainsString( 'AI, Team Kriesi', wp_strip_all_tags( $content ) );
 	}
 

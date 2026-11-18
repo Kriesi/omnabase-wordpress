@@ -56,4 +56,31 @@ final class ForumPostShapeTest extends RoundThreeTestCase {
 		$this->assertStringEndsWith( 'Ada, Team Kriesi', trim( wp_strip_all_tags( $content ) ), 'the closing line stays last' );
 		$this->assertMatchesRegularExpression( '/Best regards\s*Ada, Team Kriesi$/', trim( wp_strip_all_tags( $content ) ) );
 	}
+
+	/**
+	 * What it checks: A reply written in OmnaBase keeps every paragraph and line break on the forum, also after a moderator edits it there
+	 *   (the founder's report of 2026-11-18: his edited reply read "that we posted.Maybe you removed it?").
+	 * Passes when: a reply with a greeting, two paragraphs set off by double line breaks and a single line break is posted; the stored post
+	 *   holds no paragraph or line-break tag; sent through the forum's own cleaning of an edited reply (bbPress's edit filter, which removes
+	 *   tags outside its allow-list) and then through the forum's display (which makes paragraphs from empty lines), "that we posted." and
+	 *   "Maybe you removed it?" are still in separate paragraphs, the single line break is still a line break, and the closing line's two
+	 *   lines are still two lines.
+	 * Fails when: one edit in the forum turns the team's answer into a single block of text.
+	 */
+	public function test_an_edit_in_the_forum_keeps_the_paragraphs_and_lines(): void {
+		$topic = $this->filedTopic();
+		$html  = '<p>Hi,</p><p>Your backend does not show the rule <code>.flag img { height: auto; } </code>that we posted.<br /><br />Maybe you removed it?<br />Please check.</p>';
+		$this->deliverEvent( 'message.sent', 'dlv-shape-2', $this->teamReply( $topic, 'msg-shape-2', 'Ada', $html, 'Hi, Your backend does not show the rule that we posted. Maybe you removed it? Please check.' ) );
+
+		$content = self::repliesOn( $topic )[0]->post_content;
+		$this->assertDoesNotMatchRegularExpression( '#</?p\b|<br\b#i', $content, 'stored as the forum stores a post: no paragraph or line-break tag' );
+
+		$edited = (string) apply_filters( 'bbp_edit_reply_pre_content', $content ); // what the forum's edit form saves
+		$shown  = (string) apply_filters( 'bbp_get_reply_content', $edited, 0 ); // what a visitor reads afterwards
+		$this->assertMatchesRegularExpression( '#that we posted\.</p>\s*<p>Maybe you removed it\?#', $shown, 'the two paragraphs stay apart' );
+		$this->assertMatchesRegularExpression( '#Maybe you removed it\?<br\s*/?>\s*Please check\.#', $shown, 'the single line break stays' );
+		$this->assertMatchesRegularExpression( '#<p>Hi,</p>#', $shown );
+		$this->assertMatchesRegularExpression( '#Best regards<br\s*/?>\s*Ada, Team Kriesi#', $shown, 'the closing line keeps its two lines' );
+		$this->assertStringContainsString( '<code>.flag img { height: auto; } </code>', $shown );
+	}
 }

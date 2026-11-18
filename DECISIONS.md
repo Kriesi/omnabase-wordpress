@@ -1610,3 +1610,25 @@ OmnaBase's brief `docs/briefs/customer-rating-round.md` (with "After the red tea
 - **Nothing in the topic.** No question appears in the forum; the AI's automatic answer leaves the topic open by design, and its author is
   still asked after the waiting time because the ticket is resolved in OmnaBase (C6).
 - Tests: `tests/Unit/RatingSwitchTest.php` and `tests/Structure/RatingSwitchStructureTest.php` (the red team's).
+
+## 2026-11-18 — A forum reply is stored the way the forum stores a post (the small fix round)
+
+The founder's report: his reply on kriesi.at "does not show line breaks". Read on the live site (read-only): the two replies that lost
+their lines were both edited in the forum after the plugin posted them; a reply nobody edited kept them.
+
+- **The cause.** The plugin stored a reply as HTML with paragraph and line-break tags (`<p>`, `<br>`). bbPress (the forum plugin) stores a
+  post as text with line breaks and makes the paragraphs when it shows it; its list of allowed tags has neither tag, and its cleaning of
+  an edited post removes every tag outside that list. So the first edit in the forum removed all of them and the text ran together.
+- **The change.** `Forum\PostShape` (pure) turns the cleaned reply into the forum's own shape after the plugin's fence: a paragraph's end
+  becomes an empty line, a line-break tag a line break, and no paragraph or line-break tag is left. Bold, lists, links, code and the
+  saved pictures stay as they were (bbPress allows them). `ReplyPoster::body()` returns that shape, so the later picture job writes it too.
+- **The closing line changes shape with it** and overturns the polish round's chosen shape (2026-10-31, "one paragraph, the lines joined
+  by `<br>`, no raw line break inside"): it is now an empty line and then each line on its own line. The old shape met the same edit:
+  "Best regards" and the name ran together. Five assertions in `ClosingLineLinesTest` and `ForumReceiverTest` are adjusted with a dated note.
+- **Replies already on a forum stay as stored.** Nothing rewrites old posts; an old reply still loses its lines when edited, and the two
+  edited replies on kriesi.at are not repaired by the plugin.
+- **Not covered:** headings, tables, underline and strike-through in a reply are outside bbPress's list too and lose their tag (never
+  their words) at an edit; OmnaBase's reply box writes none of them today.
+- Tests: `tests/Unit/PostShapeTest.php`, and `test_an_edit_in_the_forum_keeps_the_paragraphs_and_lines` in
+  `tests/Integration/ForumPostShapeTest.php` (the reply through bbPress's own edit cleaning and display).
+

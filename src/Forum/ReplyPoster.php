@@ -39,6 +39,8 @@ defined( 'ABSPATH' ) || exit;
  * The forum reply pictures round (OmnaBase, 2026-11-17): the pictures OmnaBase lists with the reply are fetched and saved into the media
  * library before the reply is inserted, within a budget (`ReplyPictures`, which also finishes the rest later); the marked paragraphs of the
  * saved pictures become pictures before the fence, which then admits exactly those (`body()`).
+ * The forum's own shape (2026-11-18): the reply and its closing line are stored with line breaks and without paragraph or line-break tags
+ * (`PostShape`), as bbPress stores a post, so an edit in the forum keeps every paragraph and line.
  */
 final class ReplyPoster {
 
@@ -159,8 +161,9 @@ final class ReplyPoster {
 
 	/**
 	 * The reply's body: OmnaBase's HTML with the marked paragraphs of the saved pictures as those pictures (every other mark as its words),
-	 * through the plugin's fence, which keeps only those pictures (no other picture, inline style or class; its text when it has none). Also
-	 * the later picture job's, which puts late pictures into the posted reply.
+	 * through the plugin's fence, which keeps only those pictures (no other picture, inline style or class; its text when it has none), then
+	 * in the forum's own shape (`PostShape`: line breaks, no paragraph or line-break tag). Also the later picture job's, which puts late
+	 * pictures into the posted reply.
 	 *
 	 * @param string|null                                                  $html    OmnaBase's HTML.
 	 * @param string                                                       $text    OmnaBase's text.
@@ -170,12 +173,12 @@ final class ReplyPoster {
 	public static function body( ?string $html, string $text, array $entries, array $saved ): string {
 		$addresses = array_filter( array_map( static fn ( int $attachment ) => (string) wp_get_attachment_url( $attachment ), $saved ) );
 		$placed    = null !== $html ? PictureMarks::place( $html, $entries, $addresses ) : null;
-		return MessageHtml::forReply( $placed, $text, array_values( $addresses ) );
+		return PostShape::of( MessageHtml::forReply( $placed, $text, array_values( $addresses ) ) );
 	}
 
 	/**
-	 * The closing line as one paragraph after the body, its lines joined by `<br>` (no raw line break inside, so a theme's automatic
-	 * paragraphs cannot double it), each line escaped, empty lines left out.
+	 * The closing line after the body, in the forum's own shape (`PostShape`, 2026-11-18): an empty line, then its lines each on their own,
+	 * each line escaped, empty lines left out.
 	 *
 	 * @param array<string,mixed> $message   OmnaBase's message.
 	 * @param string              $workspace The workspace's name.
@@ -183,7 +186,7 @@ final class ReplyPoster {
 	private function closing( array $message, string $workspace ): string {
 		$ai   = 'ai' === ( $message['kind'] ?? null ) && '' !== trim( $workspace );
 		$line = strtr( self::template( $this->settings->closingLine(), $ai ), array( '{agent}' => self::agent( $message, $workspace, $ai ), '{workspace}' => $workspace ) );
-		return "\n\n<p>" . self::lines( $line ) . '</p>';
+		return PostShape::closing( self::lines( $line ) );
 	}
 
 	/**
@@ -214,13 +217,14 @@ final class ReplyPoster {
 	}
 
 	/**
-	 * A closing line's lines, each escaped, joined by `<br>`, empty lines left out.
+	 * A closing line's lines, each escaped, empty lines left out.
 	 *
 	 * @param string $line The closing line with its placeholders filled.
+	 * @return string[]
 	 */
-	private static function lines( string $line ): string {
+	private static function lines( string $line ): array {
 		$lines = array_filter( array_map( 'trim', preg_split( '/\R/u', $line ) ), 'strlen' );
-		return implode( '<br>', array_map( 'esc_html', $lines ) );
+		return array_map( 'esc_html', array_values( $lines ) );
 	}
 
 	/**

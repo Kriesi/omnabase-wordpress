@@ -209,7 +209,8 @@ final class ForumReceiverTest extends RoundThreeTestCase {
 
 		$content = (string) ( self::repliesOn( $topic )[0]->post_content ?? '' );
 		$text    = wp_strip_all_tags( $content );
-		$this->assertMatchesRegularExpression( '#<p>Cheers,<br\s*/?>Ada from Team Kriesi</p>\s*$#', $content );
+		// adjusted 2026-11-18 (the small fix round, DECISIONS "A forum reply is stored the way the forum stores a post"), not weakened: the closing line is no longer a paragraph with a line-break tag, which an edit in the forum removed (the lines ran together); it is an empty line and then each line on its own line
+		$this->assertMatchesRegularExpression( '#\n\nCheers,\nAda from Team Kriesi$#', $content );
 		$this->assertStringNotContainsString( 'Best regards', $text, 'not the default line' );
 	}
 
