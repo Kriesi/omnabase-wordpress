@@ -15,12 +15,12 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * `{prefix}omnabase_outbox`: one row per call to OmnaBase still to make (or made in the last seven days). A row names its kind
- * (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`), the user or post it is about, a dedupe key and its own idempotency key
+ * (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`, `forum_edit`), the user or post it is about, a dedupe key and its own idempotency key
  * (version 2, round three: made once with the row and sent on every try, so a resent topic counts once at OmnaBase); its state is
  * `waiting`, `sent`, `attention` (needs the administrator) or `discarded`. Times are unix seconds. The body is built from the user or post
  * when the row is sent, so the table holds no customer data, with one exception (version 3, round four): a form message has nothing to be
  * rebuilt from, so a `form_submission` row carries its body in `payload` while it waits, and the payload is emptied the moment the row is
- * sent or discarded. The plugin's forms round retired that form: such rows queued before the update show as needing attention ("no longer
+ * sent or discarded (since the forum edits and pictures round an idempotent call keeps its first try's body there too, for its retries). The plugin's forms round retired that form: such rows queued before the update show as needing attention ("no longer
  * knows this kind of call") and leave with the usual clean-up; no new one is made. Made or changed on load when the schema version (`omnabase_db_version`) is missing or older; dropped by uninstall.php.
  * Every query is prepared.
  */
@@ -171,9 +171,20 @@ final class Table {
 	}
 
 	/**
-	 * A row needing attention waits again, due now, as if new (its three days start afresh), with a new idempotency key: the old one may be
-	 * the reason it needed attention (OmnaBase's "used with another request" after the post was edited), and the site's own reference
-	 * (`topic-<id>`, `reply-<id>`) still makes a resend count once.
+	 * Keeps a first try's body in its row (the forum edits and pictures round): its retries send the same, emptied when the row ends.
+	 *
+	 * @param int    $id      The row.
+	 * @param string $payload The body, as JSON.
+	 */
+	public function keep( int $id, string $payload ): void {
+		global $wpdb;
+		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET payload = %s WHERE id = %d', self::name(), $payload, $id ) );
+	}
+
+	/**
+	 * A row needing attention waits again, due now, as if new (its three days start afresh), with a new idempotency key and no kept body:
+	 * the old pair may be the reason it needed attention, the next try builds the body from the post as it is then, and the site's own
+	 * reference (`topic-<id>`, `reply-<id>`) still makes a resend count once.
 	 *
 	 * @param int $id  The row.
 	 * @param int $now The time now.
@@ -181,7 +192,7 @@ final class Table {
 	public function retry( int $id, int $now ): bool {
 		global $wpdb;
 		$table = self::name();
-		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'waiting', next_at = %d, attempts = 0, created_at = %d, claimed_until = 0, idempotency_key = %s WHERE id = %d AND state = 'attention'", $table, $now, $now, self::newKey(), $id ) );
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "UPDATE %i SET state = 'waiting', next_at = %d, attempts = 0, created_at = %d, claimed_until = 0, idempotency_key = %s, payload = NULL WHERE id = %d AND state = 'attention'", $table, $now, $now, self::newKey(), $id ) );
 	}
 
 	/**

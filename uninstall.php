@@ -100,6 +100,9 @@ $omnabase_uninstall_site = static function ( bool $can_call ): void {
 	delete_post_meta_by_key( '_omnabase_file_id' );
 	delete_post_meta_by_key( '_omnabase_pictures' );
 
+	// The forum edits and pictures round (2026-11-18): the fingerprint of what was last sent of every topic and reply.
+	delete_post_meta_by_key( '_omnabase_sent_fingerprint' );
+
 	// The outbox's timer (the job every minute and the one-off run after a new row) and the forum's waiting subscriber mails.
 	wp_clear_scheduled_hook( 'omnabase_outbox' );
 	wp_clear_scheduled_hook( 'omnabase_outbox_now' );

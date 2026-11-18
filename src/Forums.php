@@ -3,7 +3,8 @@
  * The forum parts, built once and wired together: the settings, the triggers, the three senders, the reply poster, the subscriber mails, the
  * closer (the forum sync round, 2026-11-02: a topic closed or opened in the forum moves its ticket, and the ticket's status moves the topic),
  * the answer's `posted` (the forum reply mails round, 2026-11-03), the resend and its WP-CLI command (the support user replies round, 2026-11-04),
- * the pictures of OmnaBase's replies and their later job (the forum reply pictures round, 2026-11-17).
+ * the pictures of OmnaBase's replies and their later job (the forum reply pictures round, 2026-11-17), the edits of forum posts (the forum edits
+ * and pictures round, 2026-11-18).
  *
  * @package OmnaBase
  */
@@ -15,6 +16,8 @@ use OmnaBase\WordPress\Cli\ForumCommand;
 use OmnaBase\WordPress\Connect\ConnectionInfo;
 use OmnaBase\WordPress\Forum\Closer;
 use OmnaBase\WordPress\Forum\CustomerMail;
+use OmnaBase\WordPress\Forum\EditSender;
+use OmnaBase\WordPress\Forum\Fingerprint;
 use OmnaBase\WordPress\Forum\PictureLog;
 use OmnaBase\WordPress\Forum\PictureSaver;
 use OmnaBase\WordPress\Forum\PostFields;
@@ -76,6 +79,7 @@ final class Forums {
 		$data->worker->add( new TopicSender( $this->settings, $connection, $fields, $data->table ) );
 		$data->worker->add( new ReplySender( $this->settings, $data->table, $fields ) );
 		$data->worker->add( new StatusSender() );
+		$data->worker->add( new EditSender( $data->table, $fields, new Fingerprint( $fields ) ) ); // the forum edits and pictures round
 	}
 
 	/** bbPress's moments, the webhook listeners and the mail job: once per request, with bbPress active. */

@@ -190,22 +190,32 @@ final class ForumRepliesTest extends RoundThreeTestCase {
 	}
 
 	/**
-	 * What it checks: Edits and deletions on the forum are not copied to OmnaBase in this version (the screen says so).
-	 * Passes when: after Ada's reply was sent, editing it and then trashing it make no further call to OmnaBase.
-	 * Fails when: a typo fix posts the whole reply a second time on the ticket.
+	 * What it checks: An edit on the forum changes the post's message in the ticket and never posts it a second time; a deletion is not copied
+	 *   to OmnaBase (the screen says so). Adjusted 2026-11-18 (the forum edits and pictures round: the founder decided that edits reach the
+	 *   ticket; before, edits were not copied either).
+	 * Passes when: after Ada's reply was sent, editing it and then trashing it make no call about the reply, and editing the topic makes one
+	 *   edit call with its new words; no post is filed or added a second time.
+	 * Fails when: a typo fix posts the whole reply a second time on the ticket, or a trashed reply's last edit still reaches the ticket.
 	 */
 	public function test_edits_and_deletions_are_not_synced(): void {
 		$topic = $this->filedTopic();
 		$reply = $this->reply( $topic, $this->ada, 'First version.' );
 		$this->workOutbox();
 		$this->calls = array();
+		$this->answers[ 'PATCH /by-external/topic-' . $topic ] = self::answer( 200, array( 'id' => 'msg-topic', 'kind' => 'customer' ) ); // added 2026-11-18: OmnaBase takes the topic's edit
 
 		wp_update_post( array( 'ID' => $reply, 'post_content' => 'Second version.' ) );
 		wp_update_post( array( 'ID' => $topic, 'post_content' => 'The topic, edited.' ) );
 		wp_trash_post( $reply );
 		$this->sendEverything();
 
-		$this->assertSame( array(), array_values( array_filter( $this->calls, static fn ( $c ) => 'GET' !== $c['method'] ) ) );
+		// adjusted 2026-11-18 (the forum edits and pictures round), not weakened: the topic's edit is now one PATCH of its own message; the
+		// reply's edit and trashing still send nothing, and nothing is posted again
+		$sent = array_values( array_filter( $this->calls, static fn ( $c ) => 'GET' !== $c['method'] ) );
+		$this->assertCount( 1, $sent, 'one call: the topic\'s edit' );
+		$this->assertSame( 'PATCH', $sent[0]['method'] );
+		$this->assertStringEndsWith( '/messages/by-external/topic-' . $topic, (string) wp_parse_url( $sent[0]['url'], PHP_URL_PATH ) );
+		$this->assertSame( 'The topic, edited.', self::bodyOf( $sent[0] )['body'] ?? null );
 	}
 
 	/**

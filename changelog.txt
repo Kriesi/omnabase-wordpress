@@ -5,6 +5,8 @@ section is never changed again. At release the top section is copied into readme
 
 = 0.2.1 — unreleased =
 
+* Added: When a customer, another member or a moderator edits a forum post that is part of a ticket, the edit now reaches the ticket in OmnaBase with the new words; a topic's new title and the answers your team sent from OmnaBase are left as they are.
+* Added: The pictures in a forum topic or reply now show in its ticket in OmnaBase, where the post shows them; each picture's address is also kept in the post's text for search and the AI.
 * Fixed: An answer your team sends from OmnaBase keeps its paragraphs and line breaks on the forum after someone edits the reply there; before, the first edit ran the whole answer together into one block.
 * Added: "OmnaBase asks the customer for a rating" under Settings › OmnaBase › Forums (on by default): when your OmnaBase workspace asks for ratings, a topic's author gets one email after their ticket is resolved asking how the help was; guests and password-protected topics are never asked, and nothing appears in the forum.
 * Added: A screenshot your team pastes into an answer now shows in the forum reply where they put it, saved into your site's media library; a picture that cannot be fetched in time follows a little later, and the Activity tab says when a picture was left out and why.

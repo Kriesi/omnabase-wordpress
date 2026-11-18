@@ -1,6 +1,6 @@
 <?php
 /**
- * The moments bbPress publishes a topic or a reply: each queues one outbox row.
+ * The moments bbPress publishes or edits a topic or a reply: each queues one outbox row.
  *
  * @package OmnaBase
  */
@@ -16,7 +16,13 @@ defined( 'ABSPATH' ) || exit;
  * (`bbp_approved_topic`, `bbp_approved_reply`), a post marked not spam (`bbp_unspammed_topic`, `bbp_unspammed_reply`), and WordPress's
  * `transition_post_status` into `publish` from any other status (topics and replies written in wp-admin). Several of them fire for one post;
  * the outbox keeps one waiting row per post. Only cheap checks run here (published, in a marked forum, not the plugin's own posting, not
- * filed already); the sending job decides the rest when the row goes. Edits (`publish` to `publish`) and deletions queue nothing.
+ * filed already); the sending job decides the rest when the row goes. Deletions queue nothing.
+ *
+ * The forum edits and pictures round (2026-11-18): an edit queues one `forum_edit` row per post, from bbPress's two edit moments
+ * (`bbp_edit_topic`, `bbp_edit_reply`) and WordPress's `post_updated` (an edit in wp-admin; it fires for every save of every post type, so
+ * only topics and replies whose status stayed the same count: a close, a spam mark or a trashing is no edit). Skipped here: the plugin's own
+ * posting, a reply with OmnaBase's sign, and a post whose topic is no ticket and not on its way to becoming one. The edit job decides the
+ * rest at its turn (unchanged, unpublished, not at OmnaBase yet).
  */
 final class Triggers {
 
@@ -28,7 +34,7 @@ final class Triggers {
 	 */
 	public function __construct( private Queue $queue, private Settings $settings ) {}
 
-	/** Registers the seven moments. */
+	/** Registers the seven moments of a new post and the three of an edit. */
 	public function register(): void {
 		add_action( 'bbp_new_topic', array( $this, 'topic' ), 20, 1 );
 		add_action( 'bbp_approved_topic', array( $this, 'topic' ), 20, 1 );
@@ -37,6 +43,41 @@ final class Triggers {
 		add_action( 'bbp_approved_reply', array( $this, 'reply' ), 20, 1 );
 		add_action( 'bbp_unspammed_reply', array( $this, 'reply' ), 20, 1 );
 		add_action( 'transition_post_status', array( $this, 'transition' ), 20, 3 );
+		add_action( 'bbp_edit_topic', array( $this, 'edited' ), 20, 1 );
+		add_action( 'bbp_edit_reply', array( $this, 'edited' ), 20, 1 );
+		add_action( 'post_updated', array( $this, 'updated' ), 20, 3 );
+	}
+
+	/**
+	 * A post was saved (wp-admin's editor, any code): an edit when its status stayed the same.
+	 *
+	 * @param int|mixed $post_id The post.
+	 * @param mixed     $after   The post after the save.
+	 * @param mixed     $before  The post before it.
+	 */
+	public function updated( $post_id, $after, $before ): void {
+		if ( $after instanceof \WP_Post && $before instanceof \WP_Post && $after->post_status === $before->post_status ) {
+			$this->edited( $post_id );
+		}
+	}
+
+	/**
+	 * A topic or reply was edited: queued when its topic is a ticket or on its way to becoming one.
+	 *
+	 * @param int|mixed $post_id The topic or reply.
+	 */
+	public function edited( $post_id ): void {
+		$post = get_post( (int) $post_id );
+		if ( ReplyPoster::isPosting() || ! ( Posts::isTopic( $post ) || Posts::isReply( $post ) ) ) {
+			return;
+		}
+		if ( Posts::isReply( $post ) && ( '' !== Posts::messageOf( $post->ID ) || '' !== Posts::postedAsOf( $post->ID ) ) ) {
+			return; // OmnaBase's own reply: never followed, and the plugin's own writes into it are no edit
+		}
+		$topic = Posts::isTopic( $post ) ? $post->ID : Posts::topicOf( $post );
+		if ( Posts::ticketOf( $topic ) > 0 || $this->queue->isOpen( TopicSender::KIND . ':' . $topic ) ) {
+			$this->queue->add( EditSender::KIND, $post->ID );
+		}
 	}
 
 	/**

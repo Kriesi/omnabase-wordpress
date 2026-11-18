@@ -118,6 +118,11 @@ final class OldTopicReplyTest extends TestCase {
 		Functions\when( 'wp_schedule_single_event' )->justReturn( true );
 		Functions\when( 'wp_generate_password' )->alias( static fn ( $n = 12 ) => substr( bin2hex( random_bytes( 32 ) ), 0, (int) $n ) );
 		Functions\when( '__' )->returnArg();
+		// Added 2026-11-18 (the forum edits and pictures round): the sender now also reads the post as the forum shows it (no password here,
+		// the forum's display filters faked as "unchanged") and remembers what it sent; nothing these tests assert changes.
+		Functions\when( 'bbp_get_password_required_id' )->justReturn( 0 );
+		Functions\when( 'setup_postdata' )->justReturn( true );
+		Functions\when( 'wp_json_encode' )->alias( static fn ( $v ) => json_encode( $v ) );
 	}
 
 	protected function tearDown(): void {

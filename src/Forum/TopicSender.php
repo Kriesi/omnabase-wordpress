@@ -23,7 +23,9 @@ defined( 'ABSPATH' ) || exit;
  * ticket number, kept on the topic. The site-fields round: a forum with declared post fields also sends `replyFields` (every declared field)
  * and `fields` (those with a value on the topic); a forum without any sends today's body. The old-topics-and-undelivered round
  * (2026-11-16): a topic with earlier replies (an old topic filed at its next reply) also sends its own date and its history
- * (`TopicHistory`), and once accepted every earlier reply that travelled is marked delivered.
+ * (`TopicHistory`), and once accepted every earlier reply that travelled is marked delivered. The forum edits and pictures round (2026-11-18):
+ * the topic also carries `html`, the post as the forum shows it (`ShownForm`), and when its body is built for the first try (no body kept in
+ * the row yet) the topic and its travelling replies are remembered as sent (`Fingerprint`), so a later edit knows what OmnaBase has.
  */
 final class TopicSender implements Job {
 
@@ -73,7 +75,24 @@ final class TopicSender implements Job {
 		if ( '' === $project ) {
 			return Step::attention( __( 'The connection names no project for new tickets: connect the site again.', 'omnabase' ) );
 		}
-		return Step::send( 'POST', '/tickets', $this->body( $topic, $author, $project ), 15, true );
+		$body = $this->body( $topic, $author, $project );
+		if ( '' === (string) ( $row['payload'] ?? '' ) ) {
+			$this->rememberSent( $topic );
+		}
+		return Step::send( 'POST', '/tickets', $body, 15, true );
+	}
+
+	/**
+	 * The topic and the replies travelling with it, remembered as sent (at the first try; its retries send the same body).
+	 *
+	 * @param \WP_Post $topic The topic.
+	 */
+	private function rememberSent( \WP_Post $topic ): void {
+		$sent = new Fingerprint( $this->fields );
+		$sent->remember( $topic );
+		foreach ( ( new TopicHistory( $this->table ) )->travelling( $topic ) as $reply ) {
+			$sent->remember( $reply );
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -139,7 +158,7 @@ final class TopicSender implements Job {
 			'public'   => Posts::isPublicForum( Posts::forumOf( $topic->ID ) ),
 			'channel'  => 'api',
 		);
-		return $body + $this->fieldsOf( $topic->ID ) + ( new TopicHistory( $this->table ) )->fieldsOf( $topic );
+		return $body + ShownForm::of( $topic ) + $this->fieldsOf( $topic->ID ) + ( new TopicHistory( $this->table ) )->fieldsOf( $topic );
 	}
 
 	/**

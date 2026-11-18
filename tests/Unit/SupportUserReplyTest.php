@@ -73,6 +73,12 @@ final class SupportUserReplyTest extends TestCase {
 		Functions\when( 'wp_strip_all_tags' )->alias( static fn ( $s ) => trim( strip_tags( (string) $s ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- the fake of WordPress's own function
 		Functions\when( 'sanitize_text_field' )->alias( static fn ( $s ) => trim( strip_tags( (string) $s ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- the fake of WordPress's own function
 		Functions\when( '__' )->returnArg();
+		// Added 2026-11-18 (the forum edits and pictures round): the reply job now also reads the reply as the forum shows it (no password
+		// here, the forum's display filters faked as "unchanged") and remembers what it sent; nothing these tests assert changes.
+		Functions\when( 'bbp_get_password_required_id' )->justReturn( 0 );
+		Functions\when( 'setup_postdata' )->justReturn( true );
+		Functions\when( 'update_post_meta' )->justReturn( true );
+		Functions\when( 'wp_json_encode' )->alias( static fn ( $v ) => json_encode( $v ) );
 	}
 
 	/** A post as WordPress hands it out. */

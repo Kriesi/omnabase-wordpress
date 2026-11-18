@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-17T14:05:22+00:00\n"
+"POT-Creation-Date: 2026-11-18T13:39:16+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: omnabase\n"
@@ -552,65 +552,92 @@ msgstr ""
 msgid "Only administrators see this note."
 msgstr ""
 
+#: src/Forum/EditSender.php:50
+msgid "Forum edit to ticket"
+msgstr ""
+
+#: src/Forum/EditSender.php:68
+msgid "Waiting for the post itself to reach OmnaBase first."
+msgstr ""
+
+#: src/Forum/EditSender.php:72
+msgid "Not sent: OmnaBase never received this post, so there is nothing to change."
+msgstr ""
+
+#: src/Forum/EditSender.php:75
+msgid "Not sent: nothing changed since the post was last sent."
+msgstr ""
+
+#: src/Forum/EditSender.php:96
+msgid "Not sent: the post was removed or unpublished before its turn."
+msgstr ""
+
+#: src/Forum/EditSender.php:99
+#: src/Forum/ReplySender.php:112
+msgid "Not sent: the reply came from OmnaBase."
+msgstr ""
+
+#: src/Forum/EditSender.php:157
+#: src/Forum/TopicSender.php:144
+#: src/Privacy/Exporter.php:117
+msgid "Forum topic"
+msgstr ""
+
 #: src/Forum/PictureMarks.php:85
 msgid "Picture"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:87
+#: src/Forum/ReplyPoster.php:89
 msgid "The topic of this ticket is no longer on the forum."
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:91
+#: src/Forum/ReplyPoster.php:93
 msgid "No support user is chosen under Settings › OmnaBase, so the reply cannot be posted yet."
 msgstr ""
 
 #. translators: %s: the topic's title.
-#: src/Forum/ReplyPoster.php:114
+#: src/Forum/ReplyPoster.php:116
 #, php-format
 msgid "Reply To: %s"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:128
+#: src/Forum/ReplyPoster.php:130
 msgid "WordPress did not save the reply; OmnaBase will try again."
 msgstr ""
 
 #. translators: %s: the workspace's name, e.g. "Kriesi".
-#: src/Forum/ReplyPoster.php:200
+#: src/Forum/ReplyPoster.php:203
 #, php-format
 msgid "The %s team"
 msgstr ""
 
-#: src/Forum/ReplyPoster.php:202
+#: src/Forum/ReplyPoster.php:205
 msgid "the team"
 msgstr ""
 
-#: src/Forum/ReplySender.php:58
+#: src/Forum/ReplySender.php:59
 msgid "Forum reply to ticket"
 msgstr ""
 
-#: src/Forum/ReplySender.php:79
+#: src/Forum/ReplySender.php:80
 msgid "Waiting for its topic to become a ticket."
 msgstr ""
 
-#: src/Forum/ReplySender.php:80
+#: src/Forum/ReplySender.php:81
 #: src/Forum/Resend.php:62
 msgid "Not sent: its topic is no ticket yet. It becomes one when the customer or another member replies."
 msgstr ""
 
-#: src/Forum/ReplySender.php:104
+#: src/Forum/ReplySender.php:109
 msgid "Not sent: the reply was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/ReplySender.php:107
-msgid "Not sent: the reply came from OmnaBase."
-msgstr ""
-
-#: src/Forum/ReplySender.php:111
+#: src/Forum/ReplySender.php:116
 msgid "Not sent: its topic was removed."
 msgstr ""
 
-#: src/Forum/ReplySender.php:113
-#: src/Forum/TopicSender.php:107
+#: src/Forum/ReplySender.php:118
+#: src/Forum/TopicSender.php:126
 msgid "Not sent: its forum is no longer marked."
 msgstr ""
 
@@ -659,33 +686,28 @@ msgstr ""
 msgid "Not sent: the topic is neither open nor closed now."
 msgstr ""
 
-#: src/Forum/TopicSender.php:52
+#: src/Forum/TopicSender.php:54
 msgid "Forum topic to ticket"
 msgstr ""
 
-#: src/Forum/TopicSender.php:70
+#: src/Forum/TopicSender.php:72
 msgid "This topic has no usable email address (a guest who left none), so OmnaBase cannot file it. Discard it, or Retry once the topic has one."
 msgstr ""
 
-#: src/Forum/TopicSender.php:74
+#: src/Forum/TopicSender.php:76
 msgid "The connection names no project for new tickets: connect the site again."
 msgstr ""
 
-#: src/Forum/TopicSender.php:101
+#: src/Forum/TopicSender.php:120
 msgid "Not sent: the topic was removed or unpublished before its turn."
 msgstr ""
 
-#: src/Forum/TopicSender.php:104
+#: src/Forum/TopicSender.php:123
 msgid "Not sent: the topic is a ticket already."
 msgstr ""
 
-#: src/Forum/TopicSender.php:110
+#: src/Forum/TopicSender.php:129
 msgid "Not sent: guests' topics are switched off."
-msgstr ""
-
-#: src/Forum/TopicSender.php:125
-#: src/Privacy/Exporter.php:117
-msgid "Forum topic"
 msgstr ""
 
 #: src/Outbox/Policy.php:51
@@ -731,8 +753,12 @@ msgstr ""
 msgid "Every minute (OmnaBase outbox)"
 msgstr ""
 
-#: src/Outbox/Worker.php:103
+#: src/Outbox/Worker.php:106
 msgid "The plugin no longer knows this kind of call."
+msgstr ""
+
+#: src/Outbox/Worker.php:117
+msgid "Not sent: OmnaBase does not have this post."
 msgstr ""
 
 #: src/Portal/Notices.php:44
@@ -1445,7 +1471,7 @@ msgid "Replies by the topic's author and by moderators are sent."
 msgstr ""
 
 #: templates/admin/partials/forum.php:28
-msgid "Edits and deletions on the forum are not sent."
+msgid "Edits on the forum reach the ticket; deletions are not sent."
 msgstr ""
 
 #: templates/admin/partials/forum.php:33

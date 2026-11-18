@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  */
 interface Job {
 
-	/** The kind it sends (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`). */
+	/** The kind it sends (`user_link`, `licence_refresh`, `forum_topic`, `forum_reply`, `forum_edit`). */
 	public function kind(): string;
 
 	/** The kind in words, for the settings screen. */

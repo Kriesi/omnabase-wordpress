@@ -165,6 +165,12 @@ final class Options {
 	 */
 	public const PICTURES_META = '_omnabase_pictures';
 
+	/**
+	 * Post meta (the forum edits and pictures round, 2026-11-18): a fingerprint of a topic's or reply's stored text and declared field values
+	 * as the plugin last sent them to OmnaBase; an edit whose post still matches it sends nothing. Removed at uninstall.
+	 */
+	public const SENT_FINGERPRINT_META = '_omnabase_sent_fingerprint';
+
 	/** Transients: a short message for one administrator's next view of the screen (`omnabase_notice_<user id>`). */
 	public const NOTICE_TRANSIENT = 'omnabase_notice_';
 

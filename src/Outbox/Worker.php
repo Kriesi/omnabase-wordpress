@@ -17,7 +17,10 @@ defined( 'ABSPATH' ) || exit;
  * twice. Without a readable connection, or while OmnaBase refuses the key (401: disconnected in OmnaBase), nothing is tried: rows wait,
  * their tries untouched, for the administrator to connect again. Each row's job says what to do with
  * it (send, wait, skip, ask the administrator); each answer goes through the policy (sent, waiting, needing attention). A call the job marks
- * idempotent carries the row's own Idempotency-Key, the same on every try. Sent and discarded rows are kept seven days.
+ * idempotent carries the row's own Idempotency-Key, the same on every try, and (the forum edits and pictures round, 2026-11-18) the same
+ * body: the first try's body is kept in the row and sent again on every retry, so a post whose shown form changed between two tries (a link
+ * preview filled in) is never read by OmnaBase as "the post changed". A step that drops "not found" ends quietly at OmnaBase's 404. Sent
+ * and discarded rows are kept seven days.
  */
 final class Worker {
 
@@ -105,9 +108,13 @@ final class Worker {
 			$this->table->finish( (int) $row['id'], (int) $row['attempts'], $this->decideWithout( $step, $row ), time() );
 			return;
 		}
-		$outcome = $this->send( (array) $step->request, $row );
+		$outcome = $this->send( $this->sameBody( (array) $step->request, $row ), $row );
 		if ( 401 === $outcome['status'] ) {
 			$this->table->finish( (int) $row['id'], (int) $row['attempts'], Policy::paused( time() ), time() );
+			return;
+		}
+		if ( 404 === $outcome['status'] && $step->dropsNotFound ) {
+			$this->table->finish( (int) $row['id'], (int) $row['attempts'] + 1, array( 'state' => Policy::DISCARDED, 'next_at' => null, 'reason' => __( 'Not sent: OmnaBase does not have this post.', 'omnabase' ) ), time() );
 			return;
 		}
 		$decision = $this->policy->decide( $outcome, array( 'attempts' => (int) $row['attempts'], 'created_at' => (int) $row['created_at'] ), time() );
@@ -115,6 +122,26 @@ final class Worker {
 		if ( Policy::SENT === $decision['state'] && null !== $job ) {
 			$job->sent( $row, $outcome['body'] );
 		}
+	}
+
+	/**
+	 * An idempotent call goes with the body of its row's first try: kept in the row at that try, read back on every later one.
+	 *
+	 * @param array{method:string,path:string,body:mixed,timeout:int,idempotent:bool} $request The call as the job built it now.
+	 * @param array<string,mixed>                                                   $row     The row.
+	 * @return array{method:string,path:string,body:mixed,timeout:int,idempotent:bool}
+	 */
+	private function sameBody( array $request, array $row ): array {
+		if ( ! $request['idempotent'] ) {
+			return $request;
+		}
+		$kept = (string) ( $row['payload'] ?? '' );
+		if ( '' === $kept ) {
+			$this->table->keep( (int) $row['id'], (string) wp_json_encode( $request['body'] ) );
+			return $request;
+		}
+		$request['body'] = json_decode( $kept ); // objects, not arrays: an empty object stays one
+		return $request;
 	}
 
 	/**

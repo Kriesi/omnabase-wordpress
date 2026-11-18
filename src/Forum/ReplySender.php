@@ -30,7 +30,8 @@ defined( 'ABSPATH' ) || exit;
  *   answer). OmnaBase keeps it on the customer's side under that name, never as the customer, and reopens the ticket like a customer's post.
  * Each with the site's reference `reply-<id>` and the row's idempotency key; the customer's and the moderator's also with (the site-fields
  * round) `fields`: the reply's declared post fields that hold a value. Another participant's post never carries fields: another person's
- * private data must not land on the customer's ticket.
+ * private data must not land on the customer's ticket. The forum edits and pictures round (2026-11-18): every reply also carries `html`, the
+ * reply as the forum shows it (`ShownForm`), and is remembered as sent (`Fingerprint`) when its body is built for the first try.
  */
 final class ReplySender implements Job {
 
@@ -79,7 +80,11 @@ final class ReplySender implements Job {
 				? Step::wait( self::TOPIC_WAIT_SECONDS, __( 'Waiting for its topic to become a ticket.', 'omnabase' ) )
 				: Step::skip( __( 'Not sent: its topic is no ticket yet. It becomes one when the customer or another member replies.', 'omnabase' ) );
 		}
-		return Step::send( 'POST', '/tickets/' . $number . '/messages', $this->body( $reply, $topic ), 15, true );
+		$body = $this->body( $reply, $topic );
+		if ( '' === (string) ( $row['payload'] ?? '' ) ) {
+			( new Fingerprint( $this->fields ) )->remember( $reply ); // the first try; its retries send the same body
+		}
+		return Step::send( 'POST', '/tickets/' . $number . '/messages', $body, 15, true );
 	}
 
 	/**
@@ -125,7 +130,7 @@ final class ReplySender implements Job {
 		$base = array(
 			'body'     => '' !== $text ? $text : (string) get_permalink( $reply ),
 			'external' => array( 'id' => 'reply-' . $reply->ID ),
-		);
+		) + ShownForm::of( $reply );
 		if ( Posts::byTopicAuthor( $reply, $topic ) ) {
 			return array( 'from' => 'customer' ) + $base + $this->fieldsOf( $reply );
 		}

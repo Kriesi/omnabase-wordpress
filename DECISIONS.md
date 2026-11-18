@@ -292,7 +292,8 @@ is written in one file only, as the guard wants).
 - **The idempotency key** (table version 2, column `idempotency_key`): made once with the row (`obwp-` and 32 random characters) and sent on
   every try, but only by jobs that mark their call idempotent (topics and replies); the user link and the licence refresh are unchanged.
 - **Hooks only queue** (hooks: named moments where a plugin's code runs): the six bbPress moments and `transition_post_status` into
-  `publish` from any other status (edits, `publish` to `publish`, and deletions queue nothing). The queue keeps one waiting row per post
+  `publish` from any other status (edits, `publish` to `publish`, and deletions queue nothing; the edits half retired 2026-11-18, "Forum
+  edits reach the ticket"). The queue keeps one waiting row per post
   (`forum_topic:<id>`, `forum_reply:<id>`). Cheap checks at queue time: published, in a marked forum, not filed already, not the plugin's
   own posting (a flag while it posts) or the support user's, guests switched on. Everything is checked again when the row goes.
 - **The ticket**: the connection's first project; the author's address and display name (a guest's from bbPress's `_bbp_anonymous_email`
@@ -1631,4 +1632,76 @@ their lines were both edited in the forum after the plugin posted them; a reply 
   their words) at an edit; OmnaBase's reply box writes none of them today.
 - Tests: `tests/Unit/PostShapeTest.php`, and `test_an_edit_in_the_forum_keeps_the_paragraphs_and_lines` in
   `tests/Integration/ForumPostShapeTest.php` (the reply through bbPress's own edit cleaning and display).
+
+## 2026-11-18 — Forum edits reach the ticket, and a post travels with its shown form (the forum edits and pictures round)
+
+OmnaBase's brief `docs/briefs/forum-edits-and-pictures-round.md` (its final section "After the red team's review" is binding) and the red
+team's report `docs/reviews/forum-edits-and-pictures-round-red-team-report.md`, findings 16 to 25. Why: ticket 435, where a customer added
+two screenshots by editing their topic and the ticket kept the first text. The line "edits queue nothing" (round three, "Hooks only
+queue") retires; deletions still queue nothing.
+
+- **Three edit moments, one row per post (finding 16).** `Forum\Triggers` listens to bbPress's `bbp_edit_topic` and `bbp_edit_reply` and to
+  WordPress's `post_updated` (hook: a named moment where a plugin's code runs; `post_updated` fires after every save of every post type, the
+  admin's editor included). `post_updated` counts only for topics and replies whose status stayed the same, so a close, a spam mark or a
+  trashing (the plugin's own topic close among them) is no edit. A row of the new kind `forum_edit` (dedupe `forum_edit:<post>`) is queued
+  when the post's topic is a ticket or its topic row is still open; the plugin's own posting and a reply with OmnaBase's sign are skipped at
+  the hook. Three quick edits make one waiting row, which reads the post at its turn.
+- **The row decides at its turn (`Forum\EditSender`).** Nothing for a post gone, trashed, spammed or unpublished (a topic counts while
+  published or closed); nothing for a reply with OmnaBase's sign (finding 8: the team's own reply is not followed, so the late pictures job's
+  rewrite and a forum edit of such a reply never travel). While the post's own first send (for a reply also its topic's) waits or needs
+  attention, the edit waits a minute and looks again; once that send is over, a post OmnaBase never received (no ticket, a reply without the
+  delivered mark) sends nothing, because its first send read the post at its turn (finding 24).
+- **"Changes nothing" is a fingerprint (finding 19).** `Forum\Fingerprint` keeps a hash of the post's stored text and its declared field
+  values as post meta `_omnabase_sent_fingerprint` (post meta: a named value WordPress keeps beside a post; removed by uninstall.php, named
+  on `Options`). It is written when a topic or reply builds its body for its first try (a topic also for the earlier replies that travel
+  with it) and after an edit was accepted; an edit whose post still matches sends nothing. The title is not part of it: a topic's title edit
+  is not sent (question 9). A post sent before this round has no fingerprint, so its first save after the update sends one edit; OmnaBase
+  answers "same words, nothing changed".
+- **The call (findings 1, 6, 17).** `PATCH /tickets/{number}/messages/by-external/{topic-<id>|reply-<id>}` with `body` (the plain text; an
+  empty post sends the title or the reply's address, as the first send does), `html` (below) and `fields`: the post's declared fields that
+  hold a value, left out when none does (OmnaBase reads that as "none now", so a moderator who empties "Private data" empties it on the
+  ticket); never for another member's post. Sent **without** the row's idempotency key: an edit's body changes by nature and setting a text
+  twice is harmless. OmnaBase's 404 ends the row as discarded with "Not sent: OmnaBase does not have this post." (`Step::droppingNotFound()`,
+  read by the worker before the policy); every other answer goes through the policy as before.
+- **The shown form (findings 21 to 23, `Forum\ShownForm`).** Topics, replies and edits carry `html`: the stored content through bbPress's
+  own display filters (`bbp_get_topic_content` / `bbp_get_reply_content`), not bbPress's "show the post" step, which answers a password
+  box. The revision log's filter ("This topic was modified … ago by …") is lifted for that one rendering and put back. The post is set up
+  as the current post while it renders, so a link preview uses the cache the forum filled; previews run only when bbPress's auto-embed
+  setting is on, because bbPress hooks them only then. No `html` for a post behind a password (its own, its topic's or its forum's) or
+  above 200,000 characters; the plain text always goes. Checked on the test WordPress: the tests run on an admin screen, where bbPress
+  never draws the revision log, so the red team's "the revision log stays out" passes without proving it; on a visitor's page the line
+  does appear ("This topic was modified right now by Ada Lovelace. Reason: screenshots"), and `ForumEditsBuilderTest` checks that page.
+- **Pictures in the plain text (finding 20).** `PlainText::of()` turns a picture with an http(s) address into that address on a line of
+  its own; an embedded `data:` picture leaves nothing. Old topics' history posts and declared field values get the same rule.
+- **A first try's body for its retries (finding 18).** An idempotent call (topics and replies) keeps its first try's body in the row's
+  `payload` (the column the retired form messages used; emptied when the row is sent or discarded) and sends exactly that on every retry,
+  so a link preview filled in between two tries is never read by OmnaBase as "the post changed". The Activity tab's Retry still gives the
+  row a new key and now also drops the kept body, so the retry is built from the post as it is then. This closes round three's open item
+  ("fixing the body at the first try"). An edit made between two tries follows as its own edit once the topic is filed.
+- **The screen.** The Forums tab's rule list says "Edits on the forum reach the ticket; deletions are not sent." (was: neither is sent).
+- **Adjusted older tests, not weakened:** `ForumRepliesTest::test_edits_and_deletions_are_not_synced` (the topic's edit is now one edit
+  call; the reply's edit and trashing still send nothing) and `ForumScreenTest`'s rule-list check (the new sentence); two unit tests
+  (`OldTopicReplyTest`, `SupportUserReplyTest`) fake the two new WordPress steps in their setup.
+- Tests: the red team's `tests/Unit/PlainTextPicturesTest.php`, `tests/Structure/ForumEditsStructureTest.php`,
+  `tests/Integration/ForumEditsTest.php`; the builder's `tests/Integration/ForumEditsBuilderTest.php` (a lost answer between two tries,
+  the revision log on a visitor's page, a close and a trashing, fields that follow and never another member's).
+- **Not covered:** a link the forum has not previewed yet may arrive as a link and become a picture at the next edit; a preview that is a
+  script widget stays a link after OmnaBase's cleaning; an edit made in the instant its own row is being sent is folded into that row (the
+  queue keeps one waiting row per post) and travels at the next edit.
+
+## 2026-11-18 — The formatted version runs the forum's own formatting only (the check before the first install on kriesi.at)
+
+Agent-set, found before installing the forum edits and pictures round on kriesi.at. The round's first build sent each post "as the forum
+shows it" by running bbPress's display filter, which also runs every filter a site hooks onto it. kriesi.at's own code hooks several: it
+replaces email addresses and licence codes with "(hidden if logged out)" for logged-out visitors, and it turns product names
+("WooCommerce", "WPML", "Elementor") into partner links. The plugin's sending job is a logged-out visitor, so the team would have read
+hidden addresses and advertising links inside customers' messages.
+
+- **The change.** `Forum\ShownForm` runs only WordPress's and bbPress's own formatting steps, by name and in bbPress's order: link
+  previews when bbPress's auto-embed setting is on, balanced tags, clickable links, paragraphs. No filter of the site runs. bbPress's
+  revision log and its password box cannot appear, since its display filter is no longer applied.
+- **A failing step leaves the formatted version out.** The plain text still travels, so a fault in formatting never keeps a post from
+  becoming a ticket.
+- **Left out on purpose:** smilies and typographic quotes; a site's own shortcodes or embeds added by other plugins.
+- Test: `test_the_sites_own_display_filters_stay_out_of_the_ticket` in `tests/Integration/ForumEditsBuilderTest.php`.
 

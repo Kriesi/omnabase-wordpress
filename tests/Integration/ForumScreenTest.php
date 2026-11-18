@@ -90,8 +90,9 @@ final class ForumScreenTest extends RoundThreeTestCase {
 	 * What it checks: The screen lists every forum of the site with a tick, the marked ones ticked, and says in one line why a hidden forum's
 	 *   topics are not public.
 	 * Passes when: the forum section has one checkbox per forum (Support, Members, Staff, Off topic) named by the forum's id, the three marked
-	 *   forums checked and Off topic not; the section's text names each forum, says "not public" for the hidden one, says that edits and
-	 *   deletions are not sent, and that guests' addresses are unchecked.
+	 *   forums checked and Off topic not; the section's text names each forum, says "not public" for the hidden one, says that edits reach
+	 *   the ticket and deletions are not sent (adjusted 2026-11-18, the forum edits and pictures round: edits travel now), and that guests'
+	 *   addresses are unchecked.
 	 * Fails when: the site owner cannot see or choose which forums feed the inbox, or does not learn which topics OmnaBase treats as public.
 	 */
 	public function test_the_forum_section_lists_every_forum_with_a_tick(): void {
@@ -108,7 +109,10 @@ final class ForumScreenTest extends RoundThreeTestCase {
 			$this->assertStringContainsString( $title, $text );
 		}
 		$this->assertMatchesRegularExpression( '/not public/i', $text );
-		$this->assertMatchesRegularExpression( '/edit.{0,80}(not|never)|(not|never).{0,80}edit/i', $text );
+		// adjusted 2026-11-18 (the forum edits and pictures round, the founder's decision that edits reach the ticket), not weakened: the line
+		// now says edits reach the ticket, and still that deletions are not sent
+		$this->assertMatchesRegularExpression( '/edits[^.;]{0,80}ticket/i', $text );
+		$this->assertMatchesRegularExpression( '/deletions[^.;]{0,80}not sent/i', $text );
 		$this->assertMatchesRegularExpression( '/unchecked|not checked|unverified/i', $text );
 	}
 

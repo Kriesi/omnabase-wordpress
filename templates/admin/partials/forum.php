@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 			<ul class="ob-help-list ob-wp-settings__forum-rules">
 				<li class="ob-help-list__item"><?php esc_html_e( 'Topics in hidden forums are not public; every other forum is public to OmnaBase.', 'omnabase' ); ?></li>
 				<li class="ob-help-list__item"><?php esc_html_e( 'Replies by the topic\'s author and by moderators are sent.', 'omnabase' ); ?></li>
-				<li class="ob-help-list__item"><?php esc_html_e( 'Edits and deletions on the forum are not sent.', 'omnabase' ); ?></li>
+				<li class="ob-help-list__item"><?php esc_html_e( 'Edits on the forum reach the ticket; deletions are not sent.', 'omnabase' ); ?></li>
 			</ul>
 			<?php require __DIR__ . '/forum-rows.php'; ?>
 			<?php require __DIR__ . '/forum-fields.php'; ?>

@@ -15,6 +15,8 @@ defined( 'ABSPATH' ) || exit;
  * - `wait`: not yet (a reply whose topic has no ticket yet), tried again after the given seconds;
  * - `skip`: nothing to send any more (the post went away, an echo of the plugin's own post): the row is discarded with the reason;
  * - `attention`: it cannot go without the administrator (a guest topic without an email address).
+ * A `send` may also say that OmnaBase's 404 ends the row quietly (the forum edits and pictures round: an edit of a post OmnaBase never
+ * filed is dropped, never "needs attention").
  */
 final class Step {
 
@@ -30,8 +32,14 @@ final class Step {
 	 * @param array{method:string,path:string,body:mixed,timeout:int,idempotent:bool}|null $request The call, for `send`.
 	 * @param string                                                                $reason  Why, in words, for the others.
 	 * @param int                                                                   $seconds How long to wait, for `wait`.
+	 * @param bool                                                                  $dropsNotFound Whether OmnaBase's 404 discards the row quietly.
 	 */
-	private function __construct( public readonly string $kind, public readonly ?array $request, public readonly string $reason, public readonly int $seconds ) {}
+	private function __construct( public readonly string $kind, public readonly ?array $request, public readonly string $reason, public readonly int $seconds, public readonly bool $dropsNotFound = false ) {}
+
+	/** The same call, but OmnaBase's 404 ("no such post") discards the row instead of asking the administrator. */
+	public function droppingNotFound(): self {
+		return new self( $this->kind, $this->request, $this->reason, $this->seconds, true );
+	}
 
 	/**
 	 * Send this call.
