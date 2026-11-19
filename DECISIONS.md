@@ -1716,7 +1716,9 @@ founder noticed a topic that was an hour old and not in OmnaBase.
 - **The fix.** The password check reads the post, its topic and its forum with WordPress's own functions. The whole formatted version
   sits inside one catch: whatever fails there, the post travels with its plain text.
 - **The guard.** A structure test refuses a call to a function only bbPress 2.7 has (a named list; add to it when one is met).
-- **Open, for the founder:** the test WordPress should run the released bbPress, or both. Until then a new bbPress call is checked
-  against the released version by hand before an install.
+- **Decided by the founder on 2026-11-19 ("do the one line change, skip the test run for the next major change"):** the test WordPress
+  is pinned to bbPress 2.6.14, the version kriesi.at runs (`.wp-env.json`; before, "latest stable" had handed the test site a 2.7.0-alpha
+  build). The pinned version has not been run yet: the next major change's test run is its first, and tests that only pass on 2.7 will
+  show then. The test WordPress downloads it at its next start.
 - Nothing was lost: the rows waited and went out after the reinstall.
 

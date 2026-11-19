@@ -8,7 +8,7 @@
 		"wp-content/plugins/omnabase": ".",
 		"wp-content/plugins/woocommerce": "https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip",
 		"wp-content/plugins/easy-digital-downloads": "https://downloads.wordpress.org/plugin/easy-digital-downloads.latest-stable.zip",
-		"wp-content/plugins/bbpress": "https://downloads.wordpress.org/plugin/bbpress.latest-stable.zip",
+		"wp-content/plugins/bbpress": "https://downloads.wordpress.org/plugin/bbpress.2.6.14.zip",
 		"wp-content/plugins/license-manager-for-woocommerce": "https://downloads.wordpress.org/plugin/license-manager-for-woocommerce.latest-stable.zip",
 		"wp-content/plugins/plugin-check": "https://downloads.wordpress.org/plugin/plugin-check.latest-stable.zip",
 		"wp-content/mu-plugins": "./tests/wp-env/mu-plugins"
