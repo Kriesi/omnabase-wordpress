@@ -125,4 +125,29 @@ final class ForumEditsStructureTest extends TestCase {
 		$p = OMNABASE_REPO . '/' . $path;
 		return is_file( $p ) ? (string) file_get_contents( $p ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a repository file, read by a test
 	}
+
+	/**
+	 * What it checks: The plugin asks the forum plugin (bbPress) only for functions its released version 2.6 has. The plugin's test
+	 *   WordPress runs a newer, unreleased bbPress, so a call to a function that only exists there passes every test and crashes on a
+	 *   customer's site. That happened on 2026-11-18: for a day no forum post reached OmnaBase from a site on bbPress 2.6.
+	 * Passes when: no file of the plugin calls one of the functions bbPress added after 2.6 (the list below; add to it when one is met).
+	 * Fails when: a site on the released bbPress stops sending topics and replies the moment it updates the plugin.
+	 */
+	public function test_no_call_to_a_function_only_the_unreleased_bbpress_has(): void {
+		$only_in_27 = array( 'bbp_get_password_required_id', 'bbp_password_required' );
+		$found      = array();
+		$files      = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( dirname( __DIR__, 2 ) . '/src', \FilesystemIterator::SKIP_DOTS ) );
+		foreach ( $files as $file ) {
+			if ( 'php' !== $file->getExtension() ) {
+				continue;
+			}
+			$code = implode( '', array_map( static fn ( $t ) => is_array( $t ) && in_array( $t[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ? '' : ( is_array( $t ) ? $t[1] : $t ), token_get_all( (string) file_get_contents( $file->getPathname() ) ) ) );
+			foreach ( $only_in_27 as $name ) {
+				if ( preg_match( '/\\b' . $name . '\\s*\\(/', $code ) ) {
+					$found[] = $name . ' in ' . $file->getFilename();
+				}
+			}
+		}
+		$this->assertSame( array(), $found );
+	}
 }

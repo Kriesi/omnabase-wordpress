@@ -17,7 +17,8 @@ defined( 'ABSPATH' ) || exit;
  * codes from logged-out visitors, or turn product names into partner links, and the sending job is a logged-out visitor; the team must read
  * what the customer wrote. bbPress's "show the post" step is not used either: it answers a password box for a protected post and adds its
  * revision log ("This topic was modified … ago by …"). Two more rules:
- * - a post behind a password (its own, its topic's or its forum's) sends no formatted version, only its plain text;
+ * - a post behind a password (its own, its topic's or its forum's) sends no formatted version, only its plain text (read from the posts
+ *   with WordPress's own functions: the first build asked a function only bbPress 2.7 has, which stopped every send on bbPress 2.6);
  * - above OmnaBase's 200,000 characters the formatted version is left out (OmnaBase would refuse the whole call).
  * The post is set up as the current post while it renders, so a link preview uses the cache the forum filled beside the post. A formatting
  * step that fails leaves the formatted version out; the plain text still travels.
@@ -34,11 +35,29 @@ final class ShownForm {
 	 * @return array{html?:string}
 	 */
 	public static function of( \WP_Post $post ): array {
-		if ( 0 !== (int) bbp_get_password_required_id( $post->ID ) ) {
-			return array();
+		try {
+			$html = self::behindPassword( $post ) ? '' : trim( self::render( $post ) );
+		} catch ( \Throwable $e ) {
+			$html = ''; // nothing about the formatted version may keep a post from travelling: its plain text goes alone
 		}
-		$html = trim( self::render( $post ) );
 		return '' === $html || mb_strlen( $html ) > self::MAX ? array() : array( 'html' => $html );
+	}
+
+	/**
+	 * Whether the post, its topic or its forum has a password. Read from the posts themselves, with WordPress's own functions only: the
+	 * first build asked a bbPress function that only bbPress 2.7 has, and on a site with bbPress 2.6 every send stopped (kriesi.at,
+	 * 2026-11-18 to 2026-11-19).
+	 *
+	 * @param \WP_Post $post The topic or reply.
+	 */
+	private static function behindPassword( \WP_Post $post ): bool {
+		$topic = Posts::isTopic( $post ) ? $post->ID : Posts::topicOf( $post );
+		foreach ( array( $post->ID, $topic, $topic > 0 ? Posts::forumOf( $topic ) : 0 ) as $id ) {
+			if ( $id > 0 && '' !== (string) get_post_field( 'post_password', $id ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

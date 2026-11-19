@@ -1705,3 +1705,18 @@ hidden addresses and advertising links inside customers' messages.
 - **Left out on purpose:** smilies and typographic quotes; a site's own shortcodes or embeds added by other plugins.
 - Test: `test_the_sites_own_display_filters_stay_out_of_the_ticket` in `tests/Integration/ForumEditsBuilderTest.php`.
 
+## 2026-11-19 — A day without forum posts on kriesi.at: a function only the unreleased bbPress has
+
+What happened. Build d34cb9c was installed on kriesi.at on 2026-11-18 at about 17:50 local time. Its new formatted version of a post
+asked bbPress for `bbp_get_password_required_id()`, which exists in bbPress 2.7 (unreleased; the plugin's test WordPress runs
+2.7.0-alpha) and not in the released 2.6.14 that kriesi.at runs. Every send of a topic or reply stopped at that call before its try was
+counted, so the plugin's waiting list stood still: 33 rows by the next afternoon (21 replies, 1 topic, 9 edits, 2 status changes). The
+founder noticed a topic that was an hour old and not in OmnaBase.
+
+- **The fix.** The password check reads the post, its topic and its forum with WordPress's own functions. The whole formatted version
+  sits inside one catch: whatever fails there, the post travels with its plain text.
+- **The guard.** A structure test refuses a call to a function only bbPress 2.7 has (a named list; add to it when one is met).
+- **Open, for the founder:** the test WordPress should run the released bbPress, or both. Until then a new bbPress call is checked
+  against the released version by hand before an install.
+- Nothing was lost: the rows waited and went out after the reinstall.
+
